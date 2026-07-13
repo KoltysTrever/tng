@@ -126,4 +126,51 @@ export default async function handler(req, res) {
 function buildClaudePrompt({ domain, email, org, jobPostings, people }) {
   return `You are scoring a lead for TNG (The North Group), a physical/executive security and intelligence firm. Its target verticals are: Healthcare (hospital systems, health networks, health insurers), Education (K-12 districts, universities), Government (public sector, municipal/federal agencies), Entertainment & Events (venues, sports teams, promoters, festivals), High-Net-Worth/Private (family offices, private wealth, estates), and general Corporate (any large enterprise needing executive protection, embedded security, or insider threat programs).
 
-CRITICAL: A vertical match means the company's own core business or industry classification IS that vertical — it does NOT mean the company merely sells products/services INTO that vertical as a client segment. For example: an IT services vendor, staffing agency, or consultancy that has a "VP of Healthcare & Government Accounts" or job postings mentioning "supporting healthcare clients" is a Corporate/IT-services company, NOT a Healthcare or Government company itself — its own industry classification is what matters, not who it sells to. Only
+CRITICAL: A vertical match means the company's own core business or industry classification IS that vertical — it does NOT mean the company merely sells products/services INTO that vertical as a client segment. For example: an IT services vendor, staffing agency, or consultancy that has a "VP of Healthcare & Government Accounts" or job postings mentioning "supporting healthcare clients" is a Corporate/IT-services company, NOT a Healthcare or Government company itself — its own industry classification is what matters, not who it sells to. Only mark a vertical true if the organization's actual industry/business (per the industry field, SIC/NAICS codes, and company description) IS that vertical — e.g. a hospital system's own industry is Healthcare; a company that sells software to hospitals is not.
+
+Here is raw data already retrieved from Apollo for the domain "${domain}"${email ? ` (contact email: ${email})` : ''}. Use ONLY this data — do not invent facts not present here.
+
+ORGANIZATION DATA:
+${org ? JSON.stringify(org, null, 2).slice(0, 4000) : 'No organization match found.'}
+
+JOB POSTINGS (up to first 30):
+${jobPostings.length ? JSON.stringify(jobPostings.slice(0, 30).map((j) => ({ title: j.title || j.name, url: j.url })), null, 2).slice(0, 3000) : 'No job postings data.'}
+
+PEOPLE SEARCH RESULTS (candidates for best first contact — note: last names may be partially masked by Apollo, and linkedin_url may be missing/null for some records, that is expected):
+${people.length ? JSON.stringify(people.slice(0, 10).map((p) => ({
+    name: p.name, first_name: p.first_name, last_name: p.last_name,
+    title: p.title, seniority: p.seniority, linkedin_url: p.linkedin_url,
+  })), null, 2).slice(0, 3000) : 'No people found.'}
+
+Based on this data, respond with ONLY a raw JSON object, no markdown fences, no commentary, in exactly this shape:
+{
+  "company_name": string or null,
+  "industry": string or null,
+  "employee_count": number or null,
+  "estimated_revenue": string or null,
+  "likely_fortune1000": boolean,
+  "fortune1000_reasoning": string (one short phrase),
+  "vertical_healthcare": boolean,
+  "vertical_education": boolean,
+  "vertical_government": boolean,
+  "vertical_entertainment": boolean,
+  "vertical_high_net_worth": boolean,
+  "vertical_reasoning": string (one short phrase explaining the vertical call, based on the company's OWN industry, not its client base),
+  "hiring_security_leadership": boolean,
+  "hiring_detail": string (one short phrase, e.g. the role title found, or "No matching postings"),
+  "key_contact_name": string or null,
+  "key_contact_title": string or null,
+  "key_contact_linkedin_url": string or null (copy exactly from the linkedin_url field of the chosen person in PEOPLE SEARCH RESULTS; use null if that field was empty/missing for them — do not guess or construct a URL),
+  "key_contact_reasoning": string (one short phrase)
+}
+
+For key_contact, prefer in order: CSO/CISO, VP/Director of Security, Chief Risk Officer, Director of Facilities/EHS, then senior ops/COO as a last resort. Pick exactly one person from the people search results, or null with an explanation if none are a reasonable fit. Mark likely_fortune1000 true only with reasonable confidence. Mark verticals true only when the company's own core industry is a clear match — a company can match more than one vertical, or none. Being a vendor, consultant, or staffing provider to a vertical does NOT count as matching that vertical.`;
+}
+
+function extractJson(text) {
+  const cleaned = text.replace(/```json/gi, '').replace(/```/g, '').trim();
+  const start = cleaned.indexOf('{');
+  const end = cleaned.lastIndexOf('}');
+  if (start === -1 || end === -1) throw new Error('No JSON object found in Claude response');
+  return JSON.parse(cleaned.slice(start, end + 1));
+}
