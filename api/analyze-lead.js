@@ -164,7 +164,9 @@ Based on this data, respond with ONLY a raw JSON object, no markdown fences, no 
   "key_contact_reasoning": string (one short phrase)
 }
 
-For key_contact, prefer in order: CSO/CISO, VP/Director of Security, Chief Risk Officer, Director of Facilities/EHS, then senior ops/COO as a last resort. Pick exactly one person from the people search results, or null with an explanation if none are a reasonable fit. Mark likely_fortune1000 true only with reasonable confidence. Mark verticals true only when the company's own core industry is a clear match — a company can match more than one vertical, or none. Being a vendor, consultant, or staffing provider to a vertical does NOT count as matching that vertical.`;
+For key_contact, prefer in order: CSO/CISO, VP/Director of Security, Chief Risk Officer, Director of Facilities/EHS, then senior ops/COO as a last resort. Pick exactly one person from the people search results, or null with an explanation if none are a reasonable fit. Mark likely_fortune1000 true only with reasonable confidence. Mark verticals true only when the company's own core industry is a clear match — a company can match more than one vertical, or none. Being a vendor, consultant, or staffing provider to a vertical does NOT count as matching that vertical.
+
+IMPORTANT — hiring_security_leadership must be based ONLY on the JOB POSTINGS data (i.e. they are currently, actively recruiting for a security leadership role right now). The fact that a CISO or security director already works there (found via PEOPLE SEARCH RESULTS) does NOT make this true — an existing security leader is not a hiring signal, it's the opposite. If JOB POSTINGS contains no open security-leadership role, set hiring_security_leadership to false and hiring_detail to "No matching postings", even if a security leader was found elsewhere in the data.`;
 }
 
 function extractJson(text) {
