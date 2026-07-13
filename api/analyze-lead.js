@@ -61,31 +61,42 @@ export default async function handler(req, res) {
     }
 
     // ---- 3. Apollo People Search (free, no credits) ----
+    // Only run this if org enrichment actually found a real company match —
+    // otherwise a bad/non-domain input (e.g. a company name instead of a
+    // domain) can return unrelated people with no real connection to the lead.
     let people = [];
-    try {
-      const peopleResp = await fetch('https://api.apollo.io/api/v1/mixed_people/api_search', {
-        method: 'POST',
-        headers: {
-          'x-api-key': APOLLO_API_KEY,
-          'Content-Type': 'application/json',
-          accept: 'application/json',
-        },
-        body: JSON.stringify({
-          q_organization_domains_list: [cleanDomain],
-          person_titles: [
-            'chief security officer', 'ciso', 'vp security', 'vice president security',
-            'director of security', 'head of security', 'chief risk officer',
-            'director of facilities', 'director of ehs', 'chief operating officer', 'coo',
-          ],
-          person_seniorities: ['c_suite', 'vp', 'director', 'head'],
-          per_page: 10,
-          page: 1,
-        }),
-      });
-      const peopleData = await peopleResp.json();
-      people = peopleData.people || [];
-    } catch (e) {
-      console.error('Apollo people search failed:', e);
+    if (org) {
+      try {
+        const peopleResp = await fetch('https://api.apollo.io/api/v1/mixed_people/api_search', {
+          method: 'POST',
+          headers: {
+            'x-api-key': APOLLO_API_KEY,
+            'Content-Type': 'application/json',
+            accept: 'application/json',
+          },
+          body: JSON.stringify({
+            q_organization_domains_list: [cleanDomain],
+            person_titles: [
+              'chief security officer', 'ciso', 'vp security', 'vice president security',
+              'director of security', 'head of security', 'chief risk officer',
+              'director of facilities', 'director of ehs', 'chief operating officer', 'coo',
+            ],
+            person_seniorities: ['c_suite', 'vp', 'director', 'head'],
+            per_page: 10,
+            page: 1,
+          }),
+        });
+        const peopleData = await peopleResp.json();
+        const rawPeople = peopleData.people || [];
+        // Cross-check: keep only results whose employer domain actually matches,
+        // in case Apollo's domain filter loosely matches on a bad/partial input.
+        people = rawPeople.filter((p) => {
+          const empDomain = (p.organization && (p.organization.primary_domain || p.organization.website_url)) || '';
+          return !empDomain || empDomain.toLowerCase().includes(cleanDomain.toLowerCase());
+        });
+      } catch (e) {
+        console.error('Apollo people search failed:', e);
+      }
     }
 
     // ---- 4. Hand the raw data to Claude for judgment calls ----
