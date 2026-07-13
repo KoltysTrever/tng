@@ -135,7 +135,7 @@ export default async function handler(req, res) {
 }
 
 function buildClaudePrompt({ domain, email, org, jobPostings, people }) {
-  return `You are scoring a lead for TNG (The North Group), a physical/executive security and intelligence firm. Its target verticals are: Healthcare (hospital systems, health networks, health insurers), Education (K-12 districts, universities), Government (public sector, municipal/federal agencies), Entertainment & Events (venues, sports teams, promoters, festivals), High-Net-Worth/Private (family offices, private wealth, estates), and general Corporate (any large enterprise needing executive protection, embedded security, or insider threat programs).
+  return `You are scoring a lead for TNG (The North Group), a physical/executive security and intelligence firm. Its target verticals are: Healthcare (hospital systems, health networks, health insurers), Education (K-12 districts, universities), Government (public sector, municipal/federal agencies), Entertainment & Events (venues, sports teams, promoters, festivals), High-Net-Worth/Private (family offices, private wealth, estates), IT/Network Security (managed security providers, MSPs, data centers, cybersecurity firms, cloud infrastructure companies), Telecommunications (telecom carriers, connectivity/network providers, ISPs), and general Corporate (any large enterprise needing executive protection, embedded security, or insider threat programs).
 
 CRITICAL: A vertical match means the company's own core business or industry classification IS that vertical — it does NOT mean the company merely sells products/services INTO that vertical as a client segment. For example: an IT services vendor, staffing agency, or consultancy that has a "VP of Healthcare & Government Accounts" or job postings mentioning "supporting healthcare clients" is a Corporate/IT-services company, NOT a Healthcare or Government company itself — its own industry classification is what matters, not who it sells to. Only mark a vertical true if the organization's actual industry/business (per the industry field, SIC/NAICS codes, and company description) IS that vertical — e.g. a hospital system's own industry is Healthcare; a company that sells software to hospitals is not.
 
@@ -166,6 +166,8 @@ Based on this data, respond with ONLY a raw JSON object, no markdown fences, no 
   "vertical_government": boolean,
   "vertical_entertainment": boolean,
   "vertical_high_net_worth": boolean,
+  "vertical_it_network_security": boolean,
+  "vertical_telecom": boolean,
   "vertical_reasoning": string (one short phrase explaining the vertical call, based on the company's OWN industry, not its client base),
   "hiring_security_leadership": boolean,
   "hiring_detail": string (one short phrase, e.g. the role title found, or "No matching postings"),
