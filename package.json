@@ -2,5 +2,6 @@
   "name": "tng-lead-scoring-backend",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "Backend relay for TNG lead scoring tool: calls Apollo + Claude server-side so API keys never touch the browser."
 }
