@@ -86,8 +86,11 @@ export default async function handler(req, res) {
               'general counsel', 'vp legal', 'vice president legal', 'chief legal officer',
               'chief administrative officer', 'cao',
               'executive assistant', 'assistant to the ceo', 'assistant to the founder',
+              'chief executive officer', 'ceo', 'president', 'owner', 'founder', 'co-founder',
+              'managing director', 'general manager', 'vp operations', 'vice president operations',
+              'director of operations', 'head of operations',
             ],
-            per_page: 10,
+            per_page: 25,
             page: 1,
           }),
         });
@@ -270,7 +273,7 @@ Based on this data, respond with ONLY a raw JSON object, no markdown fences, no 
   "key_contact_reasoning": string (one short phrase)
 }
 
-For key_contact, prefer in order: (1) CSO/CISO, (2) VP/Director of Security, (3) Chief Risk Officer, (4) VP/Director/Chief of HR or People — a strong fit since Workplace Termination Support is a named TNG service and HR typically initiates that kind of engagement, (5) General Counsel/VP Legal — often the actual gatekeeper for vendor/security decisions when there's no dedicated security function, (6) Director of Facilities/EHS, (7) Chief Administrative Officer, (8) senior Operations/COO, (9) as a last resort for very small or founder-led companies, an Executive Assistant to the CEO/Founder — often the real point of contact for personal/executive protection conversations at that size. Pick exactly one person from the people search results using this order — do not skip past an earlier, better-fitting match if one exists. IMPORTANT: if the PEOPLE SEARCH RESULTS list contains ANY person at all, you must pick one of them as key_contact rather than returning null — null is only acceptable when the list is genuinely empty. When picking among otherwise-similar candidates, prefer the more senior title.
+For key_contact, prefer in order: (1) CSO/CISO, (2) VP/Director of Security, (3) Chief Risk Officer, (4) VP/Director/Chief of HR or People — a strong fit since Workplace Termination Support is a named TNG service and HR typically initiates that kind of engagement, (5) General Counsel/VP Legal — often the actual gatekeeper for vendor/security decisions when there's no dedicated security function, (6) Director of Facilities/EHS, (7) Chief Administrative Officer, (8) senior Operations/COO/General Manager/Managing Director, (9) for very small or founder-led companies, an Executive Assistant to the CEO/Founder — often the real point of contact for personal/executive protection conversations at that size, (10) FINAL CATCH-ALL — if none of the above roles appear anywhere in the results, pick the single most senior person present regardless of their specific title or department (CEO, President, Owner, Founder, any VP, any Director, any "Head of" role, in roughly that order of seniority) rather than returning null. Pick exactly one person from the people search results using this order — do not skip past an earlier, better-fitting match if one exists. IMPORTANT: if the PEOPLE SEARCH RESULTS list contains ANY person at all, you must pick one of them as key_contact — null is reserved strictly for when that list is genuinely empty. When picking among otherwise-similar candidates, prefer the more senior title.
 
 For revenue_tier, base it primarily on annual_revenue_printed or organization_revenue_printed in ORGANIZATION DATA; if revenue data is missing, you may estimate from estimated_num_employees as a rough proxy but must say so plainly in revenue_tier_reasoning (e.g. "No revenue data; estimated from employee count") — never invent a specific dollar figure that isn't in the data. Use "unknown" if there's not enough information to make any reasonable estimate, and "under_10m" if the company is clearly smaller than $10M. Mark verticals true only when the company's own core industry is a clear match — a company can match more than one vertical, or none. Being a vendor, consultant, or staffing provider to a vertical does NOT count as matching that vertical.
 
