@@ -21,21 +21,23 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Use POST' });
   }
 
-  const { apollo_id, first_name, domain, title } = req.body || {};
+  const { email, apollo_id, first_name, domain, title } = req.body || {};
 
   const APOLLO_API_KEY = process.env.APOLLO_API_KEY;
   if (!APOLLO_API_KEY) {
     return res.status(500).json({ error: 'Server is missing APOLLO_API_KEY env var' });
   }
 
-  if (!apollo_id && !(first_name && domain)) {
-    return res.status(400).json({ error: 'Provide either apollo_id, or first_name + domain as a fallback.' });
+  if (!email && !apollo_id && !(first_name && domain)) {
+    return res.status(400).json({ error: 'Provide email, or apollo_id, or first_name + domain as a fallback.' });
   }
 
   try {
     const params = new URLSearchParams();
     params.set('reveal_personal_emails', 'false'); // false = prefer verified work email over personal email
-    if (apollo_id) {
+    if (email) {
+      params.set('email', email);
+    } else if (apollo_id) {
       params.set('id', apollo_id);
     } else {
       params.set('first_name', first_name);
