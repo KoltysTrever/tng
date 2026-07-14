@@ -197,7 +197,7 @@ ${jobPostings.length ? JSON.stringify(jobPostings.slice(0, 30).map((j) => ({ tit
 
 PEOPLE SEARCH RESULTS (candidates for best first contact — note: last names may be partially masked by Apollo, and linkedin_url may be missing/null for some records, that is expected):
 ${people.length ? JSON.stringify(people.slice(0, 10).map((p) => ({
-    name: p.name, first_name: p.first_name, last_name: p.last_name,
+    id: p.id, name: p.name, first_name: p.first_name, last_name: p.last_name,
     title: p.title, seniority: p.seniority, linkedin_url: p.linkedin_url,
   })), null, 2).slice(0, 3000) : 'No people found.'}
 
@@ -232,6 +232,7 @@ Based on this data, respond with ONLY a raw JSON object, no markdown fences, no 
   "key_contact_name": string or null,
   "key_contact_title": string or null,
   "key_contact_linkedin_url": string or null (copy exactly from the linkedin_url field of the chosen person in PEOPLE SEARCH RESULTS; use null if that field was empty/missing for them — do not guess or construct a URL),
+  "key_contact_apollo_id": string or null (copy exactly from the id field of the chosen person in PEOPLE SEARCH RESULTS; use null if no contact was chosen — this is used later to precisely re-fetch this exact person, never guess or invent an id),
   "key_contact_reasoning": string (one short phrase)
 }
 
