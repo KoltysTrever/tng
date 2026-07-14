@@ -162,6 +162,7 @@ Based on this data, respond with ONLY a raw JSON object, no markdown fences, no 
   "company_description": string or null (a 1-3 sentence plain-language summary of what the company actually does, based on the org data provided — do not invent facts not present in the data),
   "headquarters": string or null (e.g. "Chicago, Illinois" or "London, UK" — city/state/country from the org data, whatever is available),
   "founded_year": number or null,
+  "company_linkedin_url": string or null (copy exactly from the organization's own linkedin_url field in ORGANIZATION DATA if present; use null if missing — do not guess or construct a URL),
   "likely_fortune1000": boolean,
   "fortune1000_reasoning": string (one short phrase),
   "vertical_healthcare": boolean,
@@ -174,6 +175,12 @@ Based on this data, respond with ONLY a raw JSON object, no markdown fences, no 
   "vertical_reasoning": string (one short phrase explaining the vertical call, based on the company's OWN industry, not its client base),
   "hiring_security_leadership": boolean,
   "hiring_detail": string (one short phrase, e.g. the role title found, or "No matching postings"),
+  "recently_funded": boolean,
+  "funding_detail": string (one short phrase, e.g. "$50M Series C, March 2025" or "No funding data found"),
+  "headcount_growth_signal": boolean,
+  "headcount_growth_detail": string (one short phrase describing the actual growth figure found, e.g. "+22% headcount YoY" or "No notable growth data found"),
+  "uses_security_tech": boolean,
+  "security_tech_detail": string (one short phrase naming the specific technology/vendor found, e.g. "Uses Genetec access control" or "No security/access-control tech found in stack"),
   "key_contact_name": string or null,
   "key_contact_title": string or null,
   "key_contact_linkedin_url": string or null (copy exactly from the linkedin_url field of the chosen person in PEOPLE SEARCH RESULTS; use null if that field was empty/missing for them — do not guess or construct a URL),
@@ -182,7 +189,9 @@ Based on this data, respond with ONLY a raw JSON object, no markdown fences, no 
 
 For key_contact, prefer in order: CSO/CISO, VP/Director of Security, Chief Risk Officer, Director of Facilities/EHS, then senior ops/COO as a last resort. Pick exactly one person from the people search results, or null with an explanation if none are a reasonable fit. Mark likely_fortune1000 true only with reasonable confidence. Mark verticals true only when the company's own core industry is a clear match — a company can match more than one vertical, or none. Being a vendor, consultant, or staffing provider to a vertical does NOT count as matching that vertical.
 
-IMPORTANT — hiring_security_leadership must be based ONLY on the JOB POSTINGS data (i.e. they are currently, actively recruiting for a security leadership role right now). The fact that a CISO or security director already works there (found via PEOPLE SEARCH RESULTS) does NOT make this true — an existing security leader is not a hiring signal, it's the opposite. If JOB POSTINGS contains no open security-leadership role, set hiring_security_leadership to false and hiring_detail to "No matching postings", even if a security leader was found elsewhere in the data.`;
+IMPORTANT — hiring_security_leadership must be based ONLY on the JOB POSTINGS data (i.e. they are currently, actively recruiting for a security leadership role right now). The fact that a CISO or security director already works there (found via PEOPLE SEARCH RESULTS) does NOT make this true — an existing security leader is not a hiring signal, it's the opposite. If JOB POSTINGS contains no open security-leadership role, set hiring_security_leadership to false and hiring_detail to "No matching postings", even if a security leader was found elsewhere in the data.
+
+IMPORTANT — recently_funded, headcount_growth_signal, and uses_security_tech must be based strictly on fields present in ORGANIZATION DATA (things like total_funding, funding_events, headcount_growth, technology_names, or similarly named fields) — never invent a funding round, growth figure, or technology that isn't actually present in that JSON. If the relevant field is missing, absent, or empty in ORGANIZATION DATA, set the boolean to false and say so plainly in the detail (e.g. "No funding data found"), don't guess. For recently_funded, only mark true if a funding event appears to have occurred within roughly the last 18 months based on any date present. For uses_security_tech, only mark true if technology_names contains a recognizable physical-security-adjacent vendor or product (e.g. access control, video surveillance, or guard/visitor management systems — examples include but aren't limited to Genetec, Verkada, Lenel, Milestone, Avigilon, Axis Communications, Openpath, Kisi, Brivo, Rhombus) — general IT/cybersecurity software (e.g. firewalls, EDR, SIEM) does NOT count for this signal.`;
 }
 
 function extractJson(text) {
