@@ -100,7 +100,8 @@ export default async function handler(req, res) {
     }
 
     // ---- 4. Hand the raw data to Claude for judgment calls ----
-    const claudePrompt = buildClaudePrompt({ domain: cleanDomain, email, org, jobPostings, people });
+    const curatedOrg = curateOrgData(org);
+    const claudePrompt = buildClaudePrompt({ domain: cleanDomain, email, org: curatedOrg, jobPostings, people });
 
     const claudeResp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -134,15 +135,62 @@ export default async function handler(req, res) {
   }
 }
 
+// Apollo's raw organization object can exceed 250,000 characters (technology_names
+// alone can have 1,000+ entries), which silently buried funding/growth/tech fields
+// past any reasonable truncation cutoff. Instead of truncating blindly, pull out
+// exactly the fields that matter (confirmed against real Apollo API responses) and
+// pre-filter the huge tech list down to only security-relevant hits.
+const SECURITY_TECH_KEYWORDS = [
+  'genetec', 'verkada', 'lenel', 'milestone', 'avigilon', 'axis communications',
+  'openpath', 'kisi', 'brivo', 'rhombus', 'honeywell security', 'bosch security',
+  'hikvision', 'dahua', 'pelco', 'salto', 'hid global', 'suprema', 'gallagher security',
+  'johnson controls', 'adt', 'stanley security', 'convergint', 'paxton',
+];
+
+function curateOrgData(org) {
+  if (!org) return null;
+  const techList = Array.isArray(org.technology_names) ? org.technology_names : [];
+  const matchedSecurityTech = techList.filter((t) =>
+    SECURITY_TECH_KEYWORDS.some((kw) => String(t).toLowerCase().includes(kw))
+  );
+
+  return {
+    name: org.name,
+    website_url: org.website_url,
+    linkedin_url: org.linkedin_url,
+    founded_year: org.founded_year,
+    industry: org.industry,
+    industries: org.industries,
+    secondary_industries: org.secondary_industries,
+    keywords: Array.isArray(org.keywords) ? org.keywords.slice(0, 15) : org.keywords,
+    estimated_num_employees: org.estimated_num_employees,
+    organization_revenue_printed: org.organization_revenue_printed,
+    annual_revenue_printed: org.annual_revenue_printed,
+    city: org.city,
+    state: org.state,
+    country: org.country,
+    short_description: org.short_description,
+    total_funding_printed: org.total_funding_printed,
+    latest_funding_round_date: org.latest_funding_round_date,
+    latest_funding_stage: org.latest_funding_stage,
+    funding_events: Array.isArray(org.funding_events) ? org.funding_events.slice(0, 5) : org.funding_events,
+    organization_headcount_six_month_growth: org.organization_headcount_six_month_growth,
+    organization_headcount_twelve_month_growth: org.organization_headcount_twelve_month_growth,
+    organization_headcount_twenty_four_month_growth: org.organization_headcount_twenty_four_month_growth,
+    matched_security_relevant_technologies: matchedSecurityTech,
+    total_technologies_count: techList.length,
+  };
+}
+
 function buildClaudePrompt({ domain, email, org, jobPostings, people }) {
   return `You are scoring a lead for TNG (The North Group), a physical/executive security and intelligence firm. Its target verticals are: Healthcare (hospital systems, health networks, health insurers), Education (K-12 districts, universities), Government (public sector, municipal/federal agencies), Entertainment & Events (venues, sports teams, promoters, festivals), High-Net-Worth/Private (family offices, private wealth, estates), IT/Network Security (managed security providers, MSPs, data centers, cybersecurity firms, cloud infrastructure companies), Telecommunications (telecom carriers, connectivity/network providers, ISPs), and general Corporate (any large enterprise needing executive protection, embedded security, or insider threat programs).
 
 CRITICAL: A vertical match means the company's own core business or industry classification IS that vertical — it does NOT mean the company merely sells products/services INTO that vertical as a client segment. For example: an IT services vendor, staffing agency, or consultancy that has a "VP of Healthcare & Government Accounts" or job postings mentioning "supporting healthcare clients" is a Corporate/IT-services company, NOT a Healthcare or Government company itself — its own industry classification is what matters, not who it sells to. Only mark a vertical true if the organization's actual industry/business (per the industry field, SIC/NAICS codes, and company description) IS that vertical — e.g. a hospital system's own industry is Healthcare; a company that sells software to hospitals is not.
 
-Here is raw data already retrieved from Apollo for the domain "${domain}"${email ? ` (contact email: ${email})` : ''}. Use ONLY this data — do not invent facts not present here.
+Here is data already retrieved from Apollo for the domain "${domain}"${email ? ` (contact email: ${email})` : ''}. Use ONLY this data — do not invent facts not present here.
 
-ORGANIZATION DATA:
-${org ? JSON.stringify(org, null, 2).slice(0, 4000) : 'No organization match found.'}
+ORGANIZATION DATA (curated — funding, growth, and matched security-tech fields are pulled directly from Apollo, not truncated):
+${org ? JSON.stringify(org, null, 2) : 'No organization match found.'}
 
 JOB POSTINGS (up to first 30):
 ${jobPostings.length ? JSON.stringify(jobPostings.slice(0, 30).map((j) => ({ title: j.title || j.name, url: j.url })), null, 2).slice(0, 3000) : 'No job postings data.'}
@@ -191,7 +239,7 @@ For key_contact, prefer in order: CSO/CISO, VP/Director of Security, Chief Risk 
 
 IMPORTANT — hiring_security_leadership must be based ONLY on the JOB POSTINGS data (i.e. they are currently, actively recruiting for a security leadership role right now). The fact that a CISO or security director already works there (found via PEOPLE SEARCH RESULTS) does NOT make this true — an existing security leader is not a hiring signal, it's the opposite. If JOB POSTINGS contains no open security-leadership role, set hiring_security_leadership to false and hiring_detail to "No matching postings", even if a security leader was found elsewhere in the data.
 
-IMPORTANT — recently_funded, headcount_growth_signal, and uses_security_tech must be based strictly on fields present in ORGANIZATION DATA (things like total_funding, funding_events, headcount_growth, technology_names, or similarly named fields) — never invent a funding round, growth figure, or technology that isn't actually present in that JSON. If the relevant field is missing, absent, or empty in ORGANIZATION DATA, set the boolean to false and say so plainly in the detail (e.g. "No funding data found"), don't guess. For recently_funded, only mark true if a funding event appears to have occurred within roughly the last 18 months based on any date present. For uses_security_tech, only mark true if technology_names contains a recognizable physical-security-adjacent vendor or product (e.g. access control, video surveillance, or guard/visitor management systems — examples include but aren't limited to Genetec, Verkada, Lenel, Milestone, Avigilon, Axis Communications, Openpath, Kisi, Brivo, Rhombus) — general IT/cybersecurity software (e.g. firewalls, EDR, SIEM) does NOT count for this signal.`;
+IMPORTANT — recently_funded, headcount_growth_signal, and uses_security_tech must be based strictly on fields present in ORGANIZATION DATA — never invent a funding round, growth figure, or technology that isn't actually present in that JSON. For recently_funded: check total_funding_printed, latest_funding_round_date, latest_funding_stage, and funding_events — mark true only if latest_funding_round_date (or a date within funding_events) falls within roughly the last 18 months; if these fields are null/empty/absent, set it false and say "No recent funding event data found" (do not treat old historical funding as recent). For headcount_growth_signal: check organization_headcount_six_month_growth, organization_headcount_twelve_month_growth, and organization_headcount_twenty_four_month_growth — mark true only if at least one shows meaningfully positive growth (e.g. double-digit percentage), and state the actual figure in the detail; if all are null/zero/absent, set it false and say "No notable growth data found". For uses_security_tech: check the matched_security_relevant_technologies array — if it contains any entries, mark true and name them in the detail; if it's empty, set false and say "No security/access-control tech found in stack" (do not evaluate total_technologies_count or any other tech field for this signal — it exists only for your own context on how large the full stack is).`;
 }
 
 function extractJson(text) {
