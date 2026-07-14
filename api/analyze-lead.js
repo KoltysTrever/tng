@@ -216,6 +216,11 @@ function curateOrgData(org) {
     organization_headcount_twenty_four_month_growth: org.organization_headcount_twenty_four_month_growth,
     matched_security_relevant_technologies: matchedSecurityTech,
     total_technologies_count: techList.length,
+    is_subsidiary: !!org.owned_by_organization_id,
+    num_suborganizations: org.num_suborganizations || 0,
+    suborganization_names: Array.isArray(org.suborganizations)
+      ? org.suborganizations.slice(0, 5).map((s) => s.name).filter(Boolean)
+      : [],
   };
 }
 
@@ -248,6 +253,10 @@ Based on this data, respond with ONLY a raw JSON object, no markdown fences, no 
   "headquarters": string or null (e.g. "Chicago, Illinois" or "London, UK" — city/state/country from the org data, whatever is available),
   "founded_year": number or null,
   "company_linkedin_url": string or null (copy exactly from the organization's own linkedin_url field in ORGANIZATION DATA if present; use null if missing — do not guess or construct a URL),
+  "is_subsidiary": boolean (copy directly from is_subsidiary in ORGANIZATION DATA),
+  "parent_company_hint": string or null (ONLY if company_description or short_description text explicitly names the parent/acquiring company, e.g. "AOL was recently acquired by Bending Spoons" — extract that name; otherwise null. Never guess a parent company name that isn't explicitly stated in the text),
+  "num_suborganizations": number (copy directly from num_suborganizations in ORGANIZATION DATA),
+  "suborganization_names": array of strings (copy directly from suborganization_names in ORGANIZATION DATA, do not invent names),
   "revenue_tier": "unknown" | "under_10m" | "10m_100m" | "100m_500m" | "500m_plus",
   "revenue_tier_reasoning": string (one short phrase citing the actual revenue or employee-count figure used, e.g. "$220M annual revenue" or "No revenue data; estimated from ~1,200 employees"),
   "vertical_healthcare": boolean,
