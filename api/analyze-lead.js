@@ -79,6 +79,7 @@ export default async function handler(req, res) {
             person_titles: [
               'chief security officer', 'ciso', 'vp security', 'vice president security',
               'director of security', 'head of security', 'chief risk officer',
+              'risk management director', 'director of risk management', 'risk director',
               'director of facilities', 'director of ehs', 'chief operating officer', 'coo',
               'vp human resources', 'vice president human resources', 'director of human resources',
               'chief people officer', 'chief human resources officer', 'chro',
@@ -86,7 +87,6 @@ export default async function handler(req, res) {
               'chief administrative officer', 'cao',
               'executive assistant', 'assistant to the ceo', 'assistant to the founder',
             ],
-            person_seniorities: ['c_suite', 'vp', 'director', 'head', 'senior', 'manager'],
             per_page: 10,
             page: 1,
           }),
