@@ -211,8 +211,8 @@ Based on this data, respond with ONLY a raw JSON object, no markdown fences, no 
   "headquarters": string or null (e.g. "Chicago, Illinois" or "London, UK" — city/state/country from the org data, whatever is available),
   "founded_year": number or null,
   "company_linkedin_url": string or null (copy exactly from the organization's own linkedin_url field in ORGANIZATION DATA if present; use null if missing — do not guess or construct a URL),
-  "likely_fortune1000": boolean,
-  "fortune1000_reasoning": string (one short phrase),
+  "revenue_tier": "unknown" | "under_10m" | "10m_100m" | "100m_500m" | "500m_plus",
+  "revenue_tier_reasoning": string (one short phrase citing the actual revenue or employee-count figure used, e.g. "$220M annual revenue" or "No revenue data; estimated from ~1,200 employees"),
   "vertical_healthcare": boolean,
   "vertical_education": boolean,
   "vertical_government": boolean,
@@ -235,7 +235,7 @@ Based on this data, respond with ONLY a raw JSON object, no markdown fences, no 
   "key_contact_reasoning": string (one short phrase)
 }
 
-For key_contact, prefer in order: CSO/CISO, VP/Director of Security, Chief Risk Officer, Director of Facilities/EHS, then senior ops/COO as a last resort. Pick exactly one person from the people search results, or null with an explanation if none are a reasonable fit. Mark likely_fortune1000 true only with reasonable confidence. Mark verticals true only when the company's own core industry is a clear match — a company can match more than one vertical, or none. Being a vendor, consultant, or staffing provider to a vertical does NOT count as matching that vertical.
+For key_contact, prefer in order: CSO/CISO, VP/Director of Security, Chief Risk Officer, Director of Facilities/EHS, then senior ops/COO as a last resort. Pick exactly one person from the people search results, or null with an explanation if none are a reasonable fit. For revenue_tier, base it primarily on annual_revenue_printed or organization_revenue_printed in ORGANIZATION DATA; if revenue data is missing, you may estimate from estimated_num_employees as a rough proxy but must say so plainly in revenue_tier_reasoning (e.g. "No revenue data; estimated from employee count") — never invent a specific dollar figure that isn't in the data. Use "unknown" if there's not enough information to make any reasonable estimate, and "under_10m" if the company is clearly smaller than $10M. Mark verticals true only when the company's own core industry is a clear match — a company can match more than one vertical, or none. Being a vendor, consultant, or staffing provider to a vertical does NOT count as matching that vertical.
 
 IMPORTANT — hiring_security_leadership must be based ONLY on the JOB POSTINGS data (i.e. they are currently, actively recruiting for a security leadership role right now). The fact that a CISO or security director already works there (found via PEOPLE SEARCH RESULTS) does NOT make this true — an existing security leader is not a hiring signal, it's the opposite. If JOB POSTINGS contains no open security-leadership role, set hiring_security_leadership to false and hiring_detail to "No matching postings", even if a security leader was found elsewhere in the data.
 
