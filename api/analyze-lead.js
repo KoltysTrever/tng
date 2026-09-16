@@ -246,7 +246,7 @@ ${people.length ? JSON.stringify(people.slice(0, 10).map((p) => ({
     title: p.title, seniority: p.seniority, linkedin_url: p.linkedin_url,
   })), null, 2).slice(0, 3000) : 'No people found.'}
 
-Based on this data, respond with ONLY a raw JSON object, no markdown fences, no commentary, in exactly this shape:
+Based on this data, respond with ONLY a raw JSON object, no markdown fences, no commentary, in exactly this shape. The output MUST be strictly valid JSON: every string value must be on a single line (replace any literal line break inside a string with a space instead), and any double-quote character that appears within a string's actual content (e.g. a nicknamed product or a quoted phrase from source text) must be properly backslash-escaped as \" — never leave a literal unescaped " inside a string value:
 {
   "company_name": string or null,
   "industry": string or null,
@@ -301,6 +301,33 @@ function extractJson(text) {
   const cleaned = text.replace(/```json/gi, '').replace(/```/g, '').trim();
   const start = cleaned.indexOf('{');
   const end = cleaned.lastIndexOf('}');
-  if (start === -1 || end === -1) throw new Error('No JSON object found in Claude response');
-  return JSON.parse(cleaned.slice(start, end + 1));
+  if (start === -1 || end === -1) {
+    console.error('extractJson: no braces found. Raw text:', text.slice(0, 2000));
+    throw new Error('No JSON object found in Claude response');
+  }
+  const candidate = cleaned.slice(start, end + 1);
+
+  try {
+    return JSON.parse(candidate);
+  } catch (firstErr) {
+    // Attempt a repair pass for the most common ways an LLM produces near-valid JSON:
+    // trailing commas before a closing bracket, "smart" quotes instead of straight ones,
+    // and stray literal control characters (unescaped newlines/tabs) inside string values.
+    let repaired = candidate
+      .replace(/,\s*([\]}])/g, '$1')
+      .replace(/[\u201C\u201D]/g, '"')
+      .replace(/[\u2018\u2019]/g, "'");
+
+    try {
+      return JSON.parse(repaired);
+    } catch (secondErr) {
+      // Still broken — log enough context to actually diagnose this in Vercel's logs,
+      // including exactly where the parser choked, rather than failing silently.
+      console.error('extractJson: JSON.parse failed after repair attempt.');
+      console.error('First error:', firstErr.message);
+      console.error('Second error:', secondErr.message);
+      console.error('Full raw response text:', text);
+      throw firstErr;
+    }
+  }
 }
