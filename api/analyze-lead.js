@@ -3,19 +3,10 @@
 // to make the judgment calls (verticals, Fortune 1000 guess, best contact).
 // Both API keys live only here, as environment variables — never in the browser.
 
-export default async function handler(req, res) {
-  // CORS: allow the frontend page to call this from any origin.
-  // Tighten this to your actual domain once you're past testing.
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+import { guard } from '../lib/guard.js';
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Use POST' });
-  }
+export default async function handler(req, res) {
+  if (!guard(req, res)) return;
 
   const { domain, email } = req.body || {};
   if (!domain) {
@@ -120,7 +111,8 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
-        max_tokens: 1000,
+        // ~40 fields plus up to 3 contacts with reasoning — 1000 was cutting answers off mid-JSON.
+        max_tokens: 3000,
         messages: [{ role: 'user', content: claudePrompt }],
       }),
     });
@@ -131,6 +123,9 @@ export default async function handler(req, res) {
     }
 
     const claudeData = await claudeResp.json();
+    if (claudeData.stop_reason === 'max_tokens') {
+      throw new Error('Claude response was cut off before finishing (hit max_tokens) — try again');
+    }
     const textBlock = (claudeData.content || []).find((b) => b.type === 'text');
     if (!textBlock) throw new Error('Claude returned no text content');
 
@@ -311,12 +306,14 @@ function extractJson(text) {
     return JSON.parse(candidate);
   } catch (firstErr) {
     // Attempt a repair pass for the most common ways an LLM produces near-valid JSON:
-    // trailing commas before a closing bracket, "smart" quotes instead of straight ones,
-    // and stray literal control characters (unescaped newlines/tabs) inside string values.
+    // trailing commas before a closing bracket, and stray literal control characters
+    // (unescaped newlines/tabs) inside string values. Turning every newline/tab into a
+    // space is safe everywhere: between tokens it's still whitespace, inside a string
+    // it's what the prompt asked for anyway. Curly quotes are deliberately left alone \u2014
+    // they're valid inside JSON strings, and straightening them broke otherwise-good output.
     let repaired = candidate
-      .replace(/,\s*([\]}])/g, '$1')
-      .replace(/[\u201C\u201D]/g, '"')
-      .replace(/[\u2018\u2019]/g, "'");
+      .replace(/[\r\n\t]+/g, ' ')
+      .replace(/,\s*([\]}])/g, '$1');
 
     try {
       return JSON.parse(repaired);

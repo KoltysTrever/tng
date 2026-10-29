@@ -16,6 +16,9 @@ when called:
 
 - `APOLLO_API_KEY` — your Apollo API key
 - `ANTHROPIC_API_KEY` — your Anthropic Console API key (starts with sk-ant-)
+- `TNG_ACCESS_CODE` — shared code the frontend sends in the `x-tng-access-code`
+  header; must match `ACCESS_CODE` in `tng_lead_scoring.html`. Requests without
+  it are rejected with 401, so set it in Vercel *before* deploying this version.
 
 ## Endpoint
 
@@ -23,7 +26,9 @@ Once deployed on Vercel, the live endpoint is:
 
 `https://YOUR-PROJECT-NAME.vercel.app/api/analyze-lead`
 
-Send a POST request with JSON body `{ "domain": "example.com", "email": "optional@example.com" }`.
+Send a POST request with JSON body `{ "domain": "example.com", "email": "optional@example.com" }`
+and the `x-tng-access-code` header. Both endpoints share `lib/guard.js`, which also
+applies a best-effort limit of 20 requests per minute per IP.
 
 ## Costs to expect
 
@@ -38,6 +43,8 @@ Send a POST request with JSON body `{ "domain": "example.com", "email": "optiona
 - Never commit real API keys into this repo. They belong only in Vercel's
   Environment Variables, which is what `api/analyze-lead.js` reads via
   `process.env`.
-- The CORS header is currently open (`*`) so the frontend can call it from
-  anywhere during testing. Restrict `Access-Control-Allow-Origin` in
-  `api/analyze-lead.js` to your exact frontend domain once testing is done.
+- The CORS header stays open (`*`) because the frontend is opened as a local
+  file, which has no website origin to restrict to. The access code is what
+  protects the endpoints (and your Apollo credits). Never commit the code
+  itself — if the HTML file leaks, change `TNG_ACCESS_CODE` in Vercel and
+  hand out an updated HTML file.

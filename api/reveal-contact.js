@@ -9,17 +9,10 @@
 // separately — a real infrastructure addition beyond this simple relay.
 // Name + email reveal is synchronous and returned directly below.
 
-export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+import { guard } from '../lib/guard.js';
 
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Use POST' });
-  }
+export default async function handler(req, res) {
+  if (!guard(req, res)) return;
 
   const { email, apollo_id, first_name, domain, title } = req.body || {};
 
