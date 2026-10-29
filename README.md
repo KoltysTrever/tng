@@ -19,6 +19,21 @@ when called:
 - `TNG_ACCESS_CODE` — shared code the frontend sends in the `x-tng-access-code`
   header; must match `ACCESS_CODE` in `tng_lead_scoring.html`. Requests without
   it are rejected with 401, so set it in Vercel *before* deploying this version.
+- `ZOHO_CLIENT_ID`, `ZOHO_CLIENT_SECRET`, `ZOHO_REFRESH_TOKEN` — a Zoho "Self
+  Client" with read-only scopes `ZohoCRM.coql.READ`,
+  `ZohoCRM.modules.accounts.READ`, `ZohoCRM.modules.contacts.READ`,
+  `ZohoCRM.modules.leads.READ`. Optional: if any are missing, `/api/check-crm`
+  answers `{ "configured": false }` and the page falls back to a manual check.
+- `ZOHO_ACCOUNTS_URL`, `ZOHO_CRM_URL` — only if your Zoho account is not in the
+  US data center (defaults `https://accounts.zoho.com` / `https://crm.zoho.com`).
+
+## Zoho CRM check
+
+`/api/check-crm` (same body and header as `analyze-lead`) looks the domain up in
+Zoho CRM: Accounts whose Website matches, plus Contacts and Leads with an email
+at that domain. It returns counts, a few linked records, and whether a typed
+contact email is already in the CRM. Read-only, no Apollo credits. The page calls
+it alongside Analyze and scores "Already in Zoho CRM" (+30) from the result.
 
 ## Endpoint
 
@@ -27,8 +42,9 @@ Once deployed on Vercel, the live endpoint is:
 `https://YOUR-PROJECT-NAME.vercel.app/api/analyze-lead`
 
 Send a POST request with JSON body `{ "domain": "example.com", "email": "optional@example.com" }`
-and the `x-tng-access-code` header. Both endpoints share `lib/guard.js`, which also
-applies a best-effort limit of 20 requests per minute per IP.
+and the `x-tng-access-code` header. All endpoints share `lib/guard.js`, which also
+applies a best-effort limit of 20 requests per minute per IP (each Analyze click
+uses two: `analyze-lead` and `check-crm`).
 
 ## Costs to expect
 
