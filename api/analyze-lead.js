@@ -4,6 +4,7 @@
 // Both API keys live only here, as environment variables — never in the browser.
 
 import { guard } from '../lib/guard.js';
+import { getSiteVisits } from '../lib/apollo-visits.js';
 
 export default async function handler(req, res) {
   if (!guard(req, res)) return;
@@ -35,6 +36,10 @@ export default async function handler(req, res) {
     } catch (e) {
       console.error('Apollo enrich failed:', e);
     }
+
+    // ---- 1b. tngdefense.com visits for this company (Apollo MCP; started now, awaited at the end) ----
+    // Never throws: resolves to { available: false } on any failure, so scoring always continues.
+    const siteVisitsPromise = getSiteVisits(APOLLO_API_KEY, org && org.id);
 
     // ---- 2. Apollo Job Postings (costs credits, needs org id from step 1) ----
     let jobPostings = [];
@@ -135,6 +140,9 @@ export default async function handler(req, res) {
     const licensedStateName = matchLicensedState(curatedOrg && curatedOrg.state, curatedOrg && curatedOrg.country);
     result.licensed_state_match = !!licensedStateName;
     result.licensed_state_name = licensedStateName;
+
+    // Deterministic data straight from Apollo — the page maps paths to its checklist.
+    result.site_visits = await siteVisitsPromise;
 
     return res.status(200).json(result);
   } catch (err) {

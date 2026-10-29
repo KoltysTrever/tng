@@ -27,6 +27,17 @@ when called:
 - `ZOHO_ACCOUNTS_URL`, `ZOHO_CRM_URL` — only if your Zoho account is not in the
   US data center (defaults `https://accounts.zoho.com` / `https://crm.zoho.com`).
 
+## Website visits (Apollo MCP)
+
+`analyze-lead` also returns `site_visits`: the company's visits to tngdefense.com
+over the last 90 days (total, unique visitors, last visit, top 5 pages), read
+from Apollo's Website Visitors data. Apollo's REST API doesn't expose this, but
+its MCP server (`https://mcp.apollo.io/mcp`) does, and it accepts the same
+`APOLLO_API_KEY` in the `X-Api-Key` header — **only if it's a master key**
+(scoped keys get 403). See `lib/apollo-visits.js`. If the lookup fails, Analyze
+still succeeds with `site_visits: { available: false }` and the page falls back
+to manual ticks.
+
 ## Zoho CRM check
 
 `/api/check-crm` (same body and header as `analyze-lead`) looks the domain up in
