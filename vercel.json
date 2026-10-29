@@ -1,0 +1,5 @@
+{
+  "functions": {
+    "api/analyze-lead.js": { "maxDuration": 120 }
+  }
+}

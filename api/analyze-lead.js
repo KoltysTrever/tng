@@ -5,6 +5,7 @@
 
 import { guard } from '../lib/guard.js';
 import { getSiteVisits } from '../lib/apollo-visits.js';
+import { researchCompany } from '../lib/web-research.js';
 
 export default async function handler(req, res) {
   if (!guard(req, res)) return;
@@ -103,8 +104,22 @@ export default async function handler(req, res) {
       }
     }
 
+    // ---- 3b. Not in Apollo? Research the company on the public web instead ----
+    // The profile is shaped like curated Apollo data, so the same scoring prompt and rules apply.
+    let curatedOrg = curateOrgData(org);
+    let research = null;
+    if (!org) {
+      research = await researchCompany(ANTHROPIC_API_KEY, cleanDomain, extractJson);
+      if (research.found) {
+        curatedOrg = profileToCuratedOrg(research.profile);
+        people = research.leaders.map((l) => ({
+          id: null, name: l.name, first_name: String(l.name).split(' ')[0], last_name: null,
+          title: l.title || null, seniority: null, linkedin_url: l.linkedin_url || null,
+        }));
+      }
+    }
+
     // ---- 4. Hand the raw data to Claude for judgment calls ----
-    const curatedOrg = curateOrgData(org);
     const claudePrompt = buildClaudePrompt({ domain: cleanDomain, email, org: curatedOrg, jobPostings, people });
 
     const claudeResp = await fetch('https://api.anthropic.com/v1/messages', {
@@ -143,6 +158,12 @@ export default async function handler(req, res) {
 
     // Deterministic data straight from Apollo — the page maps paths to its checklist.
     result.site_visits = await siteVisitsPromise;
+
+    // Tells the page whether the profile came from Apollo or the web-research fallback.
+    result.data_source = research && research.found ? 'web_research' : 'apollo';
+    if (research) {
+      result.research = { found: research.found, reason: research.reason || null, sources: research.sources || [] };
+    }
 
     return res.status(200).json(result);
   } catch (err) {
@@ -230,14 +251,54 @@ function curateOrgData(org) {
   };
 }
 
+// Maps a web-research profile (lib/web-research.js) onto the curated Apollo shape the
+// scoring prompt expects. Fields web research can't supply stay empty, so their signals
+// (security tech, headcount growth, SIC/NAICS) simply come out false.
+function profileToCuratedOrg(p) {
+  const parentNote = p.parent_company ? ` It is part of ${p.parent_company}.` : '';
+  return {
+    data_source: 'public web research (Apollo had no record) — less reliable than Apollo data',
+    name: p.name,
+    website_url: p.website_url,
+    linkedin_url: p.linkedin_url,
+    founded_year: p.founded_year,
+    industry: p.industry,
+    industries: [],
+    secondary_industries: [],
+    keywords: [],
+    estimated_num_employees: p.estimated_num_employees,
+    organization_revenue_printed: null,
+    annual_revenue_printed: p.annual_revenue_printed,
+    city: p.city,
+    state: p.state,
+    country: p.country,
+    short_description: p.short_description ? p.short_description + parentNote : parentNote.trim() || null,
+    total_funding_printed: p.total_funding_printed,
+    latest_funding_round_date: p.latest_funding_round_date,
+    latest_funding_stage: p.latest_funding_stage,
+    funding_events: [],
+    organization_headcount_six_month_growth: null,
+    organization_headcount_twelve_month_growth: null,
+    organization_headcount_twenty_four_month_growth: null,
+    matched_security_relevant_technologies: [],
+    total_technologies_count: 0,
+    is_subsidiary: !!p.is_subsidiary,
+    num_suborganizations: 0,
+    retail_location_count: p.retail_location_count || 0,
+    sic_codes: [],
+    naics_codes: [],
+    suborganization_names: [],
+  };
+}
+
 function buildClaudePrompt({ domain, email, org, jobPostings, people }) {
   return `You are scoring a lead for TNG (The North Group), a physical/executive security and intelligence firm. Its target verticals are: Healthcare (hospital systems, health networks, health insurers), Education (K-12 districts, universities), Government (public sector, municipal/federal agencies), Entertainment & Events (venues, sports teams, promoters, festivals), High-Net-Worth/Private (family offices, private wealth, estates), IT/Network Security (managed security providers, MSPs, data centers, cybersecurity firms, cloud infrastructure companies), Telecommunications (telecom carriers, connectivity/network providers, ISPs), Financial Services (banks, credit unions, investment firms, insurance companies — a strong fit for TNG's Secure Asset Transport / armed escort services), Manufacturing/Industrial (factories, industrial contractors, industrial engineering firms), Retail/Hospitality (hotels, casinos, large retail chains — a strong fit for Security Guard Services, especially multi-location operators), Energy/Utilities/Critical Infrastructure (oil & gas, electric/water utilities, renewables), Real Estate/Property Management (commercial real estate, property management firms with multiple managed sites), and general Corporate (any large enterprise needing executive protection, embedded security, or insider threat programs).
 
 CRITICAL: A vertical match means the company's own core business or industry classification IS that vertical — it does NOT mean the company merely sells products/services INTO that vertical as a client segment. For example: an IT services vendor, staffing agency, or consultancy that has a "VP of Healthcare & Government Accounts" or job postings mentioning "supporting healthcare clients" is a Corporate/IT-services company, NOT a Healthcare or Government company itself — its own industry classification is what matters, not who it sells to. Only mark a vertical true if the organization's actual industry/business (per the industry field, SIC/NAICS codes, and company description) IS that vertical — e.g. a hospital system's own industry is Healthcare; a company that sells software to hospitals is not.
 
-Here is data already retrieved from Apollo for the domain "${domain}"${email ? ` (contact email: ${email})` : ''}. Use ONLY this data — do not invent facts not present here.
+Here is data already retrieved ${org && org.data_source ? 'from public web research (Apollo had no record of this company)' : 'from Apollo'} for the domain "${domain}"${email ? ` (contact email: ${email})` : ''}. Use ONLY this data — do not invent facts not present here.
 
-ORGANIZATION DATA (curated — funding, growth, and matched security-tech fields are pulled directly from Apollo, not truncated):
+ORGANIZATION DATA (${org && org.data_source ? 'from public web research — fields a source didn\'t state are null or empty' : 'curated — funding, growth, and matched security-tech fields are pulled directly from Apollo, not truncated'}):
 ${org ? JSON.stringify(org, null, 2) : 'No organization match found.'}
 
 JOB POSTINGS (up to first 30):

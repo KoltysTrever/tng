@@ -27,6 +27,18 @@ when called:
 - `ZOHO_ACCOUNTS_URL`, `ZOHO_CRM_URL` — only if your Zoho account is not in the
   US data center (defaults `https://accounts.zoho.com` / `https://crm.zoho.com`).
 
+## Companies Apollo doesn't know (web research fallback)
+
+When Apollo's organization enrichment finds no match, `analyze-lead` asks Claude
+(Opus 5.5 with the server-side web search tool, low effort, at most 5 searches)
+to build a factual profile from public sources — see `lib/web-research.js`. The
+profile is mapped onto the same curated shape as Apollo data, so the normal
+scoring prompt and rules run on it. The response carries
+`data_source: "web_research"` plus `research.sources`, and the page shows a
+"Not in Apollo" notice with those links. Costs roughly the web search fee plus
+one Opus call, only on lookups Apollo can't match. `vercel.json` raises
+`analyze-lead`'s time limit to 120s to leave room for the research.
+
 ## Website visits (Apollo MCP)
 
 `analyze-lead` also returns `site_visits`: the company's visits to tngdefense.com
