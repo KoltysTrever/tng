@@ -2,5 +2,14 @@
   "functions": {
     "api/analyze-lead.js": { "maxDuration": 120 },
     "api/parse-brief.js": { "maxDuration": 300 }
-  }
+  },
+  "headers": [
+    {
+      "source": "/tool/(.*)",
+      "headers": [{ "key": "Cache-Control", "value": "no-cache, must-revalidate" }]
+    }
+  ],
+  "redirects": [
+    { "source": "/lib/:path*", "destination": "/", "permanent": false }
+  ]
 }

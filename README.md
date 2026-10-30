@@ -58,6 +58,17 @@ at that domain. It returns counts, a few linked records, and whether a typed
 contact email is already in the CRM. Read-only, no Apollo credits. The page calls
 it alongside Analyze and scores "Already in Zoho CRM" (+30) from the result.
 
+## The page (tool/app.js) and the SharePoint launcher
+
+The tool's page lives in this repo as `tool/app.js` (styles, markup and logic in one
+file) and Vercel serves it at `/tool/app.js` with `Cache-Control: no-cache`, so every
+push reaches users the next time they open the tool. What people open from SharePoint,
+`tng_lead_scoring.html`, is a small launcher kept **out of this repo**: it sets
+`window.TNG_CONFIG = { accessCode: "..." }` and loads `/tool/app.js`. `app.js` is
+public, so it must never contain the access code or any other secret. `vercel.json`
+also redirects `/lib/*` so the backend's shared source files aren't served as static
+files.
+
 ## Hunter Brief (batch vetting)
 
 The page's **Hunter Brief** tab takes one of Steve's daily Client Hunter Brief
