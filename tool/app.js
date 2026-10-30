@@ -227,6 +227,26 @@
   .tng-visit-summary .muted { color: var(--tng-text-tertiary); }
   .tng-crm-records .muted { color: var(--tng-text-tertiary); }
 
+  /* Recent security incidents from the news: one line per incident, newest first. */
+  .tng-incidents {
+    font-size: 14px;
+    color: var(--tng-text-secondary);
+    line-height: 1.6;
+    margin-top: 10px;
+    padding: 12px 16px;
+    background: var(--tng-surface-2);
+    border-radius: var(--tng-radius-sm);
+  }
+  .tng-incidents:empty { display: none; }
+  .tng-incident + .tng-incident { margin-top: 8px; }
+  .tng-incident-head { color: var(--tng-text); font-weight: 600; }
+  .tng-incident-head .tng-incident-type { color: #FFC977; font-weight: 600; }
+  .tng-incident.older .tng-incident-head { color: var(--tng-text-secondary); }
+  .tng-incident.older .tng-incident-type { color: var(--tng-text-secondary); }
+  .tng-incident a { color: var(--tng-intel-text); }
+  .tng-incidents .muted, .tng-incident-note { color: var(--tng-text-tertiary); }
+  .tng-incident-note { margin-top: 10px; font-size: 13px; }
+
   .tng-company-linkedin, .tng-contact-link { display: inline-block; margin-top: 16px; font-size: 14px; font-weight: 600; }
 
   /* Contact card */
@@ -326,7 +346,7 @@
   .tng-event-group .tng-hint { margin: 0 4px 10px; }
 
   /* Each signal container renders as one rounded card with hairline-separated rows. */
-  #tng-vertical-signals, #tng-event-signals, #tng-crm-signals, #tng-site-signals, #tng-page-signals {
+  #tng-vertical-signals, #tng-event-signals, #tng-crm-signals, #tng-news-signals, #tng-site-signals, #tng-page-signals {
     background: var(--tng-surface);
     border: 1px solid var(--tng-hairline);
     border-radius: var(--tng-radius-lg);
@@ -798,7 +818,7 @@
   <div class="tng-header">
     <div class="tng-header-title-block">
       <h1>TNG Opportunity Score</h1>
-      <div class="tng-version-line">TNG OP TOOL V.3.0 · Created by Trever Koltys</div>
+      <div class="tng-version-line">TNG OP TOOL V.3.1 · Created by Trever Koltys</div>
     </div>
     <span class="tng-header-note">This tool is to be used in conjunction with <a href="https://app.apollo.io/" target="_blank" rel="noopener">app.apollo.io</a></span>
   </div>
@@ -818,7 +838,7 @@
     <button class="tng-analyze-btn" id="tng-analyze-btn" onclick="tngAnalyze()">Analyze</button>
     <button class="tng-reset-btn" id="tng-reset-btn" onclick="tngReset()">Reset</button>
   </div>
-  <div class="tng-hint">Pulls Apollo firmographics and tngdefense.com visits, and checks Zoho CRM, automatically. Tick any extra pages you know they viewed.</div>
+  <div class="tng-hint">Pulls Apollo firmographics and tngdefense.com visits, checks Zoho CRM, and searches the news for security incidents, automatically. Tick any extra pages you know they viewed.</div>
 
   <div class="tng-status" id="tng-status"><span class="tng-radar"></span><span id="tng-status-text">Querying Apollo...</span></div>
   <div class="tng-error" id="tng-error"></div>
@@ -857,6 +877,12 @@
     <div class="tng-section-label">CRM Check <span class="tng-source-tag auto"><b>Automatic</b> · via Zoho CRM</span></div>
     <div id="tng-crm-signals"></div>
     <div class="tng-crm-records" id="tng-crm-records"></div>
+  </div>
+
+  <div class="tng-section">
+    <div class="tng-section-label">Security Incidents <span class="tng-source-tag auto"><b>Automatic</b> · via news search</span></div>
+    <div id="tng-news-signals"></div>
+    <div class="tng-incidents" id="tng-incidents"></div>
   </div>
 
   <div class="tng-section">
@@ -904,7 +930,7 @@
   </div><!-- /.tng-layout -->
 
   <div class="tng-footnote">
-    Firmographic (auto): Revenue Under $10M (+5), $10-100M (+10), $100-500M (+20), or $500M+ (+30) · Healthcare (+25) · Education (+20) · Government (+20) · Entertainment/Events (+15) · High-Net-Worth (+20) · IT/Network Security (+15) · Telecom (+15) · Financial Services (+20) · Manufacturing/Industrial (+20) · Retail/Hospitality (+20) · Energy/Utilities (+20) · Real Estate (+20) · Hiring security leadership (+15) · Recently funded (+15) · Rapid headcount growth (+15) · Uses physical security tech (+10) · Multi-site physical footprint (+20). CRM (auto): Already in Zoho CRM as an account, contact, or lead (+30). Site behavior: Visited a high-intent page — Request Security Services or Contact Us (+30) · Showed interest in TNG services — any service or Licensing page (+20). Pages visited: service and contact pages set those two signals; Home Page (+10), About TNG (+10) and Blog/Insights (+5) score on their own (so site behavior adds at most +75). All pages show which services to pitch. Page visits come from Apollo's Website Visitors data (top 5 pages per company, last 90 days) and are ticked automatically; tick any others yourself.
+    Firmographic (auto): Revenue Under $10M (+5), $10-100M (+10), $100-500M (+20), or $500M+ (+30) · Healthcare (+25) · Education (+20) · Government (+20) · Entertainment/Events (+15) · High-Net-Worth (+20) · IT/Network Security (+15) · Telecom (+15) · Financial Services (+20) · Manufacturing/Industrial (+20) · Retail/Hospitality (+20) · Energy/Utilities (+20) · Real Estate (+20) · Hiring security leadership (+15) · Recently funded (+15) · Rapid headcount growth (+15) · Uses physical security tech (+10) · Multi-site physical footprint (+20). CRM (auto): Already in Zoho CRM as an account, contact, or lead (+30). Security incidents (auto): a news search finds a reported assault, weapon, lockdown or threat at their sites in the last 12 months (+20); incidents 12-24 months old are listed for context with no points, and finding nothing never costs points. Site behavior: Visited a high-intent page — Request Security Services or Contact Us (+30) · Showed interest in TNG services — any service or Licensing page (+20). Pages visited: service and contact pages set those two signals; Home Page (+10), About TNG (+10) and Blog/Insights (+5) score on their own (so site behavior adds at most +75). All pages show which services to pitch. Page visits come from Apollo's Website Visitors data (top 5 pages per company, last 90 days) and are ticked automatically; tick any others yourself.
   </div>
   </div><!-- /#tng-mode-single -->
 
@@ -924,7 +950,7 @@
     <div id="tng-brief-results"></div>
 
     <div class="tng-footnote">
-      Priority starts from Steve's score in the brief and moves with what the lookups find: already in Zoho CRM (+1) · visited the Contact or Request Services page (+1.5), otherwise viewed service pages (+1), otherwise any site visit (+0.5) · strong firmographic fit, 50+ firmographic points (+0.5) · Apollo found a security, safety or facilities contact (+0.5) · work is outside TNG's licensed states (−0.5) · deadline already passed (−2). The TNG score is the same Opportunity Score as the Single Lead view, from its automatic signals only. Each vetted lead uses 2 Apollo credits, the same as one Analyze; reading the brief uses none.
+      Priority starts from Steve's score in the brief and moves with what the lookups find: already in Zoho CRM (+1) · a security incident at their sites in the news in the last 12 months (+1) · visited the Contact or Request Services page (+1.5), otherwise viewed service pages (+1), otherwise any site visit (+0.5) · strong firmographic fit, 50+ firmographic points (+0.5) · Apollo found a security, safety or facilities contact (+0.5) · work is outside TNG's licensed states (−0.5) · deadline already passed (−2). The TNG score is the same Opportunity Score as the Single Lead view, from its automatic signals only. Each vetted lead uses 2 Apollo credits, the same as one Analyze; reading the brief uses none.
     </div>
   </div>
 </div>
@@ -949,6 +975,7 @@
   const BACKEND_URL = "https://tng-lead.vercel.app/api/analyze-lead";
   const REVEAL_URL = "https://tng-lead.vercel.app/api/reveal-contact";
   const CRM_URL = "https://tng-lead.vercel.app/api/check-crm";
+  const INCIDENT_URL = "https://tng-lead.vercel.app/api/incident-scan";
   // The access code lives only in the SharePoint launcher (window.TNG_CONFIG), never in
   // this file: it must match TNG_ACCESS_CODE in Vercel. If it leaks, change both and
   // hand out a new launcher.
@@ -980,6 +1007,7 @@
     { id: 'multi_site', label: 'Multi-site physical footprint (retail/branch locations)', pts: 20, group: 'auto', subgroup: 'event' },
     // CRM — auto via Zoho (its own check, separate from Apollo)
     { id: 'crm', label: 'Already in Zoho CRM (account, contact, or lead)', pts: 30, group: 'crm' },
+    { id: 'recent_incident', label: 'Recent security incident at their sites (last 12 months, in the news)', pts: 20, group: 'news' },
     // Site behavior — two capped signals, ticked automatically from the pages checklist below.
     // Scoring every page separately let a visitor who skimmed the site out-score real fit.
     { id: 'site_high_intent', label: 'Visited a high-intent page (Request Security Services or Contact Us)', pts: 30, group: 'site', derivedFrom: 'high_intent' },
@@ -1024,11 +1052,13 @@
     const verticalEl = document.getElementById('tng-vertical-signals');
     const eventEl = document.getElementById('tng-event-signals');
     const crmEl = document.getElementById('tng-crm-signals');
+    const newsEl = document.getElementById('tng-news-signals');
     const pagesEl = document.getElementById('tng-page-signals');
     const siteEl = document.getElementById('tng-site-signals');
     verticalEl.innerHTML = '';
     eventEl.innerHTML = '';
     crmEl.innerHTML = '';
+    newsEl.innerHTML = '';
     pagesEl.innerHTML = '';
     siteEl.innerHTML = '';
     let revealIndex = 0;
@@ -1057,6 +1087,8 @@
         targetEl = s.subgroup === 'event' ? eventEl : verticalEl;
       } else if (s.group === 'crm') {
         targetEl = crmEl;
+      } else if (s.group === 'news') {
+        targetEl = newsEl;
       } else if (s.group === 'pages') {
         targetEl = pagesEl;
       } else if (s.group === 'site') {
@@ -1168,6 +1200,7 @@
     { label: 'Firmographic', match: s => s.group === 'auto' && s.subgroup !== 'event' },
     { label: 'Company activity', match: s => s.group === 'auto' && s.subgroup === 'event' },
     { label: 'Zoho CRM', match: s => s.group === 'crm' },
+    { label: 'Security incidents', match: s => s.group === 'news' },
     { label: 'Site behavior', match: s => s.group === 'site' || s.group === 'pages' },
   ];
 
@@ -1269,6 +1302,81 @@
     const end = cleaned.lastIndexOf('}');
     if (start === -1 || end === -1) throw new Error('No JSON object found in response');
     return JSON.parse(cleaned.slice(start, end + 1));
+  }
+
+  // Recent security incidents — its own request too (a news search takes 20-40s), run
+  // alongside Analyze. Finding nothing never costs points. No Apollo credits.
+  const INCIDENT_TYPE_LABELS = {
+    staff_assault: 'Staff assault', weapon: 'Weapon / shooting', lockdown: 'Lockdown',
+    threat: 'Threat', executive_threat: 'Threat to executives', other: 'Incident',
+  };
+  let incidentRequestId = 0;
+  let lastIncidents = null;
+
+  function fmtIncidentDate(date) {
+    const [y, m, d] = String(date).split('-').map(Number);
+    if (!y || !m) return String(date);
+    return new Date(Date.UTC(y, m - 1, d || 1)).toLocaleDateString('en-US',
+      d ? { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' } : { month: 'short', year: 'numeric', timeZone: 'UTC' });
+  }
+
+  // One line per incident: date · site · type, then the summary and its source link.
+  function incidentsListHtml(incidents) {
+    return incidents.map(i => `<div class="tng-incident${i.recent ? '' : ' older'}">
+      <div class="tng-incident-head">${escapeHtml([fmtIncidentDate(i.date), i.site].filter(Boolean).join(' · '))} · <span class="tng-incident-type">${escapeHtml(INCIDENT_TYPE_LABELS[i.type] || 'Incident')}</span>${i.recent ? '' : ' <span class="muted">(over 12 months ago, no points)</span>'}</div>
+      <div>${escapeHtml(i.summary)}${isWebLink(i.source_url) ? ` <a href="${escapeHtml(i.source_url)}" target="_blank" rel="noopener">${escapeHtml(i.source_name || 'Source')}</a>` : ''}</div>
+    </div>`).join('');
+  }
+
+  // Plain-text lines for the copy summary.
+  function incidentsText(incidents, indent) {
+    return incidents.map(i => `${indent}${fmtIncidentDate(i.date)}${i.site ? ' · ' + i.site : ''} · ${INCIDENT_TYPE_LABELS[i.type] || 'Incident'}: ${i.summary} ${i.source_url}\n`).join('');
+  }
+
+  function incidentsCsv(data) {
+    if (!data) return '';
+    if (!data.available) return 'Check unavailable';
+    return data.incidents.map(i => `${i.date}${i.site ? ' ' + i.site : ''}: ${i.summary} (${i.source_url})`).join(' | ') || 'None found';
+  }
+
+  function setIncidentResult(checked, detail, html) {
+    state.recent_incident.checked = checked;
+    state.recent_incident.detail = detail;
+    const chk = document.getElementById('chk-recent_incident');
+    if (chk) chk.checked = checked;
+    const detailEl = document.getElementById('detail-recent_incident');
+    if (detailEl) detailEl.textContent = detail;
+    document.getElementById('tng-incidents').innerHTML = html || '';
+    recompute();
+  }
+
+  async function runIncidentScan(domain) {
+    const requestId = ++incidentRequestId;
+    lastIncidents = null;
+    setIncidentResult(false, 'Checking the news...', '<span class="tng-radar"></span> Searching the news for incidents at their sites (20-40s)...');
+    try {
+      const data = await postJson(INCIDENT_URL, { domain }, 240000);
+      if (requestId !== incidentRequestId) return; // a newer lookup (or Reset) superseded this one
+      lastIncidents = data;
+      if (!data.available) {
+        setIncidentResult(false, 'News check unavailable (' + (data.reason || 'unknown error') + '). Tick this if you know of a recent incident.', '');
+        return;
+      }
+      if (!data.incidents.length) {
+        setIncidentResult(false, 'No reported incidents at their sites in the last 24 months', '');
+        return;
+      }
+      const recent = data.recent_count;
+      const detail = recent
+        ? `${recent} reported in the last 12 months`
+        : `${data.incidents.length} reported 12-24 months ago (context only)`;
+      setIncidentResult(recent > 0, detail, incidentsListHtml(data.incidents)
+        + '<div class="tng-incident-note">Use for background, not as an opener.</div>');
+    } catch (err) {
+      console.error(err);
+      if (requestId !== incidentRequestId) return;
+      setIncidentResult(false, 'News check failed (' + err.message + '). Tick this if you know of a recent incident.', '');
+    }
   }
 
   // Zoho CRM check — its own request, run alongside Analyze so a slow or failing
@@ -1454,6 +1562,7 @@
     }
     setError('');
     runCrmCheck(domain, email); // not awaited — fills in the CRM Check section on its own
+    runIncidentScan(domain); // not awaited either — fills in Security Incidents when the search finishes
     const btn = document.getElementById('tng-analyze-btn');
     btn.disabled = true;
     let seconds = 0;
@@ -1724,8 +1833,11 @@
     document.getElementById('tng-corp-structure').classList.remove('active');
     document.getElementById('tng-crm-records').innerHTML = '';
     document.getElementById('tng-visit-summary').innerHTML = '';
+    document.getElementById('tng-incidents').innerHTML = '';
     lastSiteVisits = null;
+    lastIncidents = null;
     crmRequestId++; // ignore any CRM check still in flight
+    incidentRequestId++; // and any news search
     prevTotal = 0;
     prevTier = 'ice_cold';
     lastCompanyInfo = null;
@@ -1778,6 +1890,11 @@
     text += `SCORE: ${total} (${tier})\n`;
     if (state.crm.detail) text += `Zoho CRM: ${state.crm.detail}\n`;
     if (lastSiteVisits && lastSiteVisits.available) text += `Site visits (Apollo, 90 days): ${lastSiteVisits.total_visits} visits, ${lastSiteVisits.unique_visitors} unique visitors\n`;
+    if (lastIncidents && lastIncidents.available) {
+      text += lastIncidents.incidents.length
+        ? `Security incidents in the news (last 24 months, background only):\n${incidentsText(lastIncidents.incidents, '  • ')}`
+        : `Security incidents in the news: none reported in the last 24 months\n`;
+    }
     text += `\n`;
     text += `Signals matched:\n`;
     if (checkedSignals.length) {
@@ -1829,7 +1946,7 @@
 
     const headers = [
       'Timestamp', 'Company', 'Domain', 'Industry', 'Employees', 'Estimated Revenue',
-      'Headquarters', 'Founded', 'Score', 'Tier', 'Zoho CRM', 'Signals Matched', 'Pages Visited',
+      'Headquarters', 'Founded', 'Score', 'Tier', 'Zoho CRM', 'Signals Matched', 'Pages Visited', 'Security Incidents',
       'Contact 1 Name', 'Contact 1 Title', 'Contact 1 LinkedIn', 'Contact 1 Revealed Name', 'Contact 1 Revealed Email',
       'Contact 2 Name', 'Contact 2 Title', 'Contact 2 LinkedIn', 'Contact 2 Revealed Name', 'Contact 2 Revealed Email',
       'Contact 3 Name', 'Contact 3 Title', 'Contact 3 LinkedIn', 'Contact 3 Revealed Name', 'Contact 3 Revealed Email',
@@ -1863,6 +1980,7 @@
       state.crm.detail || '',
       checkedSignals.map(s => s.label).join('; '),
       pagesVisited.join('; '),
+      incidentsCsv(lastIncidents),
       ...contactColumns,
     ];
 
@@ -2213,23 +2331,28 @@
   }
 
   async function vetLead(lead) {
-    const [analysis, crm] = await Promise.allSettled([
+    const [analysis, crm, news] = await Promise.allSettled([
       postJson(BACKEND_URL, { domain: lead.domain }, 150000),
       postJson(CRM_URL, { domain: lead.domain }, 60000),
+      postJson(INCIDENT_URL, { domain: lead.domain, company_name: lead.organization }, 240000),
     ]);
     if (analysis.status === 'rejected') return { ok: false, error: analysis.reason.message };
     const result = analysis.value;
     const crmData = crm.status === 'fulfilled' ? crm.value : { error: crm.reason.message };
+    const incidents = news.status === 'fulfilled' ? news.value : { available: false, reason: news.reason.message };
     const auto = autoSignalsFromResult(result);
     const visits = pagesFromVisits(result.site_visits);
     const crmFound = !!(crmData.configured && crmData.found);
+    const recentIncident = !!(incidents.available && incidents.recent_count);
     const autoIds = Object.keys(auto).filter(id => auto[id].checked);
-    const scored = scoreSignals(autoIds.concat(Object.keys(visits.pages), crmFound ? ['crm'] : []));
+    const scored = scoreSignals(autoIds.concat(Object.keys(visits.pages), crmFound ? ['crm'] : [], recentIncident ? ['recent_incident'] : []));
     return {
       ok: true,
       result,
       crm: crmData,
       crmFound,
+      incidents,
+      recentIncident,
       visits,
       total: scored.total,
       signalIds: scored.ids,
@@ -2246,6 +2369,7 @@
     const v = lead.vetted && lead.vetted.ok ? lead.vetted : null;
     if (v) {
       if (v.crmFound) add(1, 'in Zoho CRM');
+      if (v.recentIncident) add(1, 'recent security incident');
       const pageTypes = new Set(Object.keys(v.visits.pages).map(id => SIGNALS.find(s => s.id === id).pageType));
       const sv = v.result.site_visits;
       if (pageTypes.has('high_intent')) add(1.5, 'visited Contact / Request page');
@@ -2312,6 +2436,10 @@
       if (!sv || !sv.available) chips.push('<span class="tng-chip">Site visits unavailable</span>');
       else if (sv.total_visits) chips.push(`<span class="tng-chip info">${sv.total_visits} site visit${sv.total_visits === 1 ? '' : 's'}</span>`);
       else chips.push('<span class="tng-chip">No site visits</span>');
+      const inc = v.incidents;
+      if (inc && inc.available && inc.recent_count) {
+        chips.push(`<span class="tng-chip warn">⚠ ${inc.recent_count} recent incident${inc.recent_count === 1 ? '' : 's'}</span>`);
+      }
       if (v.result.data_source === 'web_research') chips.push('<span class="tng-chip warn">Not in Apollo · web profile</span>');
     } else if (lead.vetted) {
       chips.push('<span class="tng-chip bad">Vetting failed</span>');
@@ -2404,6 +2532,15 @@
       const matched = SIGNALS.filter(s => v.signalIds.includes(s.id) && s.pts > 0).map(s => `${s.label} (+${s.pts})`);
       row('TNG signals', escapeHtml(matched.join(' · ')));
       if (v.crmFound) row('Zoho CRM', crmRecordsHtml(v.crm));
+      const inc = v.incidents;
+      if (inc && inc.available && inc.incidents.length) {
+        row('Incidents', '<div class="tng-incidents">' + incidentsListHtml(inc.incidents)
+          + '<div class="tng-incident-note">In the news; use for background, not as an opener.</div></div>');
+      } else if (inc && inc.available) {
+        row('Incidents', '<span class="muted">None reported in the last 24 months</span>');
+      } else if (inc) {
+        row('Incidents', '<span class="muted">News check unavailable</span>');
+      }
       const sv = r.site_visits;
       if (sv && sv.available && sv.total_visits) {
         const pageLabels = Object.keys(v.visits.pages).map(id => SIGNALS.find(s => s.id === id).label);
@@ -2468,11 +2605,15 @@
         facts.push(v.crmFound ? 'In Zoho CRM' : 'Not in Zoho');
         const sv = v.result.site_visits;
         if (sv && sv.available) facts.push(`${sv.total_visits || 0} site visits`);
+        if (v.recentIncident) facts.push(`${v.incidents.recent_count} recent security incident${v.incidents.recent_count === 1 ? '' : 's'}`);
       } else {
         facts.push('Not vetted');
       }
       if (lead.deadline) facts.push('Deadline: ' + lead.deadline);
       text += `   ${facts.join(' · ')}\n`;
+      if (v && v.incidents && v.incidents.available && v.incidents.incidents.length) {
+        text += `   Incidents (news, background only):\n${incidentsText(v.incidents.incidents, '     - ')}`;
+      }
       if (lead.first_move) text += `   First move: ${lead.first_move}\n`;
       (lead.buyers || []).filter(b => b.name || b.email).forEach(b => {
         text += `   Contact (brief): ${[b.name, b.title, b.email, b.phone].filter(Boolean).join(', ')}\n`;
@@ -2489,7 +2630,7 @@
       'Rank', 'Priority', 'Priority Reasons', 'Organization', 'Website', 'Section', 'Steve Score', 'Score Breakdown',
       'TNG Score', 'TNG Tier', 'Lane', 'Division', 'RMR', 'Opportunity', 'Signal', 'First Move', 'Why TNG',
       'Deadline', 'Deadline Date', 'Value', 'Location', 'Licensed', 'Watch Out', 'Zoho CRM', 'Site Visits',
-      'Pages Visited', 'Brief Contacts', 'Apollo Contact 1', 'Apollo Contact 2', 'Apollo Contact 3',
+      'Pages Visited', 'Security Incidents', 'Brief Contacts', 'Apollo Contact 1', 'Apollo Contact 2', 'Apollo Contact 3',
       'Industry', 'Employees', 'Revenue', 'Headquarters', 'Vetting', 'Sources',
     ];
     const rows = main.concat(rest).map(({ lead, pr }, i) => {
@@ -2506,6 +2647,7 @@
         v ? (v.crmFound ? 'Yes' : v.crm.error ? 'Check failed' : 'No') : '',
         sv && sv.available ? sv.total_visits || 0 : '',
         v ? Object.keys(v.visits.pages).map(id => SIGNALS.find(s => s.id === id).label).join('; ') : '',
+        v ? incidentsCsv(v.incidents) : '',
         (lead.buyers || []).filter(b => b.name || b.email).map(b => [b.name, b.title, b.email, b.phone].filter(Boolean).join(', ')).join(' | '),
         contacts[0] ? contactLine(contacts[0]) : '', contacts[1] ? contactLine(contacts[1]) : '', contacts[2] ? contactLine(contacts[2]) : '',
         r.industry || '', r.employee_count || '', r.estimated_revenue || '', r.headquarters || '',
@@ -2570,7 +2712,9 @@
       const sv = l.vetted.result.site_visits;
       return sv && sv.available && sv.total_visits;
     }).length;
-    return `${main.length} leads ranked · ${vetted.length} vetted · ${inCrm} in Zoho CRM · ${visited} visited tngdefense.com`;
+    const withIncidents = vetted.filter(l => l.vetted.recentIncident).length;
+    return `${main.length} leads ranked · ${vetted.length} vetted · ${inCrm} in Zoho CRM · ${visited} visited tngdefense.com`
+      + (withIncidents ? ` · ${withIncidents} with recent security incidents` : '');
   }
 
   // "Daily Brief, Thursday, Oct 29, 2026 · Thu, Oct 29, 2026" says the date twice; show it once.

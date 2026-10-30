@@ -58,6 +58,20 @@ at that domain. It returns counts, a few linked records, and whether a typed
 contact email is already in the CRM. Read-only, no Apollo credits. The page calls
 it alongside Analyze and scores "Already in Zoho CRM" (+30) from the result.
 
+## Security incidents (news search)
+
+`/api/incident-scan` (body `{ "domain": "...", "company_name": "optional" }`, same
+header) asks Claude (Opus 5.5 with the server-side web search tool, low effort, at
+most 4 searches) for physical security incidents reported in the news in the last 24
+months at the company's own sites or against its executives: assaults on staff,
+weapons, lockdowns, threats. See `lib/incident-scan.js`. Only incidents with a real
+source link and a readable date are kept; those in the last 12 months tick "Recent
+security incident" (+20) on the page and add +1 to a Hunter Brief lead's priority.
+Finding nothing never costs points. It never fails the request: errors come back as
+`{ "available": false, "reason": "..." }`. No Apollo credits; roughly the web search
+fee plus one Opus call per lookup. The page calls it alongside Analyze and fills in
+the Security Incidents section when it finishes (20-40s).
+
 ## The page (tool/app.js) and the SharePoint launcher
 
 The tool's page lives in this repo as `tool/app.js` (styles, markup and logic in one
@@ -93,8 +107,8 @@ Once deployed on Vercel, the live endpoint is:
 
 Send a POST request with JSON body `{ "domain": "example.com", "email": "optional@example.com" }`
 and the `x-tng-access-code` header. All endpoints share `lib/guard.js`, which also
-applies a best-effort limit of 20 requests per minute per IP (each Analyze click
-uses two: `analyze-lead` and `check-crm`).
+applies a best-effort limit of 30 requests per minute per IP (each Analyze click
+uses three: `analyze-lead`, `check-crm` and `incident-scan`).
 
 ## Costs to expect
 

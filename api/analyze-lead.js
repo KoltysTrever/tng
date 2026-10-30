@@ -7,6 +7,7 @@ import { guard } from '../lib/guard.js';
 import { getSiteVisits } from '../lib/apollo-visits.js';
 import { researchCompany } from '../lib/web-research.js';
 import { matchLicensedState } from '../lib/licensing.js';
+import { extractJson } from '../lib/extract-json.js';
 
 export default async function handler(req, res) {
   if (!guard(req, res)) return;
@@ -336,41 +337,4 @@ For revenue_tier, base it primarily on annual_revenue_printed or organization_re
 IMPORTANT — hiring_security_leadership must be based ONLY on the JOB POSTINGS data (i.e. they are currently, actively recruiting for a security leadership role right now). The fact that a CISO or security director already works there (found via PEOPLE SEARCH RESULTS) does NOT make this true — an existing security leader is not a hiring signal, it's the opposite. If JOB POSTINGS contains no open security-leadership role, set hiring_security_leadership to false and hiring_detail to "No matching postings", even if a security leader was found elsewhere in the data.
 
 IMPORTANT — recently_funded, headcount_growth_signal, and uses_security_tech must be based strictly on fields present in ORGANIZATION DATA — never invent a funding round, growth figure, or technology that isn't actually present in that JSON. For recently_funded: check total_funding_printed, latest_funding_round_date, latest_funding_stage, and funding_events — mark true only if latest_funding_round_date (or a date within funding_events) falls within roughly the last 18 months; if these fields are null/empty/absent, set it false and say "No recent funding event data found" (do not treat old historical funding as recent). For headcount_growth_signal: check organization_headcount_six_month_growth, organization_headcount_twelve_month_growth, and organization_headcount_twenty_four_month_growth — mark true only if at least one shows meaningfully positive growth (e.g. double-digit percentage), and state the actual figure in the detail; if all are null/zero/absent, set it false and say "No notable growth data found". For uses_security_tech: check the matched_security_relevant_technologies array — if it contains any entries, mark true and name them in the detail; if it's empty, set false and say "No security/access-control tech found in stack" (do not evaluate total_technologies_count or any other tech field for this signal — it exists only for your own context on how large the full stack is). For multi_site_signal: check retail_location_count — mark true only if it is 5 or greater (a handful of offices doesn't represent a meaningful multi-site guard/security services opportunity), and state the exact count in the detail (e.g. "142 retail locations"); if it's 0, null, or below 5, set false and say "No multi-site retail footprint found in data".`;
-}
-
-function extractJson(text) {
-  const cleaned = text.replace(/```json/gi, '').replace(/```/g, '').trim();
-  const start = cleaned.indexOf('{');
-  const end = cleaned.lastIndexOf('}');
-  if (start === -1 || end === -1) {
-    console.error('extractJson: no braces found. Raw text:', text.slice(0, 2000));
-    throw new Error('No JSON object found in Claude response');
-  }
-  const candidate = cleaned.slice(start, end + 1);
-
-  try {
-    return JSON.parse(candidate);
-  } catch (firstErr) {
-    // Attempt a repair pass for the most common ways an LLM produces near-valid JSON:
-    // trailing commas before a closing bracket, and stray literal control characters
-    // (unescaped newlines/tabs) inside string values. Turning every newline/tab into a
-    // space is safe everywhere: between tokens it's still whitespace, inside a string
-    // it's what the prompt asked for anyway. Curly quotes are deliberately left alone \u2014
-    // they're valid inside JSON strings, and straightening them broke otherwise-good output.
-    let repaired = candidate
-      .replace(/[\r\n\t]+/g, ' ')
-      .replace(/,\s*([\]}])/g, '$1');
-
-    try {
-      return JSON.parse(repaired);
-    } catch (secondErr) {
-      // Still broken — log enough context to actually diagnose this in Vercel's logs,
-      // including exactly where the parser choked, rather than failing silently.
-      console.error('extractJson: JSON.parse failed after repair attempt.');
-      console.error('First error:', firstErr.message);
-      console.error('Second error:', secondErr.message);
-      console.error('Full raw response text:', text);
-      throw firstErr;
-    }
-  }
 }
