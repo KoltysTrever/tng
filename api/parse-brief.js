@@ -5,7 +5,7 @@
 // it with analyze-lead + check-crm. No Apollo credits; one Claude call per brief.
 
 import { guard } from '../lib/guard.js';
-import { matchLicensedState } from '../lib/licensing.js';
+import { matchLicensedState, LICENSED_STATE_NAMES } from '../lib/licensing.js';
 
 const MODEL = 'claude-opus-5-5';
 const MAX_BRIEF_CHARS = 80000;
@@ -89,7 +89,7 @@ For each lead:
 - buyers: the named people the brief lists as buyers or contacts, with their email and phone when given.
 - deadline: the brief's deadline wording ("" if none); deadline_date: that date as YYYY-MM-DD, or "" when there is no specific date.
 - site_location: where the work would be (city and state); site_state: that US state's full name ("" if national, unknown or outside the US).
-- caveats: anything that blocks or qualifies pursuit (licensing, partner needed, issuer unconfirmed, unverified), "" if none.
+- caveats: anything that blocks or qualifies pursuit (licensing, partner needed, issuer unconfirmed, unverified), "" if none. TNG is directly licensed in ${LICENSED_STATE_NAMES.join(', ')} (per tngdefense.com/licensing). If the brief says TNG lacks a license in one of those states, that claim is out of date: leave it out of caveats.
 - sources: the brief's source links for this lead (label + url).
 - For watchlist leads, rank is 0 and fields the brief doesn't give are "".
 - steve_score is the brief's score for the lead (0 if none); score_parts is its breakdown text, e.g. "Need 8, Fit 8, Value 8, Access 4", or "".
