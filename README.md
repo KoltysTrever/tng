@@ -58,6 +58,22 @@ at that domain. It returns counts, a few linked records, and whether a typed
 contact email is already in the CRM. Read-only, no Apollo credits. The page calls
 it alongside Analyze and scores "Already in Zoho CRM" (+30) from the result.
 
+## Hunter Brief (batch vetting)
+
+The page's **Hunter Brief** tab takes one of Steve's daily Client Hunter Brief
+`.html` files. The page turns the brief into plain text (links kept, outreach
+drafts set aside) and posts `{ "text": "..." }` to `/api/parse-brief`. Claude
+(Opus 5.5, low effort, structured JSON output) returns each ranked and watchlist
+lead with only the fields needed to work it, plus the buying organization's
+website domain and the state where the work would be (`site_licensed` comes from
+the same licensed-state list as `analyze-lead`, now in `lib/licensing.js`). No
+Apollo credits; one Claude call per brief. `vercel.json` gives it up to 300s.
+
+The page then runs each lead the user ticks through `analyze-lead` + `check-crm`
+(2 Apollo credits per lead, two leads at a time, waiting and retrying on 429) and
+ranks them: Steve's score is the base, adjusted for Zoho CRM, site visits,
+firmographic fit, a security contact, licensing and passed deadlines.
+
 ## Endpoint
 
 Once deployed on Vercel, the live endpoint is:

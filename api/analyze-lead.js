@@ -6,6 +6,7 @@
 import { guard } from '../lib/guard.js';
 import { getSiteVisits } from '../lib/apollo-visits.js';
 import { researchCompany } from '../lib/web-research.js';
+import { matchLicensedState } from '../lib/licensing.js';
 
 export default async function handler(req, res) {
   if (!guard(req, res)) return;
@@ -183,30 +184,6 @@ const SECURITY_TECH_KEYWORDS = [
   'hikvision', 'dahua', 'pelco', 'salto', 'hid global', 'suprema', 'gallagher security',
   'johnson controls', 'adt', 'stanley security', 'convergint', 'paxton',
 ];
-
-// TNG's directly licensed states, per https://tngdefense.com/licensing/ — update this
-// list whenever TNG adds a new state license. This is informational only, not scored:
-// it reflects headquarters location, which may differ from where service is actually needed.
-const LICENSED_STATES = {
-  california: 'California', ca: 'California',
-  indiana: 'Indiana', in: 'Indiana',
-  michigan: 'Michigan', mi: 'Michigan',
-  mississippi: 'Mississippi', ms: 'Mississippi',
-  'new mexico': 'New Mexico', nm: 'New Mexico',
-  ohio: 'Ohio', oh: 'Ohio',
-  tennessee: 'Tennessee', tn: 'Tennessee',
-  texas: 'Texas', tx: 'Texas',
-  washington: 'Washington', wa: 'Washington',
-  wisconsin: 'Wisconsin', wi: 'Wisconsin',
-};
-
-function matchLicensedState(stateField, countryField) {
-  if (!stateField) return null;
-  const isUS = !countryField || /united states|usa|u\.s\.a?\.?$/i.test(String(countryField).trim());
-  if (!isUS) return null;
-  const key = String(stateField).trim().toLowerCase();
-  return LICENSED_STATES[key] || null;
-}
 
 function curateOrgData(org) {
   if (!org) return null;

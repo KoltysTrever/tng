@@ -1,5 +1,6 @@
 {
   "functions": {
-    "api/analyze-lead.js": { "maxDuration": 120 }
+    "api/analyze-lead.js": { "maxDuration": 120 },
+    "api/parse-brief.js": { "maxDuration": 300 }
   }
 }
