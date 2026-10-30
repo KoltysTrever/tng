@@ -6,6 +6,7 @@
 
 import { guard } from '../lib/guard.js';
 import { matchLicensedState, LICENSED_STATE_NAMES } from '../lib/licensing.js';
+import { claudeErrorMessage } from '../lib/claude-error.js';
 
 const MODEL = 'claude-opus-5-5';
 const MAX_BRIEF_CHARS = 80000;
@@ -146,7 +147,7 @@ export default async function handler(req, res) {
     });
     if (!resp.ok) {
       const errText = await resp.text();
-      throw new Error(`Claude API error ${resp.status}: ${errText.slice(0, 300)}`);
+      throw new Error(claudeErrorMessage('Claude API error', resp.status, errText));
     }
     const data = await resp.json();
     if (data.stop_reason === 'refusal') throw new Error('Claude declined to read this brief');

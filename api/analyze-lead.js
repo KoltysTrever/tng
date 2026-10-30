@@ -8,6 +8,7 @@ import { getSiteVisits } from '../lib/apollo-visits.js';
 import { researchCompany } from '../lib/web-research.js';
 import { matchLicensedState } from '../lib/licensing.js';
 import { extractJson } from '../lib/extract-json.js';
+import { claudeErrorMessage } from '../lib/claude-error.js';
 
 export default async function handler(req, res) {
   if (!guard(req, res)) return;
@@ -141,7 +142,7 @@ export default async function handler(req, res) {
 
     if (!claudeResp.ok) {
       const errText = await claudeResp.text();
-      throw new Error(`Claude API error ${claudeResp.status}: ${errText}`);
+      throw new Error(claudeErrorMessage('Claude API error', claudeResp.status, errText));
     }
 
     const claudeData = await claudeResp.json();
