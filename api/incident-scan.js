@@ -10,7 +10,8 @@ import { extractJson } from '../lib/extract-json.js';
 export default async function handler(req, res) {
   if (!guard(req, res)) return;
 
-  const { domain, company_name } = req.body || {};
+  // debug: true adds the searches Claude ran and its raw answer (the page never sends it).
+  const { domain, company_name, debug } = req.body || {};
   if (!domain) {
     return res.status(400).json({ error: 'domain is required' });
   }
@@ -25,6 +26,6 @@ export default async function handler(req, res) {
   const name = company_name ? String(company_name).trim().slice(0, 200) : null;
 
   // scanIncidents never throws; a failed search comes back as { available: false, reason }.
-  const result = await scanIncidents(ANTHROPIC_API_KEY, cleanDomain, name, extractJson);
+  const result = await scanIncidents(ANTHROPIC_API_KEY, cleanDomain, name, extractJson, debug === true);
   return res.status(200).json(result);
 }
