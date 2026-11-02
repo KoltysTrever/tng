@@ -32,7 +32,7 @@ export default async function handler(req, res) {
     .replace(/^https?:\/\//, '').replace(/^www\./, '').split(/[\/?#]/)[0];
   const name = company_name ? String(company_name).trim().slice(0, 200) : null;
   const isDebug = debug === true;
-  const cacheKey = `events:v1:${cleanDomain}`;
+  const cacheKey = `events:v2:${cleanDomain}`; // v2: leadership changes limited to organization-level executives
 
   if (refresh !== true && !isDebug) {
     const saved = await cacheGet(cacheKey);
