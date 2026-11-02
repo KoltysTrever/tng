@@ -126,6 +126,13 @@ The page then runs each lead the user ticks through `analyze-lead` + `check-crm`
 ranks them: Steve's score is the base, adjusted for Zoho CRM, site visits,
 firmographic fit, a security contact, licensing and passed deadlines.
 
+While the brief is being read, the page shows the steps and a countdown. Reading the
+brief is a single Claude call, so the middle steps are paced by the expected time
+(the average of past reads, saved in the browser) rather than reported by the server;
+the last step stays open until the answer arrives. While vetting, each lead's chip
+shows which of its four lookups (Apollo, Zoho, incidents, events) have come back, and
+the status line estimates the time left from the leads finished so far.
+
 ## Endpoint
 
 Once deployed on Vercel, the live endpoint is:

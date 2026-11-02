@@ -676,11 +676,44 @@
   .tng-progress { height: 4px; margin: -8px 0 20px; background: var(--tng-surface-3); border-radius: 999px; overflow: hidden; }
   .tng-progress-bar { height: 100%; width: 0; background: var(--tng-intel-text); transition: width 0.4s; }
 
+  /* How it works: 1 choose, 2 check, 3 vet. The current step is lit. */
+  .tng-brief-steps { list-style: none; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0 0 24px; padding: 0; }
+  .tng-brief-steps li { display: flex; gap: 12px; padding: 14px 16px; background: var(--tng-surface); border: 1px solid var(--tng-hairline); border-radius: var(--tng-radius-md); font-size: 13px; line-height: 1.45; color: var(--tng-text-tertiary); transition: border-color 0.3s, background 0.3s; }
+  .tng-brief-steps b { display: block; font-size: 14px; font-weight: 600; color: var(--tng-text-secondary); margin-bottom: 2px; }
+  .tng-brief-steps .num { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; font-size: 12px; font-weight: 700; background: var(--tng-surface-3); color: var(--tng-text-secondary); }
+  .tng-brief-steps li.current { border-color: rgba(91,158,240,0.55); background: rgba(21,101,192,0.10); }
+  .tng-brief-steps li.current b { color: var(--tng-white); }
+  .tng-brief-steps li.current .num { background: var(--tng-intel-text); color: var(--tng-black); }
+  .tng-brief-steps li.done .num { background: rgba(46,125,50,0.25); color: var(--tng-clear-text); font-size: 0; }
+  .tng-brief-steps li.done .num::after { content: '✓'; font-size: 13px; }
+
+  /* Reading the brief: what's happening, with a countdown. */
+  .tng-work { padding: 22px 24px; margin-bottom: 24px; background: var(--tng-surface); border: 1px solid rgba(91,158,240,0.35); border-radius: var(--tng-radius-lg); }
+  .tng-work[hidden] { display: none; }
+  .tng-work-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; }
+  .tng-work-title { font-size: 18px; font-weight: 600; color: var(--tng-white); }
+  .tng-work-time { font-size: 15px; color: var(--tng-intel-text); font-variant-numeric: tabular-nums; }
+  .tng-work .tng-progress { margin: 14px 0 18px; height: 6px; }
+  .tng-work-steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+  .tng-work-steps li { display: flex; align-items: center; gap: 12px; font-size: 14px; line-height: 1.4; color: var(--tng-text-tertiary); }
+  .tng-work-steps .mark { flex: none; display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--tng-hairline-strong); }
+  .tng-work-steps li.current { color: var(--tng-white); }
+  .tng-work-steps li.current .mark { border: 2px solid rgba(91,158,240,0.25); border-top-color: var(--tng-intel-text); animation: tng-spin 0.8s linear infinite; }
+  .tng-work-steps li.done { color: var(--tng-text-secondary); }
+  .tng-work-steps li.done .mark { border: none; background: rgba(46,125,50,0.25); color: var(--tng-clear-text); font-size: 11px; font-weight: 700; }
+  .tng-work-steps li.done .mark::after { content: '✓'; }
+  .tng-work-steps .detail { color: var(--tng-text-tertiary); }
+  .tng-work-note { margin-top: 16px; font-size: 13px; color: var(--tng-text-tertiary); line-height: 1.5; }
+  .tng-chip .lookup { opacity: 0.55; }
+  .tng-chip .lookup.done { opacity: 1; }
+
   .tng-brief-summary { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
   .tng-brief-summary-text { font-size: 15px; color: var(--tng-text-secondary); line-height: 1.5; }
   .tng-brief-summary-text strong { color: var(--tng-white); font-weight: 600; }
   .tng-brief-summary .tng-export-row { margin-top: 0; }
   .tng-brief-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
+  /* The top Vet bar stays in view while the lead list scrolls under it. */
+  .tng-brief-actions.top { position: sticky; top: 0; z-index: 5; margin: 16px 0 0; padding: 12px 0; background: var(--tng-black); border-bottom: 1px solid var(--tng-hairline); }
   .tng-brief-credits { font-size: 13px; color: var(--tng-text-tertiary); }
 
   /* Review list: one row per lead, with its website to confirm before vetting */
@@ -802,6 +835,8 @@
   @media (max-width: 640px) {
     .tng-lead-scorer { padding: 24px 16px 0; }
     .tng-header h1 { font-size: 28px; }
+    .tng-brief-steps { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+    .tng-work { padding: 18px; }
     .tng-company-card, .tng-contact-card { padding: 20px; }
     .tng-company-name { font-size: 22px; }
     .tng-signal { padding: 12px 14px; }
@@ -826,7 +861,7 @@
   <div class="tng-header">
     <div class="tng-header-title-block">
       <h1>TNG Opportunity Score</h1>
-      <div class="tng-version-line">TNG OP TOOL V.3.3 · Created by Trever Koltys</div>
+      <div class="tng-version-line">TNG OP TOOL V.3.4 · Created by Trever Koltys</div>
     </div>
     <span class="tng-header-note">This tool is to be used in conjunction with <a href="https://app.apollo.io/" target="_blank" rel="noopener">app.apollo.io</a></span>
   </div>
@@ -950,7 +985,12 @@
   </div><!-- /#tng-mode-single -->
 
   <div id="tng-mode-brief" hidden>
-    <div class="tng-hint">Drop in a Client Hunter Brief from Steve. The tool reads every lead, finds each organization's website, vets them against Apollo, Zoho CRM and tngdefense.com visits, and ranks them best first with who to contact.</div>
+    <ol class="tng-brief-steps" id="tng-brief-steps">
+      <li data-step="1"><span class="num">1</span><span><b>Choose the brief</b>Steve's Client Hunter Brief (.html). Reading it takes about a minute.</span></li>
+      <li data-step="2"><span class="num">2</span><span><b>Check the websites</b>Confirm each lead's website and untick any you want to skip.</span></li>
+      <li data-step="3"><span class="num">3</span><span><b>Vet and work the list</b>Leads come back ranked best first, with who to contact.</span></li>
+    </ol>
+    <div class="tng-work" id="tng-brief-work" hidden></div>
     <div class="tng-status" id="tng-brief-status"><span class="tng-radar"></span><span id="tng-brief-status-text"></span></div>
     <div class="tng-progress" id="tng-brief-progress" hidden><div class="tng-progress-bar" id="tng-brief-progress-bar"></div></div>
     <div class="tng-error" id="tng-brief-error"></div>
@@ -2246,6 +2286,70 @@
     document.getElementById('tng-brief-status').classList.toggle('active', !!text);
   }
 
+  // Lights up step 1, 2 or 3 of the "how it works" strip; earlier steps get a check.
+  function setBriefStep(step) {
+    document.querySelectorAll('#tng-brief-steps li').forEach(li => {
+      const n = Number(li.dataset.step);
+      li.classList.toggle('done', n < step);
+      li.classList.toggle('current', n === step);
+    });
+  }
+
+  const fmtWait = secs => secs < 60 ? `${secs}s` : `${Math.floor(secs / 60)}m ${String(secs % 60).padStart(2, '0')}s`;
+
+  // Reading the brief is one Claude call, so its middle steps are paced by the expected
+  // time (learned from earlier briefs on this computer), not reported by the server. The
+  // last step stays open until the answer actually arrives.
+  const PARSE_SECONDS_KEY = 'tngBriefParseSeconds';
+  const PARSE_STEPS = [
+    { label: "Opened the brief" },
+    { label: 'Sent it to Claude' },
+    { label: 'Pulling out each ranked and watchlist lead', until: 0.45 },
+    { label: "Finding each organization's website", until: 0.85 },
+    { label: 'Checking licensed states and deadlines', until: Infinity },
+    { label: 'Ready for your review' },
+  ];
+
+  function expectedParseSeconds() {
+    try {
+      const saved = Number(localStorage.getItem(PARSE_SECONDS_KEY));
+      if (saved >= 15 && saved <= 240) return Math.round(saved);
+    } catch (e) { /* storage blocked: use the default */ }
+    return 55;
+  }
+  function rememberParseSeconds(secs) {
+    try { localStorage.setItem(PARSE_SECONDS_KEY, String(Math.round((expectedParseSeconds() + secs) / 2))); } catch (e) { /* not needed */ }
+  }
+
+  // stage: 'working' (paced by time) or 'done' (all checked, with a closing line).
+  function renderParseWork({ fileName, draftCount, chars, elapsed, expected, stage, leadCount }) {
+    const el = document.getElementById('tng-brief-work');
+    const frac = elapsed / expected;
+    const current = stage === 'done' ? PARSE_STEPS.length : 2 + PARSE_STEPS.slice(2).findIndex(s => frac < s.until);
+    const details = [
+      `${escapeHtml(fileName)}${draftCount ? ` · ${draftCount} outreach draft${draftCount === 1 ? '' : 's'} kept` : ''}`,
+      `about ${Math.max(1, Math.round(chars / 3000))} page${chars < 4500 ? '' : 's'} of text`,
+      stage === 'done' ? `${leadCount} lead${leadCount === 1 ? '' : 's'} found` : '',
+      '', '', '',
+    ];
+    const steps = PARSE_STEPS.map((s, i) => {
+      const cls = i < current ? 'done' : i === current ? 'current' : '';
+      return `<li class="${cls}"><span class="mark"></span><span>${s.label}${details[i] ? ` <span class="detail">· ${details[i]}</span>` : ''}</span></li>`;
+    }).join('');
+    // The bar runs to 90% at the expected time, then creeps toward 98% until the answer arrives.
+    const pct = stage === 'done' ? 100
+      : frac < 1 ? frac * 90 : 90 + 8 * (1 - Math.exp(-(elapsed - expected) / 30));
+    const left = expected - elapsed;
+    const time = stage === 'done' ? 'Done'
+      : left > 0 ? `About ${fmtWait(left)} left` : `Taking a bit longer than usual · ${fmtWait(elapsed)}`;
+    el.innerHTML = `
+      <div class="tng-work-head"><div class="tng-work-title">${stage === 'done' ? 'Brief read' : 'Reading the brief'}</div><div class="tng-work-time">${time}</div></div>
+      <div class="tng-progress"><div class="tng-progress-bar" style="width:${pct}%"></div></div>
+      <ol class="tng-work-steps">${steps}</ol>
+      <div class="tng-work-note">${stage === 'done' ? 'Your leads are below.' : "This uses no Apollo credits. You can switch to another tab; this tab's title shows when it's ready."}</div>`;
+    el.hidden = false;
+  }
+
   function setBriefError(text) {
     const el = document.getElementById('tng-brief-error');
     el.textContent = text || '';
@@ -2353,10 +2457,17 @@
     renderBriefResults();
     document.getElementById('tng-brief-drop').hidden = true;
 
-    let seconds = 0;
-    const statusText = () => `Reading the brief and finding each organization's website... (${seconds}s)`;
-    setBriefStatus(statusText());
-    const tick = setInterval(() => { seconds++; setBriefStatus(statusText()); }, 1000);
+    const work = { fileName: file.name, draftCount: Object.keys(drafts).length, chars: text.length, expected: expectedParseSeconds(), elapsed: 0, stage: 'working' };
+    const started = Date.now();
+    const originalTitle = document.title;
+    const tickWork = () => {
+      work.elapsed = Math.floor((Date.now() - started) / 1000);
+      renderParseWork(work);
+      document.title = `📄 Reading brief · ${fmtWait(work.elapsed)}`;
+    };
+    tickWork();
+    const tick = setInterval(tickWork, 1000);
+    let ok = false;
     try {
       const data = await postJson(PARSE_URL, { text }, 300000);
       const leads = (data.leads || []).map((l, i) => ({
@@ -2368,34 +2479,56 @@
         pending: false,
       }));
       if (!leads.length) throw new Error('no leads found in it');
+      clearInterval(tick);
+      rememberParseSeconds((Date.now() - started) / 1000);
+      renderParseWork({ ...work, stage: 'done', leadCount: leads.length });
       brief = { title: data.brief_title || file.name.replace(/\.html?$/i, ''), date: data.brief_date || '', leads };
       renderBriefReview();
+      ok = true;
     } catch (err) {
       console.error(err);
       setBriefError("Couldn't read the brief: " + err.message);
       document.getElementById('tng-brief-drop').hidden = false;
+      document.getElementById('tng-brief-work').hidden = true;
+      setBriefStep(1);
     } finally {
       clearInterval(tick);
-      setBriefStatus(null);
     }
+    if (!ok) { document.title = originalTitle; return; }
+    // Someone who switched tabs sees it's ready; the title goes back once they return.
+    if (document.hidden) {
+      document.title = '✅ Brief ready to review';
+      document.addEventListener('visibilitychange', () => { document.title = originalTitle; }, { once: true });
+    } else {
+      document.title = originalTitle;
+    }
+    setTimeout(() => {
+      document.getElementById('tng-brief-work').hidden = true;
+      const review = document.getElementById('tng-brief-review');
+      if (review.getBoundingClientRect().top < 0) review.scrollIntoView({ behavior: 'smooth' });
+    }, 1500);
   }
 
   // ----- Review: confirm websites and pick which leads to vet -----
   function renderBriefReview() {
     const el = document.getElementById('tng-brief-review');
+    setBriefStep(!brief ? 1 : brief.started ? 3 : 2);
     if (!brief || brief.started) { el.innerHTML = ''; return; }
     const ranked = brief.leads.filter(l => l.section === 'ranked');
     const watch = brief.leads.filter(l => l.section === 'watchlist');
+    // The Vet button sits both above the list (and stays in view while scrolling) and below it.
+    const runBar = extra => `<div class="tng-brief-actions${extra ? '' : ' top'}">
+        <button class="tng-analyze-btn tng-brief-run" data-brief-action="run"></button>
+        ${extra}
+        <span class="tng-brief-credits"></span>
+      </div>`;
     el.innerHTML = `
       <div class="tng-brief-summary"><div class="tng-brief-summary-text"><strong>${escapeHtml(briefHeading())}</strong> · ${ranked.length} ranked lead${ranked.length === 1 ? '' : 's'}${watch.length ? `, ${watch.length} on the watchlist` : ''}</div></div>
-      <div class="tng-hint" style="margin-bottom:0;">Check each website, then vet. Ticked leads get the full lookup; the rest still appear in the results with Steve's notes.</div>
+      <div class="tng-hint" style="margin-bottom:0;">Check each website (fix any marked "Check this website"), untick leads to skip, then vet. Ticked leads get the full lookup; the rest still appear in the results with Steve's notes.</div>
+      ${runBar('')}
       ${reviewGroupHtml('Ranked leads', ranked)}
       ${watch.length ? reviewGroupHtml('Watchlist', watch) : ''}
-      <div class="tng-brief-actions">
-        <button class="tng-analyze-btn" data-brief-action="run" id="tng-brief-run"></button>
-        <button class="tng-reset-btn" data-brief-action="new">Choose a different brief</button>
-        <span class="tng-brief-credits" id="tng-brief-credits"></span>
-      </div>`;
+      ${runBar('<button class="tng-reset-btn" data-brief-action="new">Choose a different brief</button>')}`;
     updateRunButton();
   }
 
@@ -2420,12 +2553,21 @@
   }
 
   function updateRunButton() {
-    const btn = document.getElementById('tng-brief-run');
-    if (!btn || !brief) return;
+    if (!brief) return;
     const n = brief.leads.filter(l => l.include && l.domain).length;
-    btn.textContent = `Vet ${n} lead${n === 1 ? '' : 's'}`;
-    btn.disabled = !n;
-    document.getElementById('tng-brief-credits').textContent = n ? `Up to ${n * 2} Apollo credits (2 per lead; companies looked up this week are free)` : '';
+    document.querySelectorAll('#tng-brief-review .tng-brief-run').forEach(btn => {
+      btn.textContent = `Vet ${n} lead${n === 1 ? '' : 's'}`;
+      btn.disabled = !n;
+    });
+    const credits = n ? `Up to ${n * 2} Apollo credits (2 per lead; companies looked up this week are free) · about ${vetMinutes(n)}` : '';
+    document.querySelectorAll('#tng-brief-review .tng-brief-credits').forEach(el => { el.textContent = credits; });
+  }
+
+  // Rough vetting time: leads run two at a time, about 40 seconds each when nothing is saved.
+  const VET_SECONDS_PER_LEAD = 40;
+  function vetMinutes(n) {
+    const mins = Math.ceil(Math.ceil(n / BRIEF_CONCURRENCY) * VET_SECONDS_PER_LEAD / 60);
+    return mins <= 1 ? 'a minute' : `${mins} minutes`;
   }
 
   // ----- Vetting -----
@@ -2443,25 +2585,37 @@
     const originalTitle = document.title;
     const progressEl = document.getElementById('tng-brief-progress');
     progressEl.hidden = false;
+    // Time left: rounds of two still to go, at the average time per lead so far (saved
+    // lookups come back in seconds, so the estimate drops quickly when they're common).
+    const durations = [];
+    let planned = Date.now() + Math.ceil(total / BRIEF_CONCURRENCY) * VET_SECONDS_PER_LEAD * 1000;
     const showProgress = () => {
-      setBriefStatus(`Vetting ${total} lead${total === 1 ? '' : 's'}: ${done} done. Keep this page open.`);
+      const left = Math.max(0, Math.round((planned - Date.now()) / 1000));
+      const eta = done === total ? '' : left > 0 ? ` · about ${fmtWait(left)} left` : ' · finishing up';
+      setBriefStatus(`Vetting ${total} lead${total === 1 ? '' : 's'}: ${done} done${eta}. Keep this page open; results fill in below as they finish.`);
       document.getElementById('tng-brief-progress-bar').style.width = (done / total * 100) + '%';
       document.title = `🔍 ${done}/${total} vetted`;
     };
     showProgress();
+    const tick = setInterval(showProgress, 1000);
     renderBriefResults();
 
     const worker = async () => {
       while (queue.length) {
         const lead = queue.shift();
+        const t0 = Date.now();
         lead.vetted = await vetLead(lead);
         lead.pending = false;
+        durations.push(Date.now() - t0);
         done++;
+        const avg = durations.reduce((a, b) => a + b, 0) / durations.length;
+        planned = Date.now() + Math.ceil((total - done) / BRIEF_CONCURRENCY) * avg;
         showProgress();
         renderBriefResults();
       }
     };
     await Promise.all(Array.from({ length: BRIEF_CONCURRENCY }, worker));
+    clearInterval(tick);
 
     briefRunning = false;
     progressEl.hidden = true;
@@ -2471,13 +2625,34 @@
     renderBriefResults();
   }
 
+  // The four lookups behind each lead, in the order the "Vetting" chip lists them.
+  const LOOKUPS = [['apollo', 'Apollo'], ['crm', 'Zoho'], ['news', 'Incidents'], ['events', 'Events']];
+
+  // A queued lead waits its turn; a running one shows which lookups have come back.
+  function pendingChipHtml(lead) {
+    const inner = lead.lookups
+      ? 'Vetting: ' + LOOKUPS.map(([k, label]) => `<span class="lookup${lead.lookups[k] ? ' done' : ''}">${label}${lead.lookups[k] ? ' ✓' : ''}</span>`).join(' · ')
+      : 'Waiting its turn';
+    return `<span class="tng-chip info" data-pending-key="${lead.key}"><span class="tng-radar"></span>${inner}</span>`;
+  }
+
+  // Updates just the chip, so a lookup finishing doesn't redraw every card.
+  function updatePendingChip(lead) {
+    const chip = document.querySelector(`#tng-brief-results [data-pending-key="${lead.key}"]`);
+    if (chip && lead.pending) chip.outerHTML = pendingChipHtml(lead);
+  }
+
   async function vetLead(lead) {
+    lead.lookups = {};
+    updatePendingChip(lead);
+    const track = (key, promise) => promise.finally(() => { lead.lookups[key] = true; updatePendingChip(lead); });
     const [analysis, crm, news, trig] = await Promise.allSettled([
-      postJson(BACKEND_URL, { domain: lead.domain }, 150000),
-      postJson(CRM_URL, { domain: lead.domain }, 60000),
-      postJson(INCIDENT_URL, { domain: lead.domain, company_name: lead.organization }, 240000),
-      postJson(EVENTS_URL, { domain: lead.domain, company_name: lead.organization }, 240000),
+      track('apollo', postJson(BACKEND_URL, { domain: lead.domain }, 150000)),
+      track('crm', postJson(CRM_URL, { domain: lead.domain }, 60000)),
+      track('news', postJson(INCIDENT_URL, { domain: lead.domain, company_name: lead.organization }, 240000)),
+      track('events', postJson(EVENTS_URL, { domain: lead.domain, company_name: lead.organization }, 240000)),
     ]);
+    lead.lookups = null;
     if (analysis.status === 'rejected') return { ok: false, error: analysis.reason.message };
     const result = analysis.value;
     const crmData = crm.status === 'fulfilled' ? crm.value : { error: crm.reason.message };
@@ -2572,7 +2747,7 @@
     const v = lead.vetted && lead.vetted.ok ? lead.vetted : null;
     const chips = [];
     if (lead.pending) {
-      chips.push('<span class="tng-chip info"><span class="tng-radar"></span>Vetting...</span>');
+      chips.push(pendingChipHtml(lead));
     } else if (v) {
       chips.push(`<span class="tng-tier sm ${v.tier.tier}">TNG ${v.total} · ${v.tier.label}</span>`);
       if (v.crmFound) chips.push('<span class="tng-chip good">In Zoho CRM</span>');
@@ -2954,6 +3129,7 @@
     renderBriefReview();
     renderBriefResults();
     document.getElementById('tng-brief-drop').hidden = false;
+    document.getElementById('tng-brief-work').hidden = true;
   }
 
   // ----- Wiring -----
