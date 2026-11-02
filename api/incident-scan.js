@@ -4,7 +4,8 @@
 // endpoint so the page can call it alongside Analyze, and a slow search never blocks scoring.
 
 import { guard } from '../lib/guard.js';
-import { scanIncidents, cleanIncidents, SCAN_MODELS } from '../lib/incident-scan.js';
+import { scanIncidents, cleanIncidents } from '../lib/incident-scan.js';
+import { NEWS_MODELS } from '../lib/news-search.js';
 import { extractJson } from '../lib/extract-json.js';
 import { cacheGet, cacheSet } from '../lib/cache.js';
 
@@ -48,7 +49,7 @@ export default async function handler(req, res) {
 
   // scanIncidents never throws; a failed search comes back as { available: false, reason }.
   const options = { debug: isDebug };
-  if (isDebug && SCAN_MODELS.includes(model)) options.model = model;
+  if (isDebug && NEWS_MODELS.includes(model)) options.model = model;
   const result = await scanIncidents(ANTHROPIC_API_KEY, cleanDomain, name, extractJson, options);
 
   // Only real answers are saved; a failed search should be retried next time.

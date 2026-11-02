@@ -87,6 +87,18 @@ Finding nothing never costs points. It never fails the request: errors come back
 fee (4 searches, about 4 cents) plus a small Haiku call per lookup. The page calls it alongside Analyze and fills in
 the Security Incidents section when it finishes (20-40s).
 
+## Trigger events (news search)
+
+`/api/trigger-events` (same body and header as `incident-scan`) looks for business
+events in the last 12 months that create a need for a TNG service: layoffs or WARN
+notices (Workplace Termination Support), a new or exposed executive (Executive
+Protection), a new or expanded facility (guard services), strikes and protests, and
+large events the company hosts. See `lib/trigger-events.js`; it shares its search code
+with the incident check in `lib/news-search.js` (Haiku 5.5, basic web search, at most 4
+searches, about 4-5 cents). Events in the last 6 months tick "Trigger event" (+15) on
+the page and add +0.5 to a Hunter Brief lead's priority, and each one names the service
+to pitch. Saved for 7 days like the other lookups.
+
 ## The page (tool/app.js) and the SharePoint launcher
 
 The tool's page lives in this repo as `tool/app.js` (styles, markup and logic in one
@@ -122,8 +134,8 @@ Once deployed on Vercel, the live endpoint is:
 
 Send a POST request with JSON body `{ "domain": "example.com", "email": "optional@example.com" }`
 and the `x-tng-access-code` header. All endpoints share `lib/guard.js`, which also
-applies a best-effort limit of 30 requests per minute per IP (each Analyze click
-uses three: `analyze-lead`, `check-crm` and `incident-scan`).
+applies a best-effort limit of 60 requests per minute per IP (each Analyze click
+uses four: `analyze-lead`, `check-crm`, `incident-scan` and `trigger-events`).
 
 ## Costs to expect
 

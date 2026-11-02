@@ -354,7 +354,7 @@
   .tng-event-group .tng-hint { margin: 0 4px 10px; }
 
   /* Each signal container renders as one rounded card with hairline-separated rows. */
-  #tng-vertical-signals, #tng-event-signals, #tng-crm-signals, #tng-news-signals, #tng-site-signals, #tng-page-signals {
+  #tng-vertical-signals, #tng-event-signals, #tng-crm-signals, #tng-news-signals, #tng-trigger-signals, #tng-site-signals, #tng-page-signals {
     background: var(--tng-surface);
     border: 1px solid var(--tng-hairline);
     border-radius: var(--tng-radius-lg);
@@ -826,7 +826,7 @@
   <div class="tng-header">
     <div class="tng-header-title-block">
       <h1>TNG Opportunity Score</h1>
-      <div class="tng-version-line">TNG OP TOOL V.3.2 · Created by Trever Koltys</div>
+      <div class="tng-version-line">TNG OP TOOL V.3.3 · Created by Trever Koltys</div>
     </div>
     <span class="tng-header-note">This tool is to be used in conjunction with <a href="https://app.apollo.io/" target="_blank" rel="noopener">app.apollo.io</a></span>
   </div>
@@ -846,7 +846,7 @@
     <button class="tng-analyze-btn" id="tng-analyze-btn" onclick="tngAnalyze()">Analyze</button>
     <button class="tng-reset-btn" id="tng-reset-btn" onclick="tngReset()">Reset</button>
   </div>
-  <div class="tng-hint">Pulls Apollo firmographics and tngdefense.com visits, checks Zoho CRM, and searches the news for security incidents, automatically. Tick any extra pages you know they viewed.</div>
+  <div class="tng-hint">Pulls Apollo firmographics and tngdefense.com visits, checks Zoho CRM, and searches the news for security incidents and trigger events, automatically. Tick any extra pages you know they viewed.</div>
 
   <div class="tng-status" id="tng-status"><span class="tng-radar"></span><span id="tng-status-text">Querying Apollo...</span></div>
   <div class="tng-error" id="tng-error"></div>
@@ -895,6 +895,12 @@
   </div>
 
   <div class="tng-section">
+    <div class="tng-section-label">Trigger Events <span class="tng-source-tag auto"><b>Automatic</b> · via news search</span></div>
+    <div id="tng-trigger-signals"></div>
+    <div class="tng-incidents" id="tng-triggers"></div>
+  </div>
+
+  <div class="tng-section">
     <div class="tng-auto-populated-section">
       <div class="tng-section-label">Firmographic <span class="tng-source-tag auto"><b>Automatic</b> · via Apollo</span></div>
       <div id="tng-vertical-signals"></div>
@@ -939,7 +945,7 @@
   </div><!-- /.tng-layout -->
 
   <div class="tng-footnote">
-    Firmographic (auto): Revenue Under $10M (+5), $10-100M (+10), $100-500M (+20), or $500M+ (+30) · Healthcare (+25) · Education (+20) · Government (+20) · Entertainment/Events (+15) · High-Net-Worth (+20) · IT/Network Security (+15) · Telecom (+15) · Financial Services (+20) · Manufacturing/Industrial (+20) · Retail/Hospitality (+20) · Energy/Utilities (+20) · Real Estate (+20) · Hiring security leadership (+15) · Recently funded (+15) · Rapid headcount growth (+15) · Uses physical security tech (+10) · Multi-site physical footprint (+20). CRM (auto): Already in Zoho CRM as an account, contact, or lead (+30). Security incidents (auto): a news search finds a reported assault, weapon, lockdown or threat at their sites in the last 12 months (+20); incidents 12-24 months old are listed for context with no points, and finding nothing never costs points. Site behavior: Visited a high-intent page — Request Security Services or Contact Us (+30) · Showed interest in TNG services — any service or Licensing page (+20). Pages visited: service and contact pages set those two signals; Home Page (+10), About TNG (+10) and Blog/Insights (+5) score on their own (so site behavior adds at most +75). All pages show which services to pitch. Page visits come from Apollo's Website Visitors data (top 5 pages per company, last 90 days) and are ticked automatically; tick any others yourself.
+    Firmographic (auto): Revenue Under $10M (+5), $10-100M (+10), $100-500M (+20), or $500M+ (+30) · Healthcare (+25) · Education (+20) · Government (+20) · Entertainment/Events (+15) · High-Net-Worth (+20) · IT/Network Security (+15) · Telecom (+15) · Financial Services (+20) · Manufacturing/Industrial (+20) · Retail/Hospitality (+20) · Energy/Utilities (+20) · Real Estate (+20) · Hiring security leadership (+15) · Recently funded (+15) · Rapid headcount growth (+15) · Uses physical security tech (+10) · Multi-site physical footprint (+20). CRM (auto): Already in Zoho CRM as an account, contact, or lead (+30). Security incidents (auto): a news search finds a reported assault, weapon, lockdown or threat at their sites in the last 12 months (+20); incidents 12-24 months old are listed for context with no points, and finding nothing never costs points. Trigger events (auto): a news search finds layoffs, a new or exposed executive, a new facility, a strike or protest, or a large event they're hosting in the last 6 months (+15); each event names the TNG service it points to, and older ones are listed for context only. Site behavior: Visited a high-intent page — Request Security Services or Contact Us (+30) · Showed interest in TNG services — any service or Licensing page (+20). Pages visited: service and contact pages set those two signals; Home Page (+10), About TNG (+10) and Blog/Insights (+5) score on their own (so site behavior adds at most +75). All pages show which services to pitch. Page visits come from Apollo's Website Visitors data (top 5 pages per company, last 90 days) and are ticked automatically; tick any others yourself.
   </div>
   </div><!-- /#tng-mode-single -->
 
@@ -959,7 +965,7 @@
     <div id="tng-brief-results"></div>
 
     <div class="tng-footnote">
-      Priority starts from Steve's score in the brief and moves with what the lookups find: already in Zoho CRM (+1) · a security incident at their sites in the news in the last 12 months (+1) · visited the Contact or Request Services page (+1.5), otherwise viewed service pages (+1), otherwise any site visit (+0.5) · strong firmographic fit, 50+ firmographic points (+0.5) · Apollo found a security, safety or facilities contact (+0.5) · work is outside TNG's licensed states (−0.5) · deadline already passed (−2). The TNG score is the same Opportunity Score as the Single Lead view, from its automatic signals only. Each vetted lead uses 2 Apollo credits, the same as one Analyze; reading the brief uses none.
+      Priority starts from Steve's score in the brief and moves with what the lookups find: already in Zoho CRM (+1) · a security incident at their sites in the news in the last 12 months (+1) · a trigger event in the news in the last 6 months (+0.5) · visited the Contact or Request Services page (+1.5), otherwise viewed service pages (+1), otherwise any site visit (+0.5) · strong firmographic fit, 50+ firmographic points (+0.5) · Apollo found a security, safety or facilities contact (+0.5) · work is outside TNG's licensed states (−0.5) · deadline already passed (−2). The TNG score is the same Opportunity Score as the Single Lead view, from its automatic signals only. Each vetted lead uses 2 Apollo credits, the same as one Analyze; reading the brief uses none.
     </div>
   </div>
 </div>
@@ -985,6 +991,7 @@
   const REVEAL_URL = "https://tng-lead.vercel.app/api/reveal-contact";
   const CRM_URL = "https://tng-lead.vercel.app/api/check-crm";
   const INCIDENT_URL = "https://tng-lead.vercel.app/api/incident-scan";
+  const EVENTS_URL = "https://tng-lead.vercel.app/api/trigger-events";
   // The access code lives only in the SharePoint launcher (window.TNG_CONFIG), never in
   // this file: it must match TNG_ACCESS_CODE in Vercel. If it leaks, change both and
   // hand out a new launcher.
@@ -1017,6 +1024,7 @@
     // CRM — auto via Zoho (its own check, separate from Apollo)
     { id: 'crm', label: 'Already in Zoho CRM (account, contact, or lead)', pts: 30, group: 'crm' },
     { id: 'recent_incident', label: 'Recent security incident at their sites (last 12 months, in the news)', pts: 20, group: 'news' },
+    { id: 'trigger_event', label: 'Trigger event in the news (last 6 months): layoffs, new executive, new facility, strike, big event', pts: 15, group: 'triggers' },
     // Site behavior — two capped signals, ticked automatically from the pages checklist below.
     // Scoring every page separately let a visitor who skimmed the site out-score real fit.
     { id: 'site_high_intent', label: 'Visited a high-intent page (Request Security Services or Contact Us)', pts: 30, group: 'site', derivedFrom: 'high_intent' },
@@ -1062,12 +1070,14 @@
     const eventEl = document.getElementById('tng-event-signals');
     const crmEl = document.getElementById('tng-crm-signals');
     const newsEl = document.getElementById('tng-news-signals');
+    const triggerEl = document.getElementById('tng-trigger-signals');
     const pagesEl = document.getElementById('tng-page-signals');
     const siteEl = document.getElementById('tng-site-signals');
     verticalEl.innerHTML = '';
     eventEl.innerHTML = '';
     crmEl.innerHTML = '';
     newsEl.innerHTML = '';
+    triggerEl.innerHTML = '';
     pagesEl.innerHTML = '';
     siteEl.innerHTML = '';
     let revealIndex = 0;
@@ -1098,6 +1108,8 @@
         targetEl = crmEl;
       } else if (s.group === 'news') {
         targetEl = newsEl;
+      } else if (s.group === 'triggers') {
+        targetEl = triggerEl;
       } else if (s.group === 'pages') {
         targetEl = pagesEl;
       } else if (s.group === 'site') {
@@ -1210,6 +1222,7 @@
     { label: 'Company activity', match: s => s.group === 'auto' && s.subgroup === 'event' },
     { label: 'Zoho CRM', match: s => s.group === 'crm' },
     { label: 'Security incidents', match: s => s.group === 'news' },
+    { label: 'Trigger events', match: s => s.group === 'triggers' },
     { label: 'Site behavior', match: s => s.group === 'site' || s.group === 'pages' },
   ];
 
@@ -1385,6 +1398,91 @@
       console.error(err);
       if (requestId !== incidentRequestId) return;
       setIncidentResult(false, 'News check failed (' + err.message + '). Tick this if you know of a recent incident.', '');
+    }
+  }
+
+  // Trigger events — business news that points to a TNG service. Same pattern as the
+  // incident check: its own request alongside Analyze, finding nothing costs no points.
+  const EVENT_TYPE_LABELS = {
+    layoffs: 'Layoffs', leadership_change: 'Leadership change', executive_exposure: 'Executive in the spotlight',
+    facility_expansion: 'New or expanded facility', labor_unrest: 'Strike or protest', major_event: 'Hosting a large event',
+  };
+  const EVENT_SERVICES = {
+    layoffs: 'Workplace Termination Support', leadership_change: 'Executive Protection',
+    executive_exposure: 'Executive Protection, Protective Intelligence', facility_expansion: 'Security Guard Services, Embedded Services',
+    labor_unrest: 'Security Guard Services, Event Security', major_event: 'Event Security',
+  };
+  let eventRequestId = 0;
+  let lastEvents = null;
+
+  // The services the recent events point to, without repeats ("Workplace Termination Support, Event Security").
+  function eventServices(events) {
+    const names = [];
+    events.filter(e => e.recent).forEach(e => (EVENT_SERVICES[e.type] || '').split(', ').forEach(n => { if (n && !names.includes(n)) names.push(n); }));
+    return names.join(', ');
+  }
+
+  // "Layoffs · New or expanded facility": the kinds of recent event, without repeats.
+  function recentEventLabels(data) {
+    const labels = [];
+    (data.events || []).filter(e => e.recent).forEach(e => { const l = EVENT_TYPE_LABELS[e.type]; if (l && !labels.includes(l)) labels.push(l); });
+    return labels.join(' · ');
+  }
+
+  function eventsListHtml(events) {
+    return events.map(e => `<div class="tng-incident${e.recent ? '' : ' older'}">
+      <div class="tng-incident-head">${escapeHtml([fmtIncidentDate(e.date), e.site].filter(Boolean).join(' · '))} · <span class="tng-incident-type">${escapeHtml(EVENT_TYPE_LABELS[e.type] || 'Event')}</span>${e.recent ? '' : ' <span class="muted">(over 6 months ago, no points)</span>'}</div>
+      <div>${escapeHtml(e.summary)}${isWebLink(e.source_url) ? ` <a href="${escapeHtml(e.source_url)}" target="_blank" rel="noopener">${escapeHtml(e.source_name || 'Source')}</a>` : ''}</div>
+      <div class="muted">Pitch: ${escapeHtml(EVENT_SERVICES[e.type] || '')}</div>
+    </div>`).join('');
+  }
+
+  function eventsText(events, indent) {
+    return events.map(e => `${indent}${fmtIncidentDate(e.date)}${e.site ? ' · ' + e.site : ''} · ${EVENT_TYPE_LABELS[e.type] || 'Event'}: ${e.summary} (pitch: ${EVENT_SERVICES[e.type] || ''}) ${e.source_url}\n`).join('');
+  }
+
+  function eventsCsv(data) {
+    if (!data) return '';
+    if (!data.available) return 'Check unavailable';
+    return data.events.map(e => `${e.date} ${EVENT_TYPE_LABELS[e.type] || e.type}: ${e.summary} (${e.source_url})`).join(' | ') || 'None found';
+  }
+
+  function setTriggerResult(checked, detail, html) {
+    state.trigger_event.checked = checked;
+    state.trigger_event.detail = detail;
+    const chk = document.getElementById('chk-trigger_event');
+    if (chk) chk.checked = checked;
+    const detailEl = document.getElementById('detail-trigger_event');
+    if (detailEl) detailEl.textContent = detail;
+    document.getElementById('tng-triggers').innerHTML = html || '';
+    recompute();
+  }
+
+  async function runEventScan(domain, refresh) {
+    const requestId = ++eventRequestId;
+    lastEvents = null;
+    setTriggerResult(false, 'Checking the news...', '<span class="tng-radar"></span> Searching the news for layoffs, new executives, new facilities and more (10-30s)...');
+    try {
+      const data = await postJson(EVENTS_URL, refresh ? { domain, refresh: true } : { domain }, 240000);
+      if (requestId !== eventRequestId) return; // a newer lookup (or Reset) superseded this one
+      lastEvents = data;
+      if (!data.available) {
+        setTriggerResult(false, 'News check unavailable (' + (data.reason || 'unknown error') + '). Tick this if you know of a recent trigger event.', '');
+        return;
+      }
+      if (!data.events.length) {
+        setTriggerResult(false, 'None found in a quick news search (last 12 months)' + savedSuffix(data.cached_at), '');
+        return;
+      }
+      const recent = data.recent_count;
+      const detail = (recent
+        ? `${recent} in the last 6 months · pitch: ${eventServices(data.events)}`
+        : `${data.events.length} reported 6-12 months ago (context only)`) + savedSuffix(data.cached_at);
+      setTriggerResult(recent > 0, detail, eventsListHtml(data.events));
+    } catch (err) {
+      console.error(err);
+      if (requestId !== eventRequestId) return;
+      setTriggerResult(false, 'News check failed (' + err.message + '). Tick this if you know of a recent trigger event.', '');
     }
   }
 
@@ -1584,6 +1682,7 @@
     setError('');
     runCrmCheck(domain, email); // not awaited — fills in the CRM Check section on its own
     runIncidentScan(domain, refresh); // not awaited either — fills in Security Incidents when the search finishes
+    runEventScan(domain, refresh); // and Trigger Events
     const btn = document.getElementById('tng-analyze-btn');
     btn.disabled = true;
     let seconds = 0;
@@ -1871,6 +1970,9 @@
     lastIncidents = null;
     crmRequestId++; // ignore any CRM check still in flight
     incidentRequestId++; // and any news search
+    eventRequestId++;
+    lastEvents = null;
+    document.getElementById('tng-triggers').innerHTML = '';
     prevTotal = 0;
     prevTier = 'ice_cold';
     lastCompanyInfo = null;
@@ -1928,6 +2030,11 @@
         ? `Security incidents in the news (last 24 months, background only):\n${incidentsText(lastIncidents.incidents, '  • ')}`
         : `Security incidents in the news: none reported in the last 24 months\n`;
     }
+    if (lastEvents && lastEvents.available) {
+      text += lastEvents.events.length
+        ? `Trigger events in the news (last 12 months):\n${eventsText(lastEvents.events, '  • ')}`
+        : `Trigger events in the news: none found in the last 12 months\n`;
+    }
     text += `\n`;
     text += `Signals matched:\n`;
     if (checkedSignals.length) {
@@ -1979,7 +2086,7 @@
 
     const headers = [
       'Timestamp', 'Company', 'Domain', 'Industry', 'Employees', 'Estimated Revenue',
-      'Headquarters', 'Founded', 'Score', 'Tier', 'Zoho CRM', 'Signals Matched', 'Pages Visited', 'Security Incidents',
+      'Headquarters', 'Founded', 'Score', 'Tier', 'Zoho CRM', 'Signals Matched', 'Pages Visited', 'Security Incidents', 'Trigger Events',
       'Contact 1 Name', 'Contact 1 Title', 'Contact 1 LinkedIn', 'Contact 1 Revealed Name', 'Contact 1 Revealed Email',
       'Contact 2 Name', 'Contact 2 Title', 'Contact 2 LinkedIn', 'Contact 2 Revealed Name', 'Contact 2 Revealed Email',
       'Contact 3 Name', 'Contact 3 Title', 'Contact 3 LinkedIn', 'Contact 3 Revealed Name', 'Contact 3 Revealed Email',
@@ -2014,6 +2121,7 @@
       checkedSignals.map(s => s.label).join('; '),
       pagesVisited.join('; '),
       incidentsCsv(lastIncidents),
+      eventsCsv(lastEvents),
       ...contactColumns,
     ];
 
@@ -2364,21 +2472,24 @@
   }
 
   async function vetLead(lead) {
-    const [analysis, crm, news] = await Promise.allSettled([
+    const [analysis, crm, news, trig] = await Promise.allSettled([
       postJson(BACKEND_URL, { domain: lead.domain }, 150000),
       postJson(CRM_URL, { domain: lead.domain }, 60000),
       postJson(INCIDENT_URL, { domain: lead.domain, company_name: lead.organization }, 240000),
+      postJson(EVENTS_URL, { domain: lead.domain, company_name: lead.organization }, 240000),
     ]);
     if (analysis.status === 'rejected') return { ok: false, error: analysis.reason.message };
     const result = analysis.value;
     const crmData = crm.status === 'fulfilled' ? crm.value : { error: crm.reason.message };
     const incidents = news.status === 'fulfilled' ? news.value : { available: false, reason: news.reason.message };
+    const events = trig.status === 'fulfilled' ? trig.value : { available: false, reason: trig.reason.message };
     const auto = autoSignalsFromResult(result);
     const visits = pagesFromVisits(result.site_visits);
     const crmFound = !!(crmData.configured && crmData.found);
     const recentIncident = !!(incidents.available && incidents.recent_count);
+    const recentEvent = !!(events.available && events.recent_count);
     const autoIds = Object.keys(auto).filter(id => auto[id].checked);
-    const scored = scoreSignals(autoIds.concat(Object.keys(visits.pages), crmFound ? ['crm'] : [], recentIncident ? ['recent_incident'] : []));
+    const scored = scoreSignals(autoIds.concat(Object.keys(visits.pages), crmFound ? ['crm'] : [], recentIncident ? ['recent_incident'] : [], recentEvent ? ['trigger_event'] : []));
     return {
       ok: true,
       result,
@@ -2386,6 +2497,8 @@
       crmFound,
       incidents,
       recentIncident,
+      events,
+      recentEvent,
       visits,
       total: scored.total,
       signalIds: scored.ids,
@@ -2403,6 +2516,7 @@
     if (v) {
       if (v.crmFound) add(1, 'in Zoho CRM');
       if (v.recentIncident) add(1, 'recent security incident');
+      if (v.recentEvent) add(0.5, 'trigger event: ' + recentEventLabels(v.events).toLowerCase());
       const pageTypes = new Set(Object.keys(v.visits.pages).map(id => SIGNALS.find(s => s.id === id).pageType));
       const sv = v.result.site_visits;
       if (pageTypes.has('high_intent')) add(1.5, 'visited Contact / Request page');
@@ -2473,6 +2587,7 @@
       if (inc && inc.available && inc.recent_count) {
         chips.push(`<span class="tng-chip warn">⚠ ${inc.recent_count} recent incident${inc.recent_count === 1 ? '' : 's'}</span>`);
       }
+      if (v.recentEvent) chips.push(`<span class="tng-chip info">📌 ${escapeHtml(recentEventLabels(v.events))}</span>`);
       if (v.result.data_source === 'web_research') chips.push('<span class="tng-chip warn">Not in Apollo · web profile</span>');
       if (v.result.cached_at) chips.push(`<span class="tng-chip">Saved lookup · ${escapeHtml(fmtSavedDate(v.result.cached_at))} · no credits</span>`);
     } else if (lead.vetted) {
@@ -2575,6 +2690,14 @@
       } else if (inc) {
         row('Incidents', '<span class="muted">News check unavailable</span>');
       }
+      const ev = v.events;
+      if (ev && ev.available && ev.events.length) {
+        row('Trigger events', '<div class="tng-incidents">' + eventsListHtml(ev.events) + '</div>');
+      } else if (ev && ev.available) {
+        row('Trigger events', '<span class="muted">None found in the last 12 months</span>');
+      } else if (ev) {
+        row('Trigger events', '<span class="muted">News check unavailable</span>');
+      }
       const sv = r.site_visits;
       if (sv && sv.available && sv.total_visits) {
         const pageLabels = Object.keys(v.visits.pages).map(id => SIGNALS.find(s => s.id === id).label);
@@ -2640,6 +2763,7 @@
         const sv = v.result.site_visits;
         if (sv && sv.available) facts.push(`${sv.total_visits || 0} site visits`);
         if (v.recentIncident) facts.push(`${v.incidents.recent_count} recent security incident${v.incidents.recent_count === 1 ? '' : 's'}`);
+        if (v.recentEvent) facts.push(`Trigger: ${recentEventLabels(v.events)} (pitch: ${eventServices(v.events.events)})`);
       } else {
         facts.push('Not vetted');
       }
@@ -2647,6 +2771,9 @@
       text += `   ${facts.join(' · ')}\n`;
       if (v && v.incidents && v.incidents.available && v.incidents.incidents.length) {
         text += `   Incidents (news, background only):\n${incidentsText(v.incidents.incidents, '     - ')}`;
+      }
+      if (v && v.events && v.events.available && v.events.events.length) {
+        text += `   Trigger events (news):\n${eventsText(v.events.events, '     - ')}`;
       }
       if (lead.first_move) text += `   First move: ${lead.first_move}\n`;
       (lead.buyers || []).filter(b => b.name || b.email).forEach(b => {
@@ -2664,7 +2791,7 @@
       'Rank', 'Priority', 'Priority Reasons', 'Organization', 'Website', 'Section', 'Steve Score', 'Score Breakdown',
       'TNG Score', 'TNG Tier', 'Lane', 'Division', 'RMR', 'Opportunity', 'Signal', 'First Move', 'Why TNG',
       'Deadline', 'Deadline Date', 'Value', 'Location', 'Licensed', 'Watch Out', 'Zoho CRM', 'Site Visits',
-      'Pages Visited', 'Security Incidents', 'Brief Contacts', 'Apollo Contact 1', 'Apollo Contact 2', 'Apollo Contact 3',
+      'Pages Visited', 'Security Incidents', 'Trigger Events', 'Brief Contacts', 'Apollo Contact 1', 'Apollo Contact 2', 'Apollo Contact 3',
       'Industry', 'Employees', 'Revenue', 'Headquarters', 'Vetting', 'Sources',
     ];
     const rows = main.concat(rest).map(({ lead, pr }, i) => {
@@ -2682,6 +2809,7 @@
         sv && sv.available ? sv.total_visits || 0 : '',
         v ? Object.keys(v.visits.pages).map(id => SIGNALS.find(s => s.id === id).label).join('; ') : '',
         v ? incidentsCsv(v.incidents) : '',
+        v ? eventsCsv(v.events) : '',
         (lead.buyers || []).filter(b => b.name || b.email).map(b => [b.name, b.title, b.email, b.phone].filter(Boolean).join(', ')).join(' | '),
         contacts[0] ? contactLine(contacts[0]) : '', contacts[1] ? contactLine(contacts[1]) : '', contacts[2] ? contactLine(contacts[2]) : '',
         r.industry || '', r.employee_count || '', r.estimated_revenue || '', r.headquarters || '',
@@ -2747,8 +2875,10 @@
       return sv && sv.available && sv.total_visits;
     }).length;
     const withIncidents = vetted.filter(l => l.vetted.recentIncident).length;
+    const withEvents = vetted.filter(l => l.vetted.recentEvent).length;
     return `${main.length} leads ranked · ${vetted.length} vetted · ${inCrm} in Zoho CRM · ${visited} visited tngdefense.com`
-      + (withIncidents ? ` · ${withIncidents} with recent security incidents` : '');
+      + (withIncidents ? ` · ${withIncidents} with recent security incidents` : '')
+      + (withEvents ? ` · ${withEvents} with trigger events` : '');
   }
 
   // "Daily Brief, Thursday, Oct 29, 2026 · Thu, Oct 29, 2026" says the date twice; show it once.

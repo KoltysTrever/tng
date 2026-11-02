@@ -2,7 +2,8 @@
   "functions": {
     "api/analyze-lead.js": { "maxDuration": 120 },
     "api/parse-brief.js": { "maxDuration": 300 },
-    "api/incident-scan.js": { "maxDuration": 240 }
+    "api/incident-scan.js": { "maxDuration": 240 },
+    "api/trigger-events.js": { "maxDuration": 240 }
   },
   "headers": [
     {
