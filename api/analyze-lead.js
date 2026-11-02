@@ -9,11 +9,17 @@ import { researchCompany } from '../lib/web-research.js';
 import { matchLicensedState } from '../lib/licensing.js';
 import { extractJson } from '../lib/extract-json.js';
 import { claudeErrorMessage } from '../lib/claude-error.js';
+import { cacheGet, cacheSet } from '../lib/cache.js';
+
+// A saved lookup is reused for a week: firmographics and job postings move slowly, and a
+// repeat lookup then costs no Apollo credits or Claude call. Site visits are always fresh.
+const CACHE_TTL_SECONDS = 7 * 24 * 3600;
 
 export default async function handler(req, res) {
   if (!guard(req, res)) return;
 
-  const { domain, email } = req.body || {};
+  // refresh: true skips the saved lookup and spends credits on a fresh one.
+  const { domain, email, refresh } = req.body || {};
   if (!domain) {
     return res.status(400).json({ error: 'domain is required' });
   }
@@ -26,8 +32,20 @@ export default async function handler(req, res) {
   }
 
   const cleanDomain = domain.trim().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '');
+  const cacheKey = `analyze:v1:${cleanDomain.toLowerCase()}:${String(email || '').trim().toLowerCase()}`;
 
   try {
+    // ---- 0. Looked up this week already? Reuse it (free), with fresh site visits ----
+    if (refresh !== true) {
+      const saved = await cacheGet(cacheKey);
+      if (saved && saved.result) {
+        const result = saved.result;
+        result.site_visits = await getSiteVisits(APOLLO_API_KEY, saved.org_id);
+        result.cached_at = saved.saved_at;
+        return res.status(200).json(result);
+      }
+    }
+
     // ---- 1. Apollo Organization Enrichment (costs 1 Apollo credit) ----
     let org = null;
     try {
@@ -167,6 +185,14 @@ export default async function handler(req, res) {
     if (research) {
       result.research = { found: research.found, reason: research.reason || null, sources: research.sources || [] };
     }
+
+    // Save it for next time, but not a lookup that found nothing to score (a typo, or a
+    // failed web search) — that should be free to retry properly.
+    if (org || (research && research.found)) {
+      const { site_visits, ...toSave } = result;
+      await cacheSet(cacheKey, { result: toSave, org_id: org ? org.id : null, saved_at: new Date().toISOString() }, CACHE_TTL_SECONDS);
+    }
+    result.cached_at = null;
 
     return res.status(200).json(result);
   } catch (err) {

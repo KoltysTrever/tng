@@ -218,6 +218,14 @@
     background: var(--tng-surface-2);
     border-radius: var(--tng-radius-sm);
   }
+  /* "Saved lookup" line: shown when Analyze reused this week's result instead of spending credits. */
+  .tng-cache-note { display: none; margin-top: 14px; font-size: 13px; color: var(--tng-text-tertiary); }
+  .tng-cache-note.active { display: block; }
+  .tng-cache-note button {
+    background: none; border: 0; padding: 0; margin-left: 4px; font: inherit; font-weight: 600;
+    color: var(--tng-intel-text); cursor: pointer;
+  }
+  .tng-cache-note button:hover { text-decoration: underline; }
   .tng-corp-structure { display: none; }
   .tng-corp-structure.active { display: block; }
   .tng-corp-structure strong, .tng-crm-records strong { color: var(--tng-text); font-weight: 600; }
@@ -818,7 +826,7 @@
   <div class="tng-header">
     <div class="tng-header-title-block">
       <h1>TNG Opportunity Score</h1>
-      <div class="tng-version-line">TNG OP TOOL V.3.1 · Created by Trever Koltys</div>
+      <div class="tng-version-line">TNG OP TOOL V.3.2 · Created by Trever Koltys</div>
     </div>
     <span class="tng-header-note">This tool is to be used in conjunction with <a href="https://app.apollo.io/" target="_blank" rel="noopener">app.apollo.io</a></span>
   </div>
@@ -855,6 +863,7 @@
     <div class="tng-source-note" id="tng-source-note"></div>
     <div class="tng-license-badge" id="tng-license-badge"></div>
     <div class="tng-corp-structure" id="tng-corp-structure"></div>
+    <div class="tng-cache-note" id="tng-cache-note"></div>
     <a href="#" target="_blank" rel="noopener" class="tng-company-linkedin" id="tng-company-linkedin" style="display:none;">View Company on LinkedIn →</a>
   </div>
 
@@ -1350,12 +1359,12 @@
     recompute();
   }
 
-  async function runIncidentScan(domain) {
+  async function runIncidentScan(domain, refresh) {
     const requestId = ++incidentRequestId;
     lastIncidents = null;
     setIncidentResult(false, 'Checking the news...', '<span class="tng-radar"></span> Searching the news for incidents at their sites (20-40s)...');
     try {
-      const data = await postJson(INCIDENT_URL, { domain }, 240000);
+      const data = await postJson(INCIDENT_URL, refresh ? { domain, refresh: true } : { domain }, 240000);
       if (requestId !== incidentRequestId) return; // a newer lookup (or Reset) superseded this one
       lastIncidents = data;
       if (!data.available) {
@@ -1363,13 +1372,13 @@
         return;
       }
       if (!data.incidents.length) {
-        setIncidentResult(false, 'No reported incidents at their sites in the last 24 months', '');
+        setIncidentResult(false, 'None found in a quick news search (last 24 months)' + savedSuffix(data.cached_at), '');
         return;
       }
       const recent = data.recent_count;
-      const detail = recent
+      const detail = (recent
         ? `${recent} reported in the last 12 months`
-        : `${data.incidents.length} reported 12-24 months ago (context only)`;
+        : `${data.incidents.length} reported 12-24 months ago (context only)`) + savedSuffix(data.cached_at);
       setIncidentResult(recent > 0, detail, incidentsListHtml(data.incidents)
         + '<div class="tng-incident-note">Use for background, not as an opener.</div>');
     } catch (err) {
@@ -1377,6 +1386,16 @@
       if (requestId !== incidentRequestId) return;
       setIncidentResult(false, 'News check failed (' + err.message + '). Tick this if you know of a recent incident.', '');
     }
+  }
+
+  // " · news checked Oct 30" when the backend reused this week's search.
+  function savedSuffix(cachedAt) {
+    return cachedAt ? ' · news checked ' + fmtSavedDate(cachedAt) : '';
+  }
+
+  function fmtSavedDate(iso) {
+    const d = new Date(iso);
+    return isNaN(d) ? '' : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
   // Zoho CRM check — its own request, run alongside Analyze so a slow or failing
@@ -1538,7 +1557,9 @@
     return out;
   }
 
-  window.tngAnalyze = async function() {
+  // refresh: true (from the "Refresh" link) skips this week's saved lookup and spends credits.
+  window.tngAnalyze = async function(refresh) {
+    refresh = refresh === true;
     let domain = document.getElementById('tng-domain').value.trim();
     const email = document.getElementById('tng-email').value.trim();
 
@@ -1562,7 +1583,7 @@
     }
     setError('');
     runCrmCheck(domain, email); // not awaited — fills in the CRM Check section on its own
-    runIncidentScan(domain); // not awaited either — fills in Security Incidents when the search finishes
+    runIncidentScan(domain, refresh); // not awaited either — fills in Security Incidents when the search finishes
     const btn = document.getElementById('tng-analyze-btn');
     btn.disabled = true;
     let seconds = 0;
@@ -1598,7 +1619,7 @@
         fetch(BACKEND_URL, {
           method: "POST",
           headers: API_HEADERS,
-          body: JSON.stringify({ domain, email: email || undefined })
+          body: JSON.stringify({ domain, email: email || undefined, refresh: refresh || undefined })
         }),
         timeoutPromise
       ]);
@@ -1701,6 +1722,17 @@
       } else {
         sourceNoteEl.innerHTML = '';
         sourceNoteEl.classList.remove('active');
+      }
+
+      // Reused this week's lookup: say so, and offer a paid refresh.
+      const cacheNoteEl = document.getElementById('tng-cache-note');
+      if (result.cached_at) {
+        cacheNoteEl.innerHTML = `Saved lookup from ${escapeHtml(fmtSavedDate(result.cached_at))}, no credits used. Site visits and Zoho are always live.`
+          + '<button type="button" onclick="tngAnalyze(true)">Refresh (2 Apollo credits)</button>';
+        cacheNoteEl.classList.add('active');
+      } else {
+        cacheNoteEl.innerHTML = '';
+        cacheNoteEl.classList.remove('active');
       }
 
       lastCompanyInfo = {
@@ -1834,6 +1866,7 @@
     document.getElementById('tng-crm-records').innerHTML = '';
     document.getElementById('tng-visit-summary').innerHTML = '';
     document.getElementById('tng-incidents').innerHTML = '';
+    document.getElementById('tng-cache-note').classList.remove('active');
     lastSiteVisits = null;
     lastIncidents = null;
     crmRequestId++; // ignore any CRM check still in flight
@@ -2284,7 +2317,7 @@
     const n = brief.leads.filter(l => l.include && l.domain).length;
     btn.textContent = `Vet ${n} lead${n === 1 ? '' : 's'}`;
     btn.disabled = !n;
-    document.getElementById('tng-brief-credits').textContent = n ? `About ${n * 2} Apollo credits (2 per lead)` : '';
+    document.getElementById('tng-brief-credits').textContent = n ? `Up to ${n * 2} Apollo credits (2 per lead; companies looked up this week are free)` : '';
   }
 
   // ----- Vetting -----
@@ -2441,6 +2474,7 @@
         chips.push(`<span class="tng-chip warn">⚠ ${inc.recent_count} recent incident${inc.recent_count === 1 ? '' : 's'}</span>`);
       }
       if (v.result.data_source === 'web_research') chips.push('<span class="tng-chip warn">Not in Apollo · web profile</span>');
+      if (v.result.cached_at) chips.push(`<span class="tng-chip">Saved lookup · ${escapeHtml(fmtSavedDate(v.result.cached_at))} · no credits</span>`);
     } else if (lead.vetted) {
       chips.push('<span class="tng-chip bad">Vetting failed</span>');
     } else {
@@ -2558,7 +2592,7 @@
       return `<div class="tng-brief-detail"><div class="tng-brief-people-label">Details</div><dl class="tng-brief-facts">${rows.join('')}</dl>${draft}</div>`;
     }
     const open = lead.domain
-      ? `<div class="tng-brief-actions"><button class="tng-export-btn" data-brief-action="open" data-key="${lead.key}">Open in Single Lead (new lookup, 2 credits)</button></div>` : '';
+      ? `<div class="tng-brief-actions"><button class="tng-export-btn" data-brief-action="open" data-key="${lead.key}">Open in Single Lead</button></div>` : '';
     if (!rows.length && !draft && !open) return '';
     return `<details class="tng-brief-more" data-key="${lead.key}" ${lead.moreOpen ? 'open' : ''}>
       <summary>More detail</summary>

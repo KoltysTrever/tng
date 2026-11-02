@@ -30,13 +30,13 @@ when called:
 ## Companies Apollo doesn't know (web research fallback)
 
 When Apollo's organization enrichment finds no match, `analyze-lead` asks Claude
-(Opus 5.5 with the server-side web search tool, low effort, at most 5 searches)
+(Sonnet 5.5 with the basic server-side web search tool, low effort, at most 5 searches)
 to build a factual profile from public sources — see `lib/web-research.js`. The
 profile is mapped onto the same curated shape as Apollo data, so the normal
 scoring prompt and rules run on it. The response carries
 `data_source: "web_research"` plus `research.sources`, and the page shows a
 "Not in Apollo" notice with those links. Costs roughly the web search fee plus
-one Opus call, only on lookups Apollo can't match. `vercel.json` raises
+one Sonnet call, only on lookups Apollo can't match. `vercel.json` raises
 `analyze-lead`'s time limit to 120s to leave room for the research.
 
 ## Website visits (Apollo MCP)
@@ -58,18 +58,33 @@ at that domain. It returns counts, a few linked records, and whether a typed
 contact email is already in the CRM. Read-only, no Apollo credits. The page calls
 it alongside Analyze and scores "Already in Zoho CRM" (+30) from the result.
 
+## Saved lookups (cache)
+
+`analyze-lead` and `incident-scan` save each company's result for 7 days in Upstash
+Redis (`lib/cache.js`), so looking the same company up again — a re-run, "Open in
+Single Lead" from a brief, the same organization in the next brief — costs no Apollo
+credits and no Claude call. Site visits and the Zoho check always run live. The page
+says when a result was saved and offers "Refresh", which sends `refresh: true` and
+spends credits on a fresh lookup. Lookups that found nothing (no Apollo match and no
+web profile, or a failed news search) aren't saved, so a retry does real work.
+
+Set up once: Vercel → the project → Storage → add **Upstash for Redis** (free tier) and
+connect it to the project. That adds `KV_REST_API_URL` and `KV_REST_API_TOKEN` (the
+`UPSTASH_REDIS_REST_*` names also work); redeploy. Without them nothing is saved and
+every lookup is fresh, as before.
+
 ## Security incidents (news search)
 
 `/api/incident-scan` (body `{ "domain": "...", "company_name": "optional" }`, same
-header) asks Claude (Opus 5.5 with the server-side web search tool, low effort, at
-most 4 searches) for physical security incidents reported in the news in the last 24
+header) asks Claude (Haiku 5.5 with the basic server-side web search tool, low effort,
+at most 4 searches) for physical security incidents reported in the news in the last 24
 months at the company's own sites or against its executives: assaults on staff,
 weapons, lockdowns, threats. See `lib/incident-scan.js`. Only incidents with a real
 source link and a readable date are kept; those in the last 12 months tick "Recent
 security incident" (+20) on the page and add +1 to a Hunter Brief lead's priority.
 Finding nothing never costs points. It never fails the request: errors come back as
 `{ "available": false, "reason": "..." }`. No Apollo credits; roughly the web search
-fee plus one Opus call per lookup. The page calls it alongside Analyze and fills in
+fee (4 searches, about 4 cents) plus a small Haiku call per lookup. The page calls it alongside Analyze and fills in
 the Security Incidents section when it finishes (20-40s).
 
 ## The page (tool/app.js) and the SharePoint launcher
