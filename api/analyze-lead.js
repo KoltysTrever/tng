@@ -15,7 +15,10 @@ import { cacheGet, cacheSet } from '../lib/cache.js';
 // repeat lookup then costs no Apollo credits or Claude call. Site visits are always fresh.
 const CACHE_TTL_SECONDS = 7 * 24 * 3600;
 
-const SCORING_MODEL = 'claude-sonnet-4-6';
+// Haiku: in a side-by-side test on five health systems it matched Sonnet 4.6 on 89 of 90
+// scoring signals (the miss was bad Apollo revenue data, now caught by applyRevenueFloor)
+// at about 1/16 of the cost, and faster. The debug comparison can still try the others.
+const SCORING_MODEL = 'claude-haiku-5-5';
 const SCORING_MODELS = ['claude-sonnet-4-6', 'claude-sonnet-5-5', 'claude-haiku-5-5'];
 
 export default async function handler(req, res) {
@@ -167,6 +170,7 @@ export default async function handler(req, res) {
     }
 
     const { result } = await scoreLead(ANTHROPIC_API_KEY, claudePrompt);
+    applyRevenueFloor(result, curatedOrg && curatedOrg.estimated_num_employees);
 
     // Informational only — never affects scoring. Deterministic list match, not an LLM judgment call.
     const licensedStateName = matchLicensedState(curatedOrg && curatedOrg.state, curatedOrg && curatedOrg.country);
@@ -228,6 +232,21 @@ async function scoreLead(apiKey, prompt, model = SCORING_MODEL) {
   const textBlock = (data.content || []).find((b) => b.type === 'text');
   if (!textBlock) throw new Error('Claude returned no text content');
   return { result: extractJson(textBlock.text), usage: data.usage || null };
+}
+
+// Apollo's revenue figure is sometimes far too low (CommonSpirit: $103.6M for 160,000
+// employees). Headcount sets a floor: even at $50K of revenue per employee, a company this
+// size is at least in this tier. Only ever raises the tier, and says so in the reasoning.
+const REVENUE_TIERS = ['unknown', 'under_10m', '10m_100m', '100m_500m', '500m_plus'];
+const TIER_NAMES = { '10m_100m': '$10M', '100m_500m': '$100M', '500m_plus': '$500M' };
+
+function applyRevenueFloor(result, employees) {
+  const n = Number(employees) || 0;
+  const floor = n >= 10000 ? '500m_plus' : n >= 2000 ? '100m_500m' : n >= 200 ? '10m_100m' : null;
+  if (!floor || REVENUE_TIERS.indexOf(result.revenue_tier) >= REVENUE_TIERS.indexOf(floor)) return;
+  result.revenue_tier = floor;
+  result.revenue_tier_reasoning = `~${n.toLocaleString('en-US')} employees puts revenue above ${TIER_NAMES[floor]}`
+    + (result.revenue_tier_reasoning ? ` (the reported figure looks too low: ${result.revenue_tier_reasoning})` : '');
 }
 
 // Debug only: the same scoring input through each model, with its token use and time.

@@ -10,8 +10,10 @@ import { matchLicensedState, LICENSED_STATE_NAMES } from '../lib/licensing.js';
 import { claudeErrorMessage } from '../lib/claude-error.js';
 import { cacheGet, cacheSet } from '../lib/cache.js';
 
-const MODEL = 'claude-opus-5-5';
-const BRIEF_MODELS = ['claude-opus-5-5', 'claude-sonnet-5-5'];
+// Sonnet: on the 10-27 brief it found the same 16 leads with the same scores, websites,
+// states and buyer emails as Opus, at half the cost and 15 seconds faster.
+const MODEL = 'claude-sonnet-5-5';
+const BRIEF_MODELS = ['claude-sonnet-5-5', 'claude-opus-5-5'];
 const MAX_BRIEF_CHARS = 80000;
 // The same brief uploaded again within a week (a second person, or a re-run) is read from
 // the saved copy: instant, and no Claude call.
@@ -89,12 +91,13 @@ Extract every lead from the ranked leads (table and lead cards together: one ent
 
 For each lead:
 - Copy names, titles, emails, phone numbers, dates, dollar figures and scores exactly as the brief states them. Never invent or guess any of these; use "" when the brief doesn't say.
+- organization: the organization's name as people call it (e.g. "IndyGo", "Harvard University"), without RFP or solicitation numbers or a description of the work.
 - domain: the official website domain of the organization TNG would pitch or contract with (e.g. "electra.aero", "indygo.net", "va.gov"), not a news site, aggregator, procurement portal or LinkedIn. Prefer a domain the brief itself shows (an email address or the organization's own link). If the brief names a buyer at one company of several (e.g. a developer building for a tenant), use the buyer's company. Use what you know about well-known organizations; set domain_confidence to how sure you are.
 - vet: false when there is no single organization to check (unnamed or masked issuer, an industry-wide event, a breach affecting many people) or you can't name its domain with at least medium confidence; say why in vet_note. Otherwise true, with vet_note "".
 - signal: at most 2 short sentences: what happened and when, with the key numbers.
 - why_tng and first_move: one sentence each.
 - buyers: the named people the brief lists as buyers or contacts, with their email and phone when given.
-- deadline: the brief's deadline wording ("" if none); deadline_date: that date as YYYY-MM-DD, or "" when there is no specific date.
+- deadline: the brief's deadline wording ("" if none); deadline_date: the date proposals or responses are due, as YYYY-MM-DD. Use "" when the brief gives no such date or calls the deadline unconfirmed; any other date (a contract or bridge ending, a vote, an event) is not a deadline_date.
 - site_location: where the work would be (city and state); site_state: that US state's full name ("" if national, unknown or outside the US).
 - caveats: anything that blocks or qualifies pursuit (licensing, partner needed, issuer unconfirmed, unverified), "" if none. TNG is directly licensed in ${LICENSED_STATE_NAMES.join(', ')} (per tngdefense.com/licensing). If the brief says TNG lacks a license in one of those states, that claim is out of date: leave it out of caveats.
 - sources: the brief's source links for this lead (label + url).
