@@ -619,6 +619,15 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   .tng-zoho-row { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 14px; font-size: 14px; }
   .tng-zoho-row a, .tng-zoho-result a { color: var(--tng-intel-text); }
   .tng-zoho-result { margin-top: 10px; font-size: 14px; color: var(--tng-clear-text); }
+  .tng-help-link { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; padding: 0; background: none; border: none; color: var(--tng-intel-text); font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .tng-help-link:hover { text-decoration: underline; }
+  .tng-help-link .tng-ico { width: 14px; height: 14px; }
+  .tng-modal-sub .tng-help-link { margin: 0; display: inline; }
+  .tng-help-steps { margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.55; color: var(--tng-text); }
+  .tng-help-steps li + li { margin-top: 6px; }
+  .tng-help-h { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--tng-text-tertiary); margin: 18px 0 6px; }
+  .tng-help-p { font-size: 14px; line-height: 1.55; color: var(--tng-text-secondary); margin: 0; }
+  .tng-help-p b, .tng-help-steps b { color: var(--tng-white); font-weight: 600; }
   .tng-modal-backdrop { position: fixed; inset: 0; z-index: 100; display: flex; align-items: flex-start; justify-content: center; padding: 6vh 16px; background: rgba(0,0,0,0.72); overflow-y: auto; }
   .tng-modal { width: 100%; max-width: 640px; background: var(--tng-surface); border: 1px solid var(--tng-hairline-strong); border-radius: var(--tng-radius-lg); padding: 24px; box-shadow: 0 24px 80px rgba(0,0,0,0.6); }
   .tng-modal-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -925,9 +934,10 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   <div class="tng-header">
     <div class="tng-header-title-block">
       <h1>TNG Opportunity Score</h1>
-      <div class="tng-version-line">TNG OP TOOL V.3.8 · Created by Trever Koltys</div>
+      <div class="tng-version-line">TNG OP TOOL V.3.9 · Created by Trever Koltys</div>
     </div>
-    <span class="tng-header-note">This tool is to be used in conjunction with <a href="https://app.apollo.io/" target="_blank" rel="noopener">app.apollo.io</a></span>
+    <span class="tng-header-note">This tool is to be used in conjunction with <a href="https://app.apollo.io/" target="_blank" rel="noopener">app.apollo.io</a><br>
+      <button class="tng-help-link" onclick="tngZohoHelp()">${tngIcon('info')}Zoho push instructions</button></span>
   </div>
 
   <div class="tng-mode-tabs" role="tablist" aria-label="Mode">
@@ -3865,7 +3875,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
       <input class="tng-push-input" id="tng-push-${name}" data-field="${name}" value="${escapeHtml(s.fields[name])}" ${busy ? 'disabled' : ''} autocomplete="off" spellcheck="false"></div>`;
     el.innerHTML = `<div class="tng-modal">
       <div class="tng-modal-head"><h2 id="tng-push-title">Push to Zoho</h2><button class="tng-modal-x" data-push="close" aria-label="Close">×</button></div>
-      <p class="tng-modal-sub">Creates one Contact in Zoho CRM with Contact Type "Prospect" and adds the opportunity-score note. It never creates companies and never changes existing records. Check the details, then push.</p>
+      <p class="tng-modal-sub">Creates one Contact in Zoho CRM with Contact Type "Prospect" and adds the opportunity-score note. It never creates companies and never changes existing records. Check the details, then push. <button class="tng-help-link" data-push="help">How it works</button></p>
       ${off}
       ${input('owner_email', 'Your work email (the Contact is assigned to you)')}
       ${picker}
@@ -3921,10 +3931,53 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
       case 'check': runPushPreview(); break;
       case 'push': runPush(); break;
       case 'reveal': revealForPush(); break;
+      case 'help': tngZohoHelp(); break;
     }
   }
 
-  document.addEventListener('keydown', e => { if (e.key === 'Escape' && pushState) closePush(); });
+  // The short how-to, from the header button or the push window. Escape closes it first.
+  function closeZohoHelp() {
+    const el = document.getElementById('tng-help-modal');
+    if (el) el.remove();
+    return !!el;
+  }
+
+  window.tngZohoHelp = function() {
+    if (document.getElementById('tng-help-modal')) return;
+    const el = document.createElement('div');
+    el.id = 'tng-help-modal';
+    el.className = 'tng-modal-backdrop';
+    el.setAttribute('role', 'dialog');
+    el.setAttribute('aria-modal', 'true');
+    el.setAttribute('aria-labelledby', 'tng-help-title');
+    el.innerHTML = `<div class="tng-modal">
+      <div class="tng-modal-head"><h2 id="tng-help-title">Zoho push instructions</h2><button class="tng-modal-x" data-help="close" aria-label="Close">×</button></div>
+      <p class="tng-modal-sub">Push to Zoho adds one person to Zoho CRM as a Contact with Contact Type "Prospect", assigned to you, with the TNG score note. It never creates companies and never changes existing records.</p>
+      <ol class="tng-help-steps">
+        <li>Click <b>Push to Zoho</b> on a vetted Hunter Brief lead, or on the Single Lead contact card.</li>
+        <li>Enter <b>your work email</b> (first time only). The Contact is assigned to you.</li>
+        <li>Pick <b>who to push</b>. Apollo contacts need <b>Reveal</b> first (1 Apollo credit): a full name and an email or phone are required.</li>
+        <li>Check the details. If you edit anything, click <b>Check again</b>.</li>
+        <li>Click <b>Push to Zoho</b>, then <b>Open the Contact in Zoho</b> to see it.</li>
+      </ol>
+      <div class="tng-help-h">If it won't push</div>
+      <p class="tng-help-p">The message says why. Most often the person is <b>already in Zoho</b> (open the linked record instead), the name or email is missing, or the daily limit is reached (<b>10 for you, 25 for the team</b>).</p>
+      <div class="tng-help-h">Finding pushed Contacts later</div>
+      <p class="tng-help-p">Search Zoho Contacts for <b>"Added by the TNG lead tool"</b>. To clean up a dead prospect, change its Contact Type or delete it in Zoho.</p>
+      <div class="tng-push-foot"><button class="tng-export-btn primary" data-help="close">Got it</button></div>
+    </div>`;
+    el.addEventListener('click', e => {
+      if (e.target === el || e.target.closest('[data-help="close"]')) closeZohoHelp();
+    });
+    document.querySelector('.tng-lead-scorer').appendChild(el);
+    el.querySelector('[data-help="close"]').focus();
+  };
+
+  document.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    if (closeZohoHelp()) return;
+    if (pushState) closePush();
+  });
 
   function openBriefPush(lead) {
     const v = vettedOf(lead);
