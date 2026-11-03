@@ -300,20 +300,24 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   .tng-contact-reasoning { font-size: 14px; color: var(--tng-text-tertiary); margin-top: 10px; line-height: 1.5; }
   .tng-contact-actions { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-top: 18px; }
   .tng-contact-actions .tng-contact-link { margin-top: 0; }
+  /* Action buttons (Reveal, Push to Zoho) are solid fills, so they stand apart from the tinted
+     chips and quiet secondary buttons: these are the things we want people to press. */
   .tng-reveal-btn {
-    background: rgba(21,101,192,0.16);
-    color: var(--tng-intel-text);
-    border: none;
+    background: var(--tng-intel-accent);
+    color: var(--tng-white);
+    border: 1px solid rgba(255,255,255,0.14);
     padding: 10px 18px;
     font-size: 14px;
     font-weight: 600;
     border-radius: var(--tng-radius-sm);
     cursor: pointer;
     font-family: inherit;
-    transition: background 0.2s;
+    box-shadow: 0 4px 14px rgba(21,101,192,0.35);
+    transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
   }
-  .tng-reveal-btn:hover { background: rgba(21,101,192,0.26); }
-  .tng-reveal-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .tng-reveal-btn:hover:not(:disabled) { background: #1976D2; box-shadow: 0 6px 20px rgba(21,101,192,0.5); }
+  .tng-reveal-btn:active:not(:disabled), .tng-zoho-btn:active { transform: scale(0.98); }
+  .tng-reveal-btn:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
   .tng-reveal-result { font-size: 15px; color: var(--tng-text-secondary); margin-top: 12px; line-height: 1.5; }
   .tng-reveal-result .name { color: var(--tng-white); font-weight: 600; }
   .tng-reveal-result .email { color: var(--tng-clear-text); }
@@ -618,8 +622,8 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   .tng-export-confirm { font-size: 14px; color: var(--tng-clear-text); opacity: 0; transition: opacity 0.3s; }
 
   /* ---------- Push to Zoho ---------- */
-  .tng-zoho-btn { display: inline-flex; align-items: center; gap: 8px; background: rgba(46,125,50,0.16); color: var(--tng-clear-text); border: none; padding: 10px 16px; font-size: 14px; font-weight: 600; border-radius: var(--tng-radius-sm); cursor: pointer; font-family: inherit; transition: background 0.2s; }
-  .tng-zoho-btn:hover { background: rgba(46,125,50,0.28); }
+  .tng-zoho-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--tng-alert-clear); color: var(--tng-white); border: 1px solid rgba(255,255,255,0.14); padding: 10px 16px; font-size: 14px; font-weight: 600; border-radius: var(--tng-radius-sm); cursor: pointer; font-family: inherit; box-shadow: 0 4px 14px rgba(46,125,50,0.35); transition: background 0.2s, box-shadow 0.2s, transform 0.1s; }
+  .tng-zoho-btn:hover { background: #388E3C; box-shadow: 0 6px 20px rgba(46,125,50,0.5); }
   .tng-zoho-row { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 14px; font-size: 14px; }
   .tng-zoho-row a, .tng-zoho-result a { color: var(--tng-intel-text); }
   .tng-zoho-result { margin-top: 10px; font-size: 14px; color: var(--tng-clear-text); }
