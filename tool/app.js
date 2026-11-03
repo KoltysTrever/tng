@@ -13,6 +13,10 @@ const TNG_ICON_PATHS = {
   userPlus: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>',
   info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
 };
+// The Zoho mark (a square drawn in Zoho's four colors), inline so it shows where outside images are blocked.
+const ZOHO_MARK = '<svg class="tng-zoho-mark" viewBox="0 0 24 24" fill="none" stroke-width="3.2" stroke-linecap="round" aria-hidden="true">'
+  + '<path d="M4 15V7a3 3 0 0 1 3-3h4" stroke="#E42527"/><path d="M11 4h6a3 3 0 0 1 3 3v2" stroke="#089949"/>'
+  + '<path d="M20 9v8a3 3 0 0 1-3 3h-4" stroke="#F9B21D"/><path d="M13 20H7a3 3 0 0 1-3-3v-2" stroke="#226DB4"/></svg>';
 const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${TNG_ICON_PATHS[name]}</svg>`;
 
 // ---------- Page: styles and markup, mounted into the launcher's page ----------
@@ -623,6 +627,10 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   .tng-help-link:hover { text-decoration: underline; }
   .tng-help-link .tng-ico { width: 14px; height: 14px; }
   .tng-modal-sub .tng-help-link { margin: 0; display: inline; }
+  /* The header's instructions button: an outlined pill with the Zoho mark, so it reads as a button. */
+  .tng-zoho-help-btn { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; padding: 8px 14px; background: var(--tng-surface-2); border: 1px solid var(--tng-hairline-strong); border-radius: 999px; color: var(--tng-white); font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: border-color 0.2s, background 0.2s; }
+  .tng-zoho-help-btn:hover { background: var(--tng-surface-3); border-color: rgba(255,255,255,0.35); }
+  .tng-zoho-mark { width: 18px; height: 18px; flex: none; }
   .tng-help-steps { margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.55; color: var(--tng-text); }
   .tng-help-steps li + li { margin-top: 6px; }
   .tng-help-h { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--tng-text-tertiary); margin: 18px 0 6px; }
@@ -937,7 +945,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
       <div class="tng-version-line">TNG OP TOOL V.3.9 · Created by Trever Koltys</div>
     </div>
     <span class="tng-header-note">This tool is to be used in conjunction with <a href="https://app.apollo.io/" target="_blank" rel="noopener">app.apollo.io</a><br>
-      <button class="tng-help-link" onclick="tngZohoHelp()">${tngIcon('info')}Zoho push instructions</button></span>
+      <button class="tng-zoho-help-btn" onclick="tngZohoHelp()">${ZOHO_MARK}Zoho push instructions</button></span>
   </div>
 
   <div class="tng-mode-tabs" role="tablist" aria-label="Mode">
