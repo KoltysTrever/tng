@@ -648,6 +648,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   /* ---------- Single Lead: a calm start, results first, the full checklist on request ---------- */
   .tng-empty { display: none; margin-top: 20px; padding: 28px 28px 22px; background: var(--tng-surface); border: 1px solid var(--tng-hairline); border-radius: 18px; }
   #tng-mode-single.is-empty .tng-empty { display: block; }
+  #tng-mode-single { padding-bottom: 96px; }
   #tng-mode-single.is-empty .tng-section, #tng-mode-single.is-empty .tng-adjust,
   #tng-mode-single.is-empty .tng-export-row, #tng-mode-single.is-empty .tng-score-row,
   #tng-mode-single.is-empty .tng-breakdown, #tng-mode-single.is-empty .tng-score-help { display: none; }
@@ -669,8 +670,17 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   .tng-adjust-title { display: inline-flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 600; color: var(--tng-white); }
   .tng-adjust-title .tng-ico { color: var(--tng-text-secondary); }
   .tng-adjust-count { font-size: 13px; color: var(--tng-text-tertiary); font-variant-numeric: tabular-nums; }
-  .tng-adjust-chev { margin-left: auto; display: inline-flex; color: var(--tng-text-tertiary); transition: transform 0.2s; }
+  /* The open/close control reads as one: a label plus a round arrow button. */
+  .tng-adjust-cta { margin-left: auto; display: inline-flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: var(--tng-text-secondary); transition: color 0.2s; }
+  .tng-adjust-cta .when-open, .tng-adjust[open] .tng-adjust-cta .when-closed { display: none; }
+  .tng-adjust[open] .tng-adjust-cta .when-open { display: inline; }
+  .tng-adjust-chev { display: inline-flex; align-items: center; justify-content: center; width: 34px; height: 34px; border-radius: 50%; background: var(--tng-surface-3); border: 1px solid var(--tng-hairline-strong); color: var(--tng-white); transition: transform 0.25s, background 0.2s, border-color 0.2s; }
+  .tng-adjust-chev .tng-ico { width: 18px; height: 18px; }
+  .tng-adjust > summary:hover .tng-adjust-cta { color: var(--tng-white); }
+  .tng-adjust > summary:hover .tng-adjust-chev { background: #333336; border-color: rgba(255,255,255,0.3); }
   .tng-adjust[open] .tng-adjust-chev { transform: rotate(180deg); }
+  .tng-adjust-note { flex-basis: 100%; font-size: 13px; color: var(--tng-text-tertiary); line-height: 1.5; }
+  .tng-adjust[open] .tng-adjust-note { display: none; }
   .tng-adjust-matched { flex-basis: 100%; font-size: 13px; color: var(--tng-clear-text); line-height: 1.5; }
   .tng-adjust-matched:empty { display: none; }
   .tng-adjust-body { padding: 4px 22px 24px; border-top: 1px solid var(--tng-hairline); }
@@ -1071,7 +1081,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   <div class="tng-header">
     <div class="tng-header-title-block">
       <h1>TNG Opportunity Score</h1>
-      <div class="tng-version-line">TNG OP TOOL V.4.2 · Created by Trever Koltys</div>
+      <div class="tng-version-line">TNG OP TOOL V.4.3 · Created by Trever Koltys</div>
     </div>
     <div class="tng-header-tools">
       <a class="tng-header-link" href="https://app.apollo.io/" target="_blank" rel="noopener" title="This tool works alongside Apollo">Open Apollo${tngIcon('external')}</a>
@@ -1189,8 +1199,9 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     <summary>
       <span class="tng-adjust-title">${tngIcon('sliders')}Adjust signals</span>
       <span class="tng-adjust-count" id="tng-adjust-count"></span>
-      <span class="tng-adjust-chev">${tngIcon('chevron')}</span>
+      <span class="tng-adjust-cta"><span class="when-closed">See all signals</span><span class="when-open">Hide</span><span class="tng-adjust-chev">${tngIcon('chevron')}</span></span>
       <span class="tng-adjust-matched" id="tng-adjust-matched"></span>
+      <span class="tng-adjust-note">Optional: open it to tick or untick anything you know better, and the score updates as you go.</span>
     </summary>
     <div class="tng-adjust-body">
       <div class="tng-section">
