@@ -3,6 +3,17 @@
 // window.TNG_CONFIG.accessCode and loads this script, so a push here reaches everyone the
 // next time they open the file. Nothing secret belongs in this file: it is public.
 
+// Small line icons for the export buttons (16px, drawn in the button's text color).
+const TNG_ICON_PATHS = {
+  copy: '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+  sheet: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/>',
+  doc: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/>',
+  print: '<path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/>',
+  plus: '<path d="M12 5v14M5 12h14"/>',
+  info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
+};
+const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${TNG_ICON_PATHS[name]}</svg>`;
+
 // ---------- Page: styles and markup, mounted into the launcher's page ----------
 (function mountTngTool() {
   const TNG_CSS = `
@@ -588,6 +599,17 @@
     transition: background 0.2s;
   }
   .tng-export-btn:hover { background: var(--tng-surface-3); }
+  .tng-export-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+  .tng-export-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .tng-ico { width: 16px; height: 16px; flex: none; }
+  /* One main export (filled white), the rest secondary, and "start over" set apart as a quiet outline. */
+  .tng-export-btn.primary { background: var(--tng-white); color: var(--tng-black); border-color: var(--tng-white); font-weight: 600; }
+  .tng-export-btn.primary:hover:not(:disabled) { background: #E5E5E7; }
+  .tng-export-btn.ghost { flex: 0 0 auto; margin-left: auto; background: transparent; color: var(--tng-text-secondary); border-color: var(--tng-hairline-strong); }
+  .tng-export-btn.ghost:hover { color: var(--tng-white); background: transparent; border-color: rgba(255,255,255,0.3); }
+  .tng-export-note { display: flex; align-items: flex-start; gap: 8px; flex-basis: 100%; font-size: 13px; line-height: 1.5; color: var(--tng-text-tertiary); margin-top: 2px; }
+  .tng-export-note .tng-ico { width: 14px; height: 14px; margin-top: 2px; color: var(--tng-intel-text); }
+  .tng-export-note b { color: var(--tng-text-secondary); font-weight: 600; }
   .tng-export-confirm { font-size: 14px; color: var(--tng-clear-text); opacity: 0; transition: opacity 0.3s; }
   .tng-export-confirm.active { opacity: 1; }
 
@@ -861,7 +883,7 @@
   <div class="tng-header">
     <div class="tng-header-title-block">
       <h1>TNG Opportunity Score</h1>
-      <div class="tng-version-line">TNG OP TOOL V.3.5 · Created by Trever Koltys</div>
+      <div class="tng-version-line">TNG OP TOOL V.3.6 · Created by Trever Koltys</div>
     </div>
     <span class="tng-header-note">This tool is to be used in conjunction with <a href="https://app.apollo.io/" target="_blank" rel="noopener">app.apollo.io</a></span>
   </div>
@@ -972,8 +994,9 @@
     </div>
 
     <div class="tng-export-row">
-      <button class="tng-export-btn" onclick="tngCopySummary()">Copy Summary</button>
-      <button class="tng-export-btn" onclick="tngExportCsv()">Download CSV</button>
+      <button class="tng-export-btn" onclick="tngCopySummary()">${tngIcon('copy')}Copy Summary</button>
+      <button class="tng-export-btn" onclick="tngExportCsv()">${tngIcon('sheet')}Download CSV</button>
+      <div class="tng-export-note">${tngIcon('info')}<span>Contacts are exported with their full name and email only after you pull them from Apollo with <b>Reveal Full Name &amp; Email</b> (1 Apollo credit each).</span></div>
       <span class="tng-export-confirm" id="tng-export-confirm"></span>
     </div>
   </aside>
@@ -2730,11 +2753,12 @@
       <div class="tng-brief-summary">
         <div class="tng-brief-summary-text"><strong>${escapeHtml(briefHeading())}</strong><br>${escapeHtml(briefCountsText(main))}</div>
         <div class="tng-export-row">
-          <button class="tng-export-btn" data-brief-action="copy">Copy Summary</button>
-          <button class="tng-export-btn" data-brief-action="csv">Download CSV</button>
-          <button class="tng-export-btn" data-brief-action="report" ${briefRunning ? 'disabled title="Available when vetting finishes"' : ''}>Executive Report</button>
-          <button class="tng-export-btn" data-brief-action="pdf" ${briefRunning ? 'disabled title="Available when vetting finishes"' : ''}>Save as PDF</button>
-          <button class="tng-export-btn" data-brief-action="new">New Brief</button>
+          <button class="tng-export-btn primary" data-brief-action="report" ${briefRunning ? 'disabled title="Available when vetting finishes"' : 'title="Download a Word document for leadership"'}>${tngIcon('doc')}Executive Report</button>
+          <button class="tng-export-btn" data-brief-action="pdf" ${briefRunning ? 'disabled title="Available when vetting finishes"' : 'title="Print the full report, or save it as a PDF"'}>${tngIcon('print')}Save as PDF</button>
+          <button class="tng-export-btn" data-brief-action="csv" title="Every lead as a spreadsheet">${tngIcon('sheet')}Download CSV</button>
+          <button class="tng-export-btn" data-brief-action="copy" title="Copy a plain-text summary to paste into email or Teams">${tngIcon('copy')}Copy Summary</button>
+          <button class="tng-export-btn ghost" data-brief-action="new" title="Clear these results and choose another brief">${tngIcon('plus')}New Brief</button>
+          <div class="tng-export-note">${tngIcon('info')}<span>Apollo contacts are included in every export with their full name and email only after you pull them from Apollo with <b>Reveal email</b> (1 Apollo credit each). Contacts named in Steve's brief are always included.</span></div>
           <span class="tng-export-confirm" id="tng-brief-confirm"></span>
         </div>
       </div>
@@ -3463,7 +3487,7 @@
   async function downloadBriefReport(btn) {
     if (btn.disabled) return;
     btn.disabled = true;
-    const label = btn.textContent;
+    const label = btn.innerHTML; // icon and text
     btn.textContent = 'Building...';
     try {
       const blob = await briefDocxBlob();
@@ -3474,7 +3498,7 @@
       showExportConfirm("Couldn't build the Word report: " + err.message, 'tng-brief-confirm');
     } finally {
       btn.disabled = false;
-      btn.textContent = label;
+      btn.innerHTML = label;
     }
   }
 
