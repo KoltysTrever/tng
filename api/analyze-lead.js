@@ -15,11 +15,19 @@ import { cacheGet, cacheSet } from '../lib/cache.js';
 // repeat lookup then costs no Apollo credits or Claude call. Site visits are always fresh.
 const CACHE_TTL_SECONDS = 7 * 24 * 3600;
 
+const SCORING_MODEL = 'claude-sonnet-4-6';
+const SCORING_MODELS = ['claude-sonnet-4-6', 'claude-sonnet-5-5', 'claude-haiku-5-5'];
+
 export default async function handler(req, res) {
   if (!guard(req, res)) return;
 
   // refresh: true skips the saved lookup and spends credits on a fresh one.
-  const { domain, email, refresh } = req.body || {};
+  // debug + compare_models: scores the same Apollo data with each listed model and returns
+  // them side by side, saving nothing (the page never sends these). It reuses this week's
+  // saved scoring input when there is one, so a repeat comparison costs no Apollo credits.
+  const { domain, email, refresh, debug, compare_models } = req.body || {};
+  const compareModels = debug === true && Array.isArray(compare_models)
+    ? compare_models.filter((m) => SCORING_MODELS.includes(m)).slice(0, 3) : null;
   if (!domain) {
     return res.status(400).json({ error: 'domain is required' });
   }
@@ -33,10 +41,18 @@ export default async function handler(req, res) {
 
   const cleanDomain = domain.trim().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '');
   const cacheKey = `analyze:v1:${cleanDomain.toLowerCase()}:${String(email || '').trim().toLowerCase()}`;
+  const promptKey = `scoreinput:v1:${cleanDomain.toLowerCase()}:${String(email || '').trim().toLowerCase()}`;
 
   try {
+    if (compareModels && compareModels.length && refresh !== true) {
+      const savedPrompt = await cacheGet(promptKey);
+      if (savedPrompt && savedPrompt.prompt) {
+        return res.status(200).json(await compareScoring(ANTHROPIC_API_KEY, savedPrompt.prompt, compareModels, 'saved scoring input'));
+      }
+    }
+
     // ---- 0. Looked up this week already? Reuse it (free), with fresh site visits ----
-    if (refresh !== true) {
+    if (refresh !== true && !compareModels) {
       const saved = await cacheGet(cacheKey);
       if (saved && saved.result) {
         const result = saved.result;
@@ -142,35 +158,15 @@ export default async function handler(req, res) {
 
     // ---- 4. Hand the raw data to Claude for judgment calls ----
     const claudePrompt = buildClaudePrompt({ domain: cleanDomain, email, org: curatedOrg, jobPostings, people });
-
-    const claudeResp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        // ~40 fields plus up to 3 contacts with reasoning — 1000 was cutting answers off mid-JSON.
-        max_tokens: 3000,
-        messages: [{ role: 'user', content: claudePrompt }],
-      }),
-    });
-
-    if (!claudeResp.ok) {
-      const errText = await claudeResp.text();
-      throw new Error(claudeErrorMessage('Claude API error', claudeResp.status, errText));
+    // Kept for a week so a scoring model can be compared later without new Apollo lookups.
+    if (org || (research && research.found)) {
+      await cacheSet(promptKey, { prompt: claudePrompt, saved_at: new Date().toISOString() }, CACHE_TTL_SECONDS);
+    }
+    if (compareModels && compareModels.length) {
+      return res.status(200).json(await compareScoring(ANTHROPIC_API_KEY, claudePrompt, compareModels, 'fresh Apollo lookup'));
     }
 
-    const claudeData = await claudeResp.json();
-    if (claudeData.stop_reason === 'max_tokens') {
-      throw new Error('Claude response was cut off before finishing (hit max_tokens) — try again');
-    }
-    const textBlock = (claudeData.content || []).find((b) => b.type === 'text');
-    if (!textBlock) throw new Error('Claude returned no text content');
-
-    const result = extractJson(textBlock.text);
+    const { result } = await scoreLead(ANTHROPIC_API_KEY, claudePrompt);
 
     // Informational only — never affects scoring. Deterministic list match, not an LLM judgment call.
     const licensedStateName = matchLicensedState(curatedOrg && curatedOrg.state, curatedOrg && curatedOrg.country);
@@ -199,6 +195,53 @@ export default async function handler(req, res) {
     console.error('analyze-lead error:', err);
     return res.status(500).json({ error: err.message || 'Unknown error' });
   }
+}
+
+// The scoring call: Claude reads the curated Apollo data and makes the judgment calls.
+async function scoreLead(apiKey, prompt, model = SCORING_MODEL) {
+  const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model,
+      // ~40 fields plus up to 3 contacts with reasoning — 1000 was cutting answers off mid-JSON.
+      max_tokens: 3000,
+      // Newer models take an effort setting; filling in fields from given data needs little thought.
+      ...(model === 'claude-sonnet-4-6' ? {} : { output_config: { effort: 'low' } }),
+      messages: [{ role: 'user', content: prompt }],
+    }),
+  });
+
+  if (!resp.ok) {
+    const errText = await resp.text();
+    throw new Error(claudeErrorMessage('Claude API error', resp.status, errText));
+  }
+
+  const data = await resp.json();
+  if (data.stop_reason === 'max_tokens') {
+    throw new Error('Claude response was cut off before finishing (hit max_tokens) — try again');
+  }
+  const textBlock = (data.content || []).find((b) => b.type === 'text');
+  if (!textBlock) throw new Error('Claude returned no text content');
+  return { result: extractJson(textBlock.text), usage: data.usage || null };
+}
+
+// Debug only: the same scoring input through each model, with its token use and time.
+async function compareScoring(apiKey, prompt, models, source) {
+  const runs = await Promise.all(models.map(async (model) => {
+    const started = Date.now();
+    try {
+      const { result, usage } = await scoreLead(apiKey, prompt, model);
+      return { model, ms: Date.now() - started, usage, result };
+    } catch (err) {
+      return { model, ms: Date.now() - started, error: err.message };
+    }
+  }));
+  return { compare: runs, source, prompt_chars: prompt.length };
 }
 
 // Apollo's raw organization object can exceed 250,000 characters (technology_names

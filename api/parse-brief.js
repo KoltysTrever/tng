@@ -4,12 +4,18 @@
 // work the lead, and names the buying organization's website so the page can vet
 // it with analyze-lead + check-crm. No Apollo credits; one Claude call per brief.
 
+import { createHash } from 'node:crypto';
 import { guard } from '../lib/guard.js';
 import { matchLicensedState, LICENSED_STATE_NAMES } from '../lib/licensing.js';
 import { claudeErrorMessage } from '../lib/claude-error.js';
+import { cacheGet, cacheSet } from '../lib/cache.js';
 
 const MODEL = 'claude-opus-5-5';
+const BRIEF_MODELS = ['claude-opus-5-5', 'claude-sonnet-5-5'];
 const MAX_BRIEF_CHARS = 80000;
+// The same brief uploaded again within a week (a second person, or a re-run) is read from
+// the saved copy: instant, and no Claude call.
+const CACHE_TTL_SECONDS = 7 * 24 * 3600;
 
 const str = { type: 'string' };
 const LEAD_SCHEMA = {
@@ -112,7 +118,8 @@ function cleanDomain(raw) {
 export default async function handler(req, res) {
   if (!guard(req, res)) return;
 
-  const { text } = req.body || {};
+  // debug + model: reads with another model for comparison, saving nothing (the page never sends these).
+  const { text, debug, model } = req.body || {};
   if (!text || typeof text !== 'string') {
     return res.status(400).json({ error: 'text (the brief as plain text) is required' });
   }
@@ -125,21 +132,32 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Server is missing ANTHROPIC_API_KEY env var' });
   }
 
+  const isDebug = debug === true;
+  const useModel = isDebug && BRIEF_MODELS.includes(model) ? model : MODEL;
+  // Keyed by the model too, so changing models never serves an answer from the old one.
+  const cacheKey = `brief:v1:${useModel}:${createHash('sha256').update(text).digest('hex')}`;
+  if (!isDebug) {
+    const saved = await cacheGet(cacheKey);
+    if (saved && saved.brief) return res.status(200).json({ ...saved.brief, cached_at: saved.saved_at });
+  }
+
   try {
+    const started = Date.now();
+    // Server-side refusal fallbacks (a classifier false positive reroutes instead of failing) exist for Opus only.
+    const useFallbacks = useModel.startsWith('claude-opus');
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
         'x-api-key': ANTHROPIC_API_KEY,
         'anthropic-version': '2023-06-01',
-        // Opt into server-side refusal fallbacks so a classifier false positive reroutes instead of failing.
-        'anthropic-beta': 'server-side-fallback-2026-07-01',
+        ...(useFallbacks ? { 'anthropic-beta': 'server-side-fallback-2026-07-01' } : {}),
       },
       signal: AbortSignal.timeout(270000),
       body: JSON.stringify({
-        model: MODEL,
+        model: useModel,
         max_tokens: 16000,
-        fallbacks: 'default',
+        ...(useFallbacks ? { fallbacks: 'default' } : {}),
         // Extraction, not analysis: low effort keeps a ~16-lead brief well inside the time limit.
         output_config: { effort: 'low', format: { type: 'json_schema', schema: BRIEF_SCHEMA } },
         messages: [{ role: 'user', content: buildPrompt(text) }],
@@ -170,7 +188,12 @@ export default async function handler(req, res) {
       };
     });
 
-    return res.status(200).json(brief);
+    if (isDebug) {
+      brief.debug = { model: useModel, usage: data.usage || null, ms: Date.now() - started };
+    } else {
+      await cacheSet(cacheKey, { brief, saved_at: new Date().toISOString() }, CACHE_TTL_SECONDS);
+    }
+    return res.status(200).json({ ...brief, cached_at: null });
   } catch (err) {
     console.error('parse-brief error:', err);
     return res.status(502).json({ error: err.message || 'Unknown error' });
