@@ -58,6 +58,19 @@ at that domain. It returns counts, a few linked records, and whether a typed
 contact email is already in the CRM. Read-only, no Apollo credits. The page calls
 it alongside Analyze and scores "Already in Zoho CRM" (+30) from the result.
 
+## Who can be reached (email on file)
+
+Apollo's free People Search says for each person whether Apollo holds an email
+(`has_email`) and a direct phone (`has_direct_phone`: yes / maybe / no). `analyze-lead`
+passes the email flag to the scoring prompt (between close fits, the person Apollo can
+reach ranks first), copies both flags onto each recommended contact, and returns
+`more_people`: up to 10 other people at the company from the same search, ordered by role
+(security, risk, HR, legal, facilities, operations, executives) and then email on file.
+Lookups saved before these flags existed get them from the free search on their next read.
+The page shows "Email on file" / "No email in Apollo" badges, warns before revealing
+someone with no email on file, and lists the more people under the contacts; revealing
+one (1 credit) adds them to the contacts, so exports and Push to Zoho include them.
+
 ## Push to Zoho
 
 A **Push to Zoho** button on each vetted Hunter Brief lead (and on the Single Lead contact

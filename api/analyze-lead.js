@@ -59,7 +59,13 @@ export default async function handler(req, res) {
       const saved = await cacheGet(cacheKey);
       if (saved && saved.result) {
         const result = saved.result;
-        result.site_visits = await getSiteVisits(APOLLO_API_KEY, saved.org_id);
+        // Lookups saved before the email flags existed get them from the free people search.
+        const [visits, people] = await Promise.all([
+          getSiteVisits(APOLLO_API_KEY, saved.org_id),
+          saved.org_id && !result.more_people ? searchPeople(APOLLO_API_KEY, cleanDomain) : null,
+        ]);
+        if (people) addReachability(result, people);
+        result.site_visits = visits;
         result.cached_at = saved.saved_at;
         return res.status(200).json(result);
       }
@@ -102,47 +108,7 @@ export default async function handler(req, res) {
     // otherwise a bad/non-domain input (e.g. a company name instead of a
     // domain) can return unrelated people with no real connection to the lead.
     let people = [];
-    if (org) {
-      try {
-        const peopleResp = await fetch('https://api.apollo.io/api/v1/mixed_people/api_search', {
-          method: 'POST',
-          headers: {
-            'x-api-key': APOLLO_API_KEY,
-            'Content-Type': 'application/json',
-            accept: 'application/json',
-          },
-          body: JSON.stringify({
-            q_organization_domains_list: [cleanDomain],
-            person_titles: [
-              'chief security officer', 'ciso', 'vp security', 'vice president security',
-              'director of security', 'head of security', 'chief risk officer',
-              'risk management director', 'director of risk management', 'risk director',
-              'director of facilities', 'director of ehs', 'chief operating officer', 'coo',
-              'vp human resources', 'vice president human resources', 'director of human resources',
-              'chief people officer', 'chief human resources officer', 'chro',
-              'general counsel', 'vp legal', 'vice president legal', 'chief legal officer',
-              'chief administrative officer', 'cao',
-              'executive assistant', 'assistant to the ceo', 'assistant to the founder',
-              'chief executive officer', 'ceo', 'president', 'owner', 'founder', 'co-founder',
-              'managing director', 'general manager', 'vp operations', 'vice president operations',
-              'director of operations', 'head of operations',
-            ],
-            per_page: 25,
-            page: 1,
-          }),
-        });
-        const peopleData = await peopleResp.json();
-        const rawPeople = peopleData.people || [];
-        // Cross-check: keep only results whose employer domain actually matches,
-        // in case Apollo's domain filter loosely matches on a bad/partial input.
-        people = rawPeople.filter((p) => {
-          const empDomain = (p.organization && (p.organization.primary_domain || p.organization.website_url)) || '';
-          return !empDomain || empDomain.toLowerCase().includes(cleanDomain.toLowerCase());
-        });
-      } catch (e) {
-        console.error('Apollo people search failed:', e);
-      }
-    }
+    if (org) people = await searchPeople(APOLLO_API_KEY, cleanDomain);
 
     // ---- 3b. Not in Apollo? Research the company on the public web instead ----
     // The profile is shaped like curated Apollo data, so the same scoring prompt and rules apply.
@@ -171,6 +137,7 @@ export default async function handler(req, res) {
 
     const { result } = await scoreLead(ANTHROPIC_API_KEY, claudePrompt);
     applyRevenueFloor(result, curatedOrg && curatedOrg.estimated_num_employees);
+    if (org) addReachability(result, people);
 
     // Informational only — never affects scoring. Deterministic list match, not an LLM judgment call.
     const licensedStateName = matchLicensedState(curatedOrg && curatedOrg.state, curatedOrg && curatedOrg.country);
@@ -199,6 +166,80 @@ export default async function handler(req, res) {
     console.error('analyze-lead error:', err);
     return res.status(500).json({ error: err.message || 'Unknown error' });
   }
+}
+
+// Apollo's People Search (free): up to 25 people at the domain in the roles TNG sells to.
+// Each comes with has_email / has_direct_phone, which say whether a reveal would find them.
+// Never throws: a failed search means no people, not a failed lookup.
+const PEOPLE_TITLES = [
+  'chief security officer', 'ciso', 'vp security', 'vice president security',
+  'director of security', 'head of security', 'chief risk officer',
+  'risk management director', 'director of risk management', 'risk director',
+  'director of facilities', 'director of ehs', 'chief operating officer', 'coo',
+  'vp human resources', 'vice president human resources', 'director of human resources',
+  'chief people officer', 'chief human resources officer', 'chro',
+  'general counsel', 'vp legal', 'vice president legal', 'chief legal officer',
+  'chief administrative officer', 'cao',
+  'executive assistant', 'assistant to the ceo', 'assistant to the founder',
+  'chief executive officer', 'ceo', 'president', 'owner', 'founder', 'co-founder',
+  'managing director', 'general manager', 'vp operations', 'vice president operations',
+  'director of operations', 'head of operations',
+];
+
+async function searchPeople(apiKey, domain) {
+  try {
+    const peopleResp = await fetch('https://api.apollo.io/api/v1/mixed_people/api_search', {
+      method: 'POST',
+      headers: { 'x-api-key': apiKey, 'Content-Type': 'application/json', accept: 'application/json' },
+      body: JSON.stringify({ q_organization_domains_list: [domain], person_titles: PEOPLE_TITLES, per_page: 25, page: 1 }),
+    });
+    const peopleData = await peopleResp.json();
+    // Cross-check: keep only results whose employer domain actually matches,
+    // in case Apollo's domain filter loosely matches on a bad/partial input.
+    return (peopleData.people || []).filter((p) => {
+      const empDomain = (p.organization && (p.organization.primary_domain || p.organization.website_url)) || '';
+      return !empDomain || empDomain.toLowerCase().includes(domain.toLowerCase());
+    });
+  } catch (e) {
+    console.error('Apollo people search failed:', e);
+    return [];
+  }
+}
+
+// Apollo answers "Yes", "Maybe: please request direct dial…" or nothing.
+const phoneFlag = (v) => (/^yes/i.test(String(v || '')) ? 'yes' : /^maybe/i.test(String(v || '')) ? 'maybe' : 'no');
+
+// The order TNG reaches out in (same as the scoring prompt's contact ranking).
+const ROLE_ORDER = [
+  /\b(cso|ciso)\b|chief security|security/i, /risk/i, /\b(hr|chro)\b|human resources|people/i,
+  /counsel|legal/i, /facilit|\behs\b|safety/i, /administrative|\bcao\b/i,
+  /\b(coo)\b|operat|general manager|managing director/i, /assistant/i,
+  /\b(ceo|cfo|cto|cpo|cxo)\b|chief|president|founder|owner|\bvp\b|vice president|director|head/i,
+];
+const roleRank = (title) => { const i = ROLE_ORDER.findIndex((re) => re.test(title || '')); return i < 0 ? ROLE_ORDER.length : i; };
+
+// Adds what a reveal would find to each recommended contact, and the next people worth
+// considering (by role, then email on file) as more_people. Deterministic, no credits.
+function addReachability(result, people) {
+  const byId = new Map(people.filter((p) => p.id).map((p) => [p.id, p]));
+  const contacts = Array.isArray(result.key_contacts) ? result.key_contacts : [];
+  contacts.forEach((c) => {
+    const p = c.apollo_id && byId.get(c.apollo_id);
+    if (p) { c.has_email = !!p.has_email; c.has_direct_phone = phoneFlag(p.has_direct_phone); }
+  });
+  const taken = new Set(contacts.map((c) => c.apollo_id).filter(Boolean));
+  result.more_people = people
+    .filter((p) => p.id && !taken.has(p.id))
+    .map((p) => ({
+      apollo_id: p.id,
+      name: [p.first_name, p.last_name_obfuscated || p.last_name].filter(Boolean).join(' ') || p.name || '(name hidden)',
+      title: p.title || null,
+      linkedin_url: p.linkedin_url || null,
+      has_email: !!p.has_email,
+      has_direct_phone: phoneFlag(p.has_direct_phone),
+    }))
+    .sort((a, b) => roleRank(a.title) - roleRank(b.title) || Number(b.has_email) - Number(a.has_email))
+    .slice(0, 10);
 }
 
 // The scoring call: Claude reads the curated Apollo data and makes the judgment calls.
@@ -372,10 +413,11 @@ JOB POSTINGS (up to first 30):
 ${jobPostings.length ? JSON.stringify(jobPostings.slice(0, 30).map((j) => ({ title: j.title || j.name, url: j.url })), null, 2).slice(0, 3000) : 'No job postings data.'}
 
 PEOPLE SEARCH RESULTS (candidates for best first contact — note: last names may be partially masked by Apollo, and linkedin_url may be missing/null for some records, that is expected):
-${people.length ? JSON.stringify(people.slice(0, 10).map((p) => ({
+${people.length ? JSON.stringify(people.slice(0, 15).map((p) => ({
     id: p.id, name: p.name, first_name: p.first_name, last_name: p.last_name,
     title: p.title, seniority: p.seniority, linkedin_url: p.linkedin_url,
-  })), null, 2).slice(0, 3000) : 'No people found.'}
+    ...(p.has_email !== undefined ? { has_email: !!p.has_email } : {}),
+  })), null, 2).slice(0, 4500) : 'No people found.'}
 
 Based on this data, respond with ONLY a raw JSON object, no markdown fences, no commentary, in exactly this shape. The output MUST be strictly valid JSON: every string value must be on a single line (replace any literal line break inside a string with a space instead), and any double-quote character that appears within a string's actual content (e.g. a nicknamed product or a quoted phrase from source text) must be properly backslash-escaped as \" — never leave a literal unescaped " inside a string value:
 {
@@ -419,7 +461,7 @@ Based on this data, respond with ONLY a raw JSON object, no markdown fences, no 
   "key_contacts": array of up to 3 objects, ranked best-first, each in exactly this shape: { "name": string, "title": string or null, "linkedin_url": string or null (copy exactly from that person's linkedin_url in PEOPLE SEARCH RESULTS, null if missing — never guess or construct a URL), "apollo_id": string or null (copy exactly from that person's id field, used later to precisely re-fetch this exact person — never guess or invent an id), "reasoning": string (one short phrase explaining why this person ranks where they do) } — return an empty array [] only if PEOPLE SEARCH RESULTS is genuinely empty
 }
 
-For key_contacts, rank candidates in this priority order: (1) CSO/CISO, (2) VP/Director of Security, (3) Chief Risk Officer, (4) VP/Director/Chief of HR or People — a strong fit since Workplace Termination Support is a named TNG service and HR typically initiates that kind of engagement, (5) General Counsel/VP Legal — often the actual gatekeeper for vendor/security decisions when there's no dedicated security function, (6) Director of Facilities/EHS, (7) Chief Administrative Officer, (8) senior Operations/COO/General Manager/Managing Director, (9) for very small or founder-led companies, an Executive Assistant to the CEO/Founder — often the real point of contact for personal/executive protection conversations at that size, (10) FINAL CATCH-ALL — if none of the above roles appear anywhere in the results, the single most senior person present regardless of their specific title or department (CEO, President, Owner, Founder, any VP, any Director, any "Head of" role, in roughly that order of seniority). Return up to 3 distinct people from the people search results in this ranked order as the key_contacts array — do not skip past an earlier, better-fitting match if one exists, and do not return duplicates. If fewer than 3 reasonable candidates exist, return fewer (even just 1) rather than padding with weak matches. IMPORTANT: if the PEOPLE SEARCH RESULTS list contains ANY person at all, key_contacts must not be empty — return at least the single most senior person available. Empty array is reserved strictly for when that list is genuinely empty.
+For key_contacts, rank candidates in this priority order: (1) CSO/CISO, (2) VP/Director of Security, (3) Chief Risk Officer, (4) VP/Director/Chief of HR or People — a strong fit since Workplace Termination Support is a named TNG service and HR typically initiates that kind of engagement, (5) General Counsel/VP Legal — often the actual gatekeeper for vendor/security decisions when there's no dedicated security function, (6) Director of Facilities/EHS, (7) Chief Administrative Officer, (8) senior Operations/COO/General Manager/Managing Director, (9) for very small or founder-led companies, an Executive Assistant to the CEO/Founder — often the real point of contact for personal/executive protection conversations at that size, (10) FINAL CATCH-ALL — if none of the above roles appear anywhere in the results, the single most senior person present regardless of their specific title or department (CEO, President, Owner, Founder, any VP, any Director, any "Head of" role, in roughly that order of seniority). Return up to 3 distinct people from the people search results in this ranked order as the key_contacts array — do not skip past an earlier, better-fitting match if one exists, and do not return duplicates. If fewer than 3 reasonable candidates exist, return fewer (even just 1) rather than padding with weak matches. IMPORTANT: if the PEOPLE SEARCH RESULTS list contains ANY person at all, key_contacts must not be empty — return at least the single most senior person available. Empty array is reserved strictly for when that list is genuinely empty. REACHABILITY: has_email says whether Apollo holds an email for that person (reaching them is the point of the recommendation). Within the same priority level, or between adjacent levels when the fit is otherwise close, rank a has_email: true person above a has_email: false one. Keep a clearly better-fitting has_email: false person (e.g. the only security leader) in the list, but never as the only contact when a reasonable has_email: true candidate exists; mention "no email on file" in that person's reasoning.
 
 For revenue_tier, base it primarily on annual_revenue_printed or organization_revenue_printed in ORGANIZATION DATA; if revenue data is missing, you may estimate from estimated_num_employees as a rough proxy but must say so plainly in revenue_tier_reasoning (e.g. "No revenue data; estimated from employee count") — never invent a specific dollar figure that isn't in the data. Use "unknown" if there's not enough information to make any reasonable estimate, and "under_10m" if the company is clearly smaller than $10M. Mark verticals true only when the company's own core industry is a clear match — a company can match more than one vertical, or none. Being a vendor, consultant, or staffing provider to a vertical does NOT count as matching that vertical. When available, cross-reference sic_codes and naics_codes in ORGANIZATION DATA alongside the industry/industries text fields — these are standardized classification codes and give a more reliable signal than free-text industry descriptions alone (e.g. SIC codes in the 6000-6300 range generally indicate banking/finance/insurance; 2000-3999 generally indicate manufacturing; 7000-7999 often indicate hospitality/retail/services; 1200-1499 and 4900-4999 often indicate energy/utilities/mining; 6500-6553 generally indicate real estate). Use these codes as supporting evidence, not the sole basis — the industry/description text and your own judgment still matter most.
 

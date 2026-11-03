@@ -10,6 +10,7 @@ const TNG_ICON_PATHS = {
   doc: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/>',
   print: '<path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',
+  mail: '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/>',
   userPlus: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>',
   info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
 };
@@ -17,6 +18,8 @@ const TNG_ICON_PATHS = {
 const ZOHO_MARK = '<svg class="tng-zoho-mark" viewBox="0 0 24 24" fill="none" stroke-width="3.2" stroke-linecap="round" aria-hidden="true">'
   + '<path d="M4 15V7a3 3 0 0 1 3-3h4" stroke="#E42527"/><path d="M11 4h6a3 3 0 0 1 3 3v2" stroke="#089949"/>'
   + '<path d="M20 9v8a3 3 0 0 1-3 3h-4" stroke="#F9B21D"/><path d="M13 20H7a3 3 0 0 1-3-3v-2" stroke="#226DB4"/></svg>';
+const ZOHO_TILE = `<span class="tng-zoho-tile">${ZOHO_MARK}</span>`;
+const REVEAL_LABEL = 'Reveal Full Name &amp; Email (1 Apollo credit)';
 const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${TNG_ICON_PATHS[name]}</svg>`;
 
 // ---------- Page: styles and markup, mounted into the launcher's page ----------
@@ -315,6 +318,9 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     box-shadow: 0 4px 14px rgba(21,101,192,0.35);
     transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
   }
+  .tng-reveal-btn { display: inline-flex; align-items: center; gap: 8px; }
+  .tng-reveal-btn .tng-ico { width: 16px; height: 16px; }
+  .tng-brief-reveal .tng-ico { width: 14px; height: 14px; }
   .tng-reveal-btn:hover:not(:disabled) { background: #1976D2; box-shadow: 0 6px 20px rgba(21,101,192,0.5); }
   .tng-reveal-btn:active:not(:disabled), .tng-zoho-btn:active { transform: scale(0.98); }
   .tng-reveal-btn:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
@@ -627,6 +633,19 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   .tng-zoho-row { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 14px; font-size: 14px; }
   .tng-zoho-row a, .tng-zoho-result a { color: var(--tng-intel-text); }
   .tng-zoho-result { margin-top: 10px; font-size: 14px; color: var(--tng-clear-text); }
+  .tng-reach { display: inline-flex; flex-wrap: wrap; gap: 6px; vertical-align: middle; margin-left: 6px; }
+  .tng-reach .tng-chip { padding: 2px 9px; font-size: 12px; }
+  .tng-reach-row .tng-reach { margin: 10px 0 0; }
+  .tng-more-people { margin-top: 14px; background: var(--tng-surface); border: 1px solid var(--tng-hairline); border-radius: var(--tng-radius-lg); padding: 14px 18px; }
+  .tng-brief-people .tng-more-people { background: transparent; border: none; border-top: 1px solid var(--tng-hairline); border-radius: 0; padding: 12px 0 0; margin-top: 12px; }
+  .tng-more-people > summary { cursor: pointer; font-size: 14px; font-weight: 600; color: var(--tng-text-secondary); }
+  .tng-more-people > summary:hover { color: var(--tng-white); }
+  .tng-more-hint { font-size: 13px; color: var(--tng-text-tertiary); margin: 8px 0 4px; line-height: 1.5; }
+  .tng-more-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; padding: 8px 0; border-top: 1px solid var(--tng-hairline); font-size: 14px; color: var(--tng-text-secondary); }
+  .tng-more-row .name { color: var(--tng-white); font-weight: 600; }
+  .tng-more-side { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+  .tng-more-side .tng-reach { margin: 0; }
+  .tng-more-row .error { flex-basis: 100%; color: #FF8A80; font-size: 13px; }
   .tng-help-link { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; padding: 0; background: none; border: none; color: var(--tng-intel-text); font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
   .tng-help-link:hover { text-decoration: underline; }
   .tng-help-link .tng-ico { width: 14px; height: 14px; }
@@ -635,6 +654,8 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   .tng-zoho-help-btn { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; padding: 8px 14px; background: var(--tng-surface-2); border: 1px solid var(--tng-hairline-strong); border-radius: 999px; color: var(--tng-white); font-family: inherit; font-size: 13px; font-weight: 600; cursor: pointer; transition: border-color 0.2s, background 0.2s; }
   .tng-zoho-help-btn:hover { background: var(--tng-surface-3); border-color: rgba(255,255,255,0.35); }
   .tng-zoho-mark { width: 18px; height: 18px; flex: none; }
+  .tng-zoho-tile { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; flex: none; background: #FFFFFF; border-radius: 5px; }
+  .tng-zoho-tile .tng-zoho-mark { width: 16px; height: 16px; }
   .tng-help-steps { margin: 0; padding-left: 20px; font-size: 14px; line-height: 1.55; color: var(--tng-text); }
   .tng-help-steps li + li { margin-top: 6px; }
   .tng-help-h { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--tng-text-tertiary); margin: 18px 0 6px; }
@@ -946,7 +967,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   <div class="tng-header">
     <div class="tng-header-title-block">
       <h1>TNG Opportunity Score</h1>
-      <div class="tng-version-line">TNG OP TOOL V.3.9 · Created by Trever Koltys</div>
+      <div class="tng-version-line">TNG OP TOOL V.3.10 · Created by Trever Koltys</div>
     </div>
     <span class="tng-header-note">This tool is to be used in conjunction with <a href="https://app.apollo.io/" target="_blank" rel="noopener">app.apollo.io</a><br>
       <button class="tng-zoho-help-btn" onclick="tngZohoHelp()">${ZOHO_MARK}Zoho push instructions</button></span>
@@ -995,15 +1016,17 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     </div>
     <div class="tng-contact-name" id="tng-contact-name">—</div>
     <div class="tng-contact-title" id="tng-contact-title"></div>
+    <div class="tng-reach-row" id="tng-contact-reach"></div>
     <div class="tng-contact-reasoning" id="tng-contact-reasoning"></div>
     <div class="tng-contact-actions">
       <a href="#" target="_blank" rel="noopener" class="tng-contact-link" id="tng-contact-link" style="display:none;">View LinkedIn →</a>
-      <button class="tng-reveal-btn" id="tng-reveal-btn" onclick="tngRevealContact()" style="display:none;">Reveal Full Name &amp; Email (1 Apollo credit)</button>
-      <button class="tng-zoho-btn" id="tng-zoho-btn" onclick="tngPushToZoho()" style="display:none;">${tngIcon('userPlus')}Push to Zoho</button>
+      <button class="tng-reveal-btn" id="tng-reveal-btn" onclick="tngRevealContact()" style="display:none;">${tngIcon('mail')}${REVEAL_LABEL}</button>
+      <button class="tng-zoho-btn" id="tng-zoho-btn" onclick="tngPushToZoho()" style="display:none;">${ZOHO_TILE}Push to Zoho</button>
     </div>
     <div class="tng-reveal-result" id="tng-reveal-result"></div>
     <div class="tng-zoho-result" id="tng-zoho-result"></div>
   </div>
+  <div id="tng-more-people"></div>
 
   <div class="tng-section">
     <div class="tng-section-label">CRM Check <span class="tng-source-tag auto"><b>Automatic</b> · via Zoho CRM</span></div>
@@ -1978,6 +2001,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
         founded_year: result.founded_year || '',
         company_description: result.company_description || '',
         key_contacts: Array.isArray(result.key_contacts) ? result.key_contacts : [],
+        more_people: Array.isArray(result.more_people) ? result.more_people : [],
         typed_contact_email: email || '',
         data_source: result.data_source || 'apollo',
       };
@@ -2037,7 +2061,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
       } else {
         contactLink.style.display = 'none';
       }
-      revealBtn.style.display = 'inline-block';
+      revealBtn.style.display = 'inline-flex';
     } else {
       document.getElementById('tng-contact-name').textContent = 'No clear match found';
       document.getElementById('tng-contact-title').textContent = '';
@@ -2058,7 +2082,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
       revealResultEl.textContent = '';
       revealResultEl.className = 'tng-reveal-result';
       revealBtn.disabled = false;
-      revealBtn.textContent = 'Reveal Full Name & Email (1 Apollo credit)';
+      revealBtn.innerHTML = tngIcon('mail') + REVEAL_LABEL;
     }
 
     // Web-research companies aren't in Apollo, so there's no contact record to reveal —
@@ -2069,8 +2093,117 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
       revealResultEl.textContent = 'Found via web search. This company isn\'t in Apollo\'s database, so there\'s no contact record to reveal.';
     }
 
+    document.getElementById('tng-contact-reach').innerHTML = contact && !revealed ? reachChips(contact) : '';
+    renderMorePeople();
     document.getElementById('tng-zoho-btn').style.display = 'inline-flex';
     document.getElementById('tng-contact-card').classList.add('active');
+  }
+
+  // ----- Who can be reached: Apollo's email/phone flags, and more people at the company -----
+  // The free people search says whether Apollo holds an email (and maybe a direct phone) for
+  // each person, so a credit is never spent blind. Revealing one of the "more people" adds
+  // them to the contacts, where the card, exports and Push to Zoho all pick them up.
+  function reachChips(c) {
+    if (!c || c.has_email === undefined) return '';
+    const chips = [c.has_email ? '<span class="tng-chip good">✉ Email on file</span>' : '<span class="tng-chip">No email in Apollo</span>'];
+    if (c.has_direct_phone === 'yes') chips.push('<span class="tng-chip good">Phone on file</span>');
+    else if (c.has_direct_phone === 'maybe') chips.push('<span class="tng-chip">Phone: maybe</span>');
+    return `<span class="tng-reach">${chips.join('')}</span>`;
+  }
+
+  function revealPrompt(c) {
+    return c && c.has_email === false
+      ? 'Apollo has no email on file for this person. Revealing will likely give only the full name, and may still use 1 Apollo credit.\n\nReveal anyway?'
+      : 'This will use 1 Apollo credit to reveal this contact\'s full name and email address.\n\nContinue?';
+  }
+
+  // Reveals one of the more people (1 credit); throws with Apollo's reason when it can't match.
+  async function revealPerson(p) {
+    const data = await postJson(REVEAL_URL, { apollo_id: p.apollo_id }, 60000);
+    if (!data.revealed) throw new Error(data.message || 'Apollo couldn\'t confidently match this person.');
+    return {
+      name: String(data.full_name || p.name).split(' ')[0], title: p.title, linkedin_url: p.linkedin_url, apollo_id: p.apollo_id,
+      has_email: p.has_email, has_direct_phone: p.has_direct_phone, reasoning: 'Added from more people at this company',
+      revealed: { full_name: data.full_name || '', email: data.email || '' },
+    };
+  }
+
+  // The list under the contacts. buttonAttrs(i) marks each Reveal button for its click handler.
+  function morePeopleHtml(list, company, buttonAttrs, detailsAttrs, open) {
+    if (!list || !list.length) return '';
+    const withEmail = list.filter(p => p.has_email).length;
+    const rows = list.map((p, i) => `<div class="tng-more-row">
+        <div class="tng-more-who"><span class="name">${escapeHtml(p.name)}</span>${p.title ? ' — ' + escapeHtml(p.title) : ''}</div>
+        <div class="tng-more-side">${reachChips(p)}<button class="tng-reveal-btn tng-brief-reveal" ${buttonAttrs(i)} ${p.busy ? 'disabled' : ''}>${p.busy ? 'Revealing...' : tngIcon('mail') + 'Reveal (1 credit)'}</button></div>
+        ${p.error ? `<div class="error">${escapeHtml(p.error)}</div>` : ''}
+      </div>`).join('');
+    return `<details class="tng-more-people" ${detailsAttrs} ${open ? 'open' : ''}>
+      <summary>More people at ${escapeHtml(company || 'this company')} (${list.length}) · ${withEmail} with email on file</summary>
+      <div class="tng-more-hint">From Apollo's free people search. Revealing someone adds them to the contacts, so they can be exported and pushed to Zoho.</div>
+      ${rows}
+    </details>`;
+  }
+
+  // Single Lead: reveal one of the more people and make them the contact shown on the card.
+  // confirmed: the caller already asked (the push window). Returns '' or the reason it failed.
+  async function revealSingleMore(i, confirmed) {
+    const p = lastCompanyInfo && lastCompanyInfo.more_people[i];
+    if (!p || p.busy) return 'busy';
+    if (!confirmed && !window.confirm(revealPrompt(p))) return 'cancelled';
+    p.busy = true;
+    p.error = '';
+    renderMorePeople();
+    try {
+      const { revealed, ...contact } = await revealPerson(p);
+      lastCompanyInfo.key_contacts.push(contact);
+      currentContactIndex = lastCompanyInfo.key_contacts.length - 1;
+      revealedByIndex[currentContactIndex] = revealed;
+      lastCompanyInfo.more_people.splice(i, 1);
+      renderContactCard(document.getElementById('tng-email').value.trim());
+      return '';
+    } catch (err) {
+      p.busy = false;
+      p.error = err.message;
+      renderMorePeople();
+      return err.message;
+    }
+  }
+
+  let morePeopleOpen = false;
+  function renderMorePeople() {
+    const el = document.getElementById('tng-more-people');
+    const info = lastCompanyInfo;
+    el.innerHTML = info ? morePeopleHtml(info.more_people, info.company_name, i => `data-more="${i}"`, 'id="tng-more-details"', morePeopleOpen) : '';
+  }
+  document.getElementById('tng-more-people').addEventListener('click', e => {
+    const btn = e.target.closest('[data-more]');
+    if (btn && !btn.disabled) revealSingleMore(Number(btn.dataset.more));
+  });
+  document.getElementById('tng-more-people').addEventListener('toggle', e => {
+    if (e.target.id === 'tng-more-details') morePeopleOpen = e.target.open;
+  }, true);
+
+  // Hunter Brief: the same, into the lead's contacts.
+  async function revealBriefMore(lead, i, confirmed) {
+    const v = vettedOf(lead);
+    const list = v && v.result.more_people;
+    const p = list && list[i];
+    if (!p || p.busy) return 'busy';
+    if (!confirmed && !window.confirm(revealPrompt(p))) return 'cancelled';
+    p.busy = true;
+    p.error = '';
+    renderBriefResults();
+    try {
+      v.contacts.push(await revealPerson(p));
+      list.splice(i, 1);
+      renderBriefResults();
+      return '';
+    } catch (err) {
+      p.busy = false;
+      p.error = err.message;
+      renderBriefResults();
+      return err.message;
+    }
   }
 
   window.tngCycleContact = function() {
@@ -2115,6 +2248,8 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     currentContactIndex = 0;
     revealedByIndex = {};
     document.getElementById('tng-zoho-result').innerHTML = '';
+    document.getElementById('tng-more-people').innerHTML = '';
+    document.getElementById('tng-contact-reach').innerHTML = '';
     setError('');
     setStatus(null);
     renderSignals();
@@ -2299,9 +2434,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     if (!contact && !lastCompanyInfo.typed_contact_email) return;
     if (lastCompanyInfo.data_source === 'web_research') return; // not in Apollo — nothing to reveal
 
-    const confirmed = window.confirm(
-      'This will use 1 Apollo credit to reveal this contact\'s full name and email address.\n\nContinue?'
-    );
+    const confirmed = window.confirm(revealPrompt(contact));
     if (!confirmed) return;
 
     const btn = document.getElementById('tng-reveal-btn');
@@ -2340,6 +2473,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
           `<span class="name">${escapeHtml(data.full_name || '(name unavailable)')}</span>` +
           (data.email ? ` &nbsp;·&nbsp; <span class="email">${escapeHtml(data.email)}</span>` : ' — no email on file');
         btn.style.display = 'none';
+        document.getElementById('tng-contact-reach').innerHTML = '';
         revealedByIndex[currentContactIndex] = {
           full_name: data.full_name || '',
           email: data.email || '',
@@ -2348,14 +2482,14 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
         resultEl.className = 'tng-reveal-result error';
         resultEl.textContent = data.message || 'Could not confidently match this contact for reveal.';
         btn.disabled = false;
-        btn.textContent = 'Reveal Full Name & Email (1 Apollo credit)';
+        btn.innerHTML = tngIcon('mail') + REVEAL_LABEL;
       }
     } catch (err) {
       console.error(err);
       resultEl.className = 'tng-reveal-result error';
       resultEl.textContent = 'Reveal failed: ' + err.message;
       btn.disabled = false;
-      btn.textContent = 'Reveal Full Name & Email (1 Apollo credit)';
+      btn.innerHTML = tngIcon('mail') + REVEAL_LABEL;
     }
   };
 
@@ -2928,16 +3062,18 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
         const revealed = c.revealed
           ? (c.revealed.email ? ` · <span class="email">${escapeHtml(c.revealed.email)}</span>` : ' · <span class="muted">no email on file</span>') : '';
         const revealBtn = !c.revealed && !fromWeb && !report
-          ?` <button class="tng-reveal-btn tng-brief-reveal" data-brief-action="reveal" data-key="${lead.key}" data-contact="${ci}">Reveal email (1 credit)</button>` : '';
+          ?` <button class="tng-reveal-btn tng-brief-reveal" data-brief-action="reveal" data-key="${lead.key}" data-contact="${ci}">${tngIcon('mail')}Reveal email (1 credit)</button>` : '';
         parts.push(`<div class="tng-brief-person">
           <span class="name">${escapeHtml(name)}</span>${c.title ? ' — ' + escapeHtml(c.title) : ''}
-          ${isWebLink(c.linkedin_url) ? ` · <a href="${escapeHtml(c.linkedin_url)}" target="_blank" rel="noopener">LinkedIn</a>` : ''}${revealed}${revealBtn}
+          ${isWebLink(c.linkedin_url) ? ` · <a href="${escapeHtml(c.linkedin_url)}" target="_blank" rel="noopener">LinkedIn</a>` : ''}${revealed}${!c.revealed && !report ? reachChips(c) : ''}${revealBtn}
           ${c.revealError ? `<div class="error">${escapeHtml(c.revealError)}</div>` : ''}
         </div>`);
       });
     }
-    if (!parts.length) return '';
-    return `<div class="tng-brief-people"><div class="tng-brief-people-label" style="color:var(--tng-text-secondary);">Who to contact</div>${parts.join('')}</div>`;
+    const more = v && !report ? morePeopleHtml(v.result.more_people, v.result.company_name || lead.organization,
+      i => `data-brief-action="reveal-more" data-key="${lead.key}" data-person="${i}"`, `data-people-key="${lead.key}"`, lead.peopleOpen) : '';
+    if (!parts.length && !more) return '';
+    return `<div class="tng-brief-people"><div class="tng-brief-people-label" style="color:var(--tng-text-secondary);">Who to contact</div>${parts.join('')}${more}</div>`;
   }
 
   function moreHtml(lead, v, report) {
@@ -3000,7 +3136,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
 
   async function revealBriefContact(lead, ci, btn) {
     const c = lead.vetted.contacts[ci];
-    if (!window.confirm('This will use 1 Apollo credit to reveal this contact\'s full name and email address.\n\nContinue?')) return;
+    if (!window.confirm(revealPrompt(c))) return;
     btn.disabled = true;
     btn.textContent = 'Revealing...';
     c.revealError = '';
@@ -3630,11 +3766,13 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
         const r = c.revealed;
         const n = splitName((r && r.full_name) || c.name);
         out.push({
-          label: `${(r && r.full_name) || c.name}${c.title ? ', ' + c.title : ''} (${fromWeb ? 'web research' : r ? 'Apollo, revealed' : 'Apollo, not revealed'})`,
+          label: `${(r && r.full_name) || c.name}${c.title ? ', ' + c.title : ''} (${fromWeb ? 'web research' : r ? 'Apollo, revealed' : 'Apollo, not revealed' + emailNote(c)})`,
           first: n.first, last: r || fromWeb ? n.last : '', title: c.title || '', email: (r && r.email) || '', phone: '',
+          hasEmail: c.has_email, apolloId: c.apollo_id || null,
           reveal: r || fromWeb ? null : { kind: 'brief', lead, ci },
         });
       });
+      (v.result.more_people || []).forEach((p, i) => out.push(morePersonCandidate(p, { kind: 'briefMore', lead, i })));
     }
     return out;
   }
@@ -3646,11 +3784,22 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
       const r = revealedByIndex[i];
       const n = splitName((r && r.full_name) || c.name);
       return {
-        label: `${(r && r.full_name) || c.name}${c.title ? ', ' + c.title : ''} (${fromWeb ? 'web research' : r ? 'Apollo, revealed' : 'Apollo, not revealed'})`,
+        label: `${(r && r.full_name) || c.name}${c.title ? ', ' + c.title : ''} (${fromWeb ? 'web research' : r ? 'Apollo, revealed' : 'Apollo, not revealed' + emailNote(c)})`,
         first: n.first, last: r || fromWeb ? n.last : '', title: c.title || '', email: (r && r.email) || '', phone: '',
+        hasEmail: c.has_email, apolloId: c.apollo_id || null,
         reveal: r || fromWeb ? null : { kind: 'single', index: i },
       };
-    });
+    }).concat((info.more_people || []).map((p, i) => morePersonCandidate(p, { kind: 'singleMore', i })));
+  }
+
+  const emailNote = c => c.has_email === true ? ', email on file' : c.has_email === false ? ', no email in Apollo' : '';
+  // Someone from the more people list, offered in the picker with a reveal.
+  function morePersonCandidate(p, reveal) {
+    return {
+      label: `${p.name}${p.title ? ', ' + p.title : ''} (more people, not revealed${emailNote(p)})`,
+      first: p.name.split(' ')[0], last: '', title: p.title || '', email: '', phone: '',
+      hasEmail: p.has_email, apolloId: p.apollo_id, reveal,
+    };
   }
 
   // The note saved on the Contact: the opportunity score and why, in plain text.
@@ -3725,8 +3874,11 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   // ctx: { company, website, candidates, refreshCandidates(), startIndex, noteTitle, note, onDone(result) }
   function openPush(ctx) {
     pushState = { ...ctx, fields: null, chosen: 0, preview: null, previewFor: '', ack: false, busy: '', result: null, error: '' };
+    // Start on someone pushable as they stand, else the first person Apollo has an email for.
     const ready = ctx.candidates.findIndex(c => c.first && c.last && (c.email || c.phone));
-    const start = ctx.startIndex != null && ctx.candidates[ctx.startIndex] ? ctx.startIndex : (ready >= 0 ? ready : 0);
+    const reachable = ctx.candidates.findIndex(c => c.hasEmail);
+    const start = ctx.startIndex != null && ctx.candidates[ctx.startIndex] ? ctx.startIndex
+      : ready >= 0 ? ready : reachable >= 0 ? reachable : 0;
     useCandidate(start);
     renderPush();
     runPushPreview();
@@ -3779,12 +3931,15 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     const s = pushState;
     const c = s && s.candidates[s.chosen];
     if (!c || !c.reveal || s.busy) return;
-    if (!window.confirm('This will use 1 Apollo credit to reveal this contact\'s full name and email address.\n\nContinue?')) return;
+    if (!window.confirm(revealPrompt({ has_email: c.hasEmail }))) return;
     s.busy = 'revealing';
     s.error = '';
     renderPush();
     try {
-      if (c.reveal.kind === 'brief') {
+      if (c.reveal.kind === 'briefMore' || c.reveal.kind === 'singleMore') {
+        const failed = c.reveal.kind === 'briefMore' ? await revealBriefMore(c.reveal.lead, c.reveal.i, true) : await revealSingleMore(c.reveal.i, true);
+        if (failed) s.error = failed;
+      } else if (c.reveal.kind === 'brief') {
         const { lead, ci } = c.reveal;
         const ac = lead.vetted.contacts[ci];
         const payload = ac.apollo_id ? { apollo_id: ac.apollo_id } : { first_name: (ac.name || '').split(' ')[0], domain: lead.domain, title: ac.title };
@@ -3810,7 +3965,9 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     if (pushState !== s) return;
     s.busy = '';
     s.candidates = s.refreshCandidates();
-    useCandidate(s.chosen);
+    // A revealed person may have moved in the list (more people join the contacts); follow them.
+    const moved = c.apolloId ? s.candidates.findIndex(x => x.apolloId === c.apolloId) : -1;
+    useCandidate(moved >= 0 ? moved : s.chosen);
     renderPush();
     runPushPreview();
   }
@@ -3882,7 +4039,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     const picker = s.candidates.length ? `<label class="tng-push-label" for="tng-push-pick">Who to push</label>
       <div class="tng-push-pick-row"><select class="tng-push-select" id="tng-push-pick" data-push="pick" ${busy ? 'disabled' : ''}>
         ${s.candidates.map((c, i) => `<option value="${i}" ${i === s.chosen ? 'selected' : ''}>${escapeHtml(c.label)}</option>`).join('')}
-      </select>${cand && cand.reveal ? `<button class="tng-reveal-btn" data-push="reveal" ${busy ? 'disabled' : ''}>Reveal full name &amp; email (1 Apollo credit)</button>` : ''}</div>` : '';
+      </select>${cand && cand.reveal ? `<button class="tng-reveal-btn" data-push="reveal" ${busy ? 'disabled' : ''}>${tngIcon('mail')}Reveal full name &amp; email (1 Apollo credit)</button>` : ''}</div>` : '';
     const input = (name, label) => `<div><label class="tng-push-label" for="tng-push-${name}">${label}</label>
       <input class="tng-push-input" id="tng-push-${name}" data-field="${name}" value="${escapeHtml(s.fields[name])}" ${busy ? 'disabled' : ''} autocomplete="off" spellcheck="false"></div>`;
     el.innerHTML = `<div class="tng-modal">
@@ -3901,7 +4058,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
         <span class="stale" id="tng-push-stale" ${s.preview && s.previewFor !== pushKey() && !busy ? '' : 'hidden'}>Details changed: check again before pushing.</span>
         <button class="tng-export-btn" data-push="check" ${busy ? 'disabled' : ''}>Check again</button>
         <button class="tng-export-btn" data-push="close" ${s.busy === 'pushing' ? 'disabled' : ''}>Cancel</button>
-        <button class="tng-export-btn primary" data-push="push" id="tng-push-go" ${pushReady() && !busy ? '' : 'disabled'}>${tngIcon('userPlus')}${s.busy === 'pushing' ? 'Pushing...' : 'Push to Zoho'}</button>
+        <button class="tng-export-btn primary" data-push="push" id="tng-push-go" ${pushReady() && !busy ? '' : 'disabled'}>${ZOHO_TILE}${s.busy === 'pushing' ? 'Pushing...' : 'Push to Zoho'}</button>
       </div>
     </div>`;
   }
@@ -4030,7 +4187,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     if (lead.zohoPushed) {
       return `<div class="tng-zoho-row"><span class="tng-chip good">✓ Pushed to Zoho</span><a href="${escapeHtml(lead.zohoPushed.url)}" target="_blank" rel="noopener">View the Contact →</a></div>`;
     }
-    return `<div class="tng-zoho-row"><button class="tng-zoho-btn" data-brief-action="zoho" data-key="${lead.key}">${tngIcon('userPlus')}Push to Zoho</button></div>`;
+    return `<div class="tng-zoho-row"><button class="tng-zoho-btn" data-brief-action="zoho" data-key="${lead.key}">${ZOHO_TILE}Push to Zoho</button></div>`;
   }
 
   function resetBrief() {
@@ -4092,6 +4249,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
       case 'pdf': printBriefReport(); break;
       case 'reveal': revealBriefContact(lead, Number(btn.dataset.contact), btn); break;
       case 'zoho': openBriefPush(lead); break;
+      case 'reveal-more': revealBriefMore(lead, Number(btn.dataset.person)); break;
       case 'retry':
         if (lead.pending) break;
         lead.pending = true;
@@ -4113,6 +4271,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     if (!brief || e.target.tagName !== 'DETAILS') return;
     if (e.target.dataset.key != null) brief.leads[Number(e.target.dataset.key)].moreOpen = e.target.open;
     else if (e.target.classList.contains('tng-brief-watch')) brief.watchOpen = e.target.open;
+    else if (e.target.dataset.peopleKey != null) brief.leads[Number(e.target.dataset.peopleKey)].peopleOpen = e.target.open;
   }, true);
 
   window.addEventListener('beforeunload', e => {
