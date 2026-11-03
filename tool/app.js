@@ -573,7 +573,7 @@
 
   /* ---------- Export & footnote ---------- */
   .tng-export-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
-  .tng-export-btn { flex: 1; }
+  .tng-export-btn { flex: 1; white-space: nowrap; }
   .tng-export-confirm { flex-basis: 100%; text-align: center; }
   .tng-export-btn {
     background: var(--tng-surface-2);
@@ -861,7 +861,7 @@
   <div class="tng-header">
     <div class="tng-header-title-block">
       <h1>TNG Opportunity Score</h1>
-      <div class="tng-version-line">TNG OP TOOL V.3.4 · Created by Trever Koltys</div>
+      <div class="tng-version-line">TNG OP TOOL V.3.5 · Created by Trever Koltys</div>
     </div>
     <span class="tng-header-note">This tool is to be used in conjunction with <a href="https://app.apollo.io/" target="_blank" rel="noopener">app.apollo.io</a></span>
   </div>
@@ -2732,7 +2732,7 @@
         <div class="tng-export-row">
           <button class="tng-export-btn" data-brief-action="copy">Copy Summary</button>
           <button class="tng-export-btn" data-brief-action="csv">Download CSV</button>
-          <button class="tng-export-btn" data-brief-action="report" ${briefRunning ? 'disabled title="Available when vetting finishes"' : ''}>Download Report</button>
+          <button class="tng-export-btn" data-brief-action="report" ${briefRunning ? 'disabled title="Available when vetting finishes"' : ''}>Executive Report</button>
           <button class="tng-export-btn" data-brief-action="pdf" ${briefRunning ? 'disabled title="Available when vetting finishes"' : ''}>Save as PDF</button>
           <button class="tng-export-btn" data-brief-action="new">New Brief</button>
           <span class="tng-export-confirm" id="tng-brief-confirm"></span>
@@ -3010,6 +3010,42 @@
   .tng-report .tng-brief-detail > .tng-brief-people-label { color: var(--tng-text-secondary); }
   .tng-report-meta { font-size: 15px; line-height: 1.6; color: var(--tng-text-secondary); margin: 0 0 28px; }
   .tng-report-meta strong { color: var(--tng-white); font-weight: 600; }
+
+  /* Executive summary: the first page, before the lead-by-lead details. */
+  .tng-exec-bottom { padding: 16px 20px; margin-bottom: 20px; background: rgba(21,101,192,0.10); border-left: 3px solid var(--tng-intel-text); border-radius: var(--tng-radius-sm); font-size: 16px; line-height: 1.55; color: var(--tng-text); }
+  .tng-exec-bottom b { color: var(--tng-white); }
+  .tng-exec-kpis { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 28px; }
+  .tng-exec-kpi { padding: 14px 16px; background: var(--tng-surface); border: 1px solid var(--tng-hairline); border-radius: var(--tng-radius-md); }
+  .tng-exec-kpi .num { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; color: var(--tng-white); font-variant-numeric: tabular-nums; }
+  .tng-exec-kpi .label { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tng-text-tertiary); margin-top: 4px; }
+  .tng-exec-h { font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--tng-text-secondary); margin: 0 0 12px; }
+  .tng-exec-item { padding: 16px 18px; margin-bottom: 10px; background: var(--tng-surface); border: 1px solid var(--tng-hairline); border-radius: var(--tng-radius-lg); }
+  .tng-exec-item-head { display: flex; align-items: flex-start; gap: 12px; }
+  .tng-exec-item-head .tng-brief-pos { margin-top: 1px; }
+  .tng-exec-item-title { flex: 1; min-width: 0; }
+  .tng-exec-org { font-size: 17px; font-weight: 700; color: var(--tng-white); line-height: 1.3; }
+  .tng-exec-opp { font-size: 13px; color: var(--tng-text-secondary); margin-top: 2px; line-height: 1.45; }
+  .tng-exec-pr { text-align: right; white-space: nowrap; }
+  .tng-exec-pr .num { font-size: 22px; font-weight: 700; color: var(--tng-white); line-height: 1; font-variant-numeric: tabular-nums; }
+  .tng-exec-pr .tng-tier.sm { margin-top: 6px; font-size: 11px; padding: 3px 9px; }
+  .tng-exec-facts { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 5px 14px; margin: 12px 0 0; font-size: 14px; line-height: 1.5; }
+  .tng-exec-facts dt { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tng-text-tertiary); padding-top: 3px; }
+  .tng-exec-facts dd { margin: 0; color: #D1D1D6; overflow-wrap: anywhere; }
+  .tng-exec-facts dd.caveat { color: #FFC977; }
+  .tng-exec-more { font-size: 13px; color: var(--tng-text-tertiary); margin: 4px 0 0; }
+  .tng-exec-cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 24px; }
+  .tng-exec-box { padding: 16px 18px; background: var(--tng-surface); border: 1px solid var(--tng-hairline); border-radius: var(--tng-radius-lg); }
+  .tng-exec-box ul { margin: 0; padding-left: 18px; font-size: 14px; line-height: 1.55; color: #D1D1D6; }
+  .tng-exec-box li + li { margin-top: 6px; }
+  .tng-exec-box b { color: var(--tng-white); font-weight: 600; }
+  .tng-exec-box .none { font-size: 14px; color: var(--tng-text-tertiary); }
+  .tng-exec-appendix { margin-top: 40px; padding-top: 28px; border-top: 1px solid var(--tng-hairline-strong); }
+  .tng-exec-appendix > h2 { font-size: 22px; font-weight: 700; color: var(--tng-white); margin: 0 0 6px; }
+  @media (max-width: 640px) {
+    .tng-exec-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .tng-exec-cols { grid-template-columns: minmax(0, 1fr); }
+    .tng-exec-facts { grid-template-columns: minmax(0, 1fr); gap: 2px; }
+  }
   /* Full-bleed black pages: no page margin (it prints grey); the report's own padding
      repeats on every page instead (box-decoration-break: clone). */
   @page { size: letter; margin: 0; }
@@ -3040,6 +3076,20 @@
     .tng-report .tng-brief-people { font-size: 12.5px; padding: 10px 14px; }
     .tng-report .tng-brief-draft { font-size: 12px; }
     .tng-report .tng-footnote { font-size: 10.5px; padding-bottom: 0; }
+    .tng-exec-bottom { font-size: 13.5px; padding: 12px 16px; margin-bottom: 14px; }
+    .tng-exec-kpis { gap: 8px; margin-bottom: 18px; }
+    .tng-exec-kpi { padding: 10px 12px; }
+    .tng-exec-kpi .num { font-size: 22px; }
+    .tng-exec-kpi .label { font-size: 10px; }
+    .tng-exec-item { padding: 12px 14px; margin-bottom: 8px; break-inside: avoid; }
+    .tng-exec-org { font-size: 15px; }
+    .tng-exec-facts { font-size: 12px; grid-template-columns: 84px minmax(0, 1fr); gap: 3px 12px; }
+    .tng-exec-facts dt { font-size: 10px; }
+    .tng-exec-cols { margin-top: 14px; break-inside: avoid; }
+    .tng-exec-box { padding: 12px 14px; }
+    .tng-exec-box ul, .tng-exec-box .none { font-size: 12px; }
+    /* The lead-by-lead details start on a fresh page after the summary. */
+    .tng-exec-appendix { break-before: page; margin-top: 0; padding-top: 0; border-top: none; }
   }`;
 
   function briefCountsText(main) {
@@ -3063,7 +3113,138 @@
   }
 
   const briefFileStem = () => (brief.date || brief.title).replace(/[^a-z0-9]+/gi, '-').toLowerCase();
-  const reportTitle = () => `TNG Hunter Brief Report ${brief.date || brief.title}`;
+  const reportTitle = () => `TNG Executive Report ${brief.date || brief.title}`;
+
+  // ----- Executive summary: page one of the report, built only from what's on screen -----
+  const EXEC_TOP = 5;
+  const HOT_TIERS = ['spicy', 'heating_up'];
+  const vettedOf = lead => lead.vetted && lead.vetted.ok ? lead.vetted : null;
+  const plural = (n, word) => `${n} ${word}${n === 1 ? '' : 's'}`;
+
+  // Who to call first: a named buyer from Steve's brief, else Apollo's security contact, else its first contact.
+  function primaryContact(lead) {
+    const b = (lead.buyers || []).find(x => x.name);
+    if (b) return [b.name, b.title, b.email, b.phone].filter(Boolean).join(' · ') + ' (from brief)';
+    const v = vettedOf(lead);
+    if (!v || !v.contacts.length) return '';
+    const c = v.contacts.find(x => SECURITY_TITLE.test(x.title || '')) || v.contacts[0];
+    const name = (c.revealed && c.revealed.full_name) || c.name;
+    return [name, c.title, c.revealed && c.revealed.email].filter(Boolean).join(' · ') + ' (Apollo)';
+  }
+
+  // "in Zoho CRM, recent security incident": the findings that raised this lead's priority.
+  const liftReasons = pr => pr.reasons.filter(r => r.pts > 0).map(r => r.text);
+  // Brief fields are sometimes fragments ("New ER tower"); end each with a period before joining.
+  const asSentence = s => { const t = String(s || '').trim(); return t && !/[.!?]$/.test(t) ? t + '.' : t; };
+
+  // One top opportunity's facts as plain-text [label, text, isCaveat] rows: shared by the PDF page and the Word doc.
+  function execRows({ lead, pr }) {
+    const v = vettedOf(lead);
+    const days = daysUntil(lead.deadline_date);
+    const rows = [];
+    const why = [asSentence(lead.signal), liftReasons(pr).length ? 'Lookups found: ' + liftReasons(pr).join(', ') + '.' : ''].filter(Boolean).join(' ');
+    if (why) rows.push(['Why now', why]);
+    const pitch = [asSentence(lead.why_tng), v && v.recentEvent ? `Trigger events point to ${eventServices(v.events.events)}.` : ''].filter(Boolean).join(' ');
+    if (pitch) rows.push(['Pitch', pitch]);
+    if (lead.first_move) rows.push(['Next step', lead.first_move]);
+    const contact = primaryContact(lead);
+    if (contact) rows.push(['Contact', contact]);
+    const terms = [lead.value, lead.rmr ? 'RMR: ' + lead.rmr : '',
+      days !== null ? (days < 0 ? 'Deadline passed' : `Due ${fmtDay(lead.deadline_date)} (${days === 0 ? 'today' : plural(days, 'day')})`) : lead.deadline].filter(Boolean);
+    if (terms.length) rows.push(['Value / due', terms.join(' · ')]);
+    if (lead.caveats) rows.push(['Watch out', lead.caveats, true]);
+    return rows;
+  }
+
+  const execSubtitle = lead => [lead.opportunity, lead.lane, lead.site_location].filter(Boolean).join(' · ');
+
+  // Everything the executive summary says, as plain text. Lines that start with an
+  // organization are { org, text } so each format can bold the name its own way.
+  function execData(main) {
+    const vetted = main.filter(x => vettedOf(x.lead));
+    const hot = vetted.filter(x => HOT_TIERS.includes(vettedOf(x.lead).tier.tier));
+    const inCrm = vetted.filter(x => vettedOf(x.lead).crmFound);
+    const visited = vetted.filter(x => { const sv = vettedOf(x.lead).result.site_visits; return sv && sv.available && sv.total_visits; });
+    const newsHits = vetted.filter(x => vettedOf(x.lead).recentIncident || vettedOf(x.lead).recentEvent);
+    const dueSoon = main.filter(x => { const d = daysUntil(x.lead.deadline_date); return d !== null && d >= 0 && d <= 14; });
+    const kpis = [
+      [main.length, 'Leads ranked'], [hot.length, 'Hot leads (Heating Up or Spicy)'], [inCrm.length, 'Already in Zoho CRM'],
+      [visited.length, 'Visited tngdefense.com'], [newsHits.length, 'In the news (incidents or triggers)'], [dueSoon.length, 'Due in the next 14 days'],
+    ];
+
+    // The bottom line, in plain words, from the top of the ranking.
+    const top = main.slice(0, EXEC_TOP);
+    const first = top[0];
+    const firstWhy = first ? liftReasons(first.pr) : [];
+    const bottom = first
+      ? {
+          lead: `Start with ${first.lead.organization}`,
+          text: ` (priority ${first.pr.total.toFixed(1)}${firstWhy.length ? ': ' + firstWhy.join(', ') : ''}).`
+            + (hot.length ? ` ${plural(hot.length, 'lead')} scored Heating Up or Spicy on TNG's own score.` : '')
+            + (inCrm.length ? ` ${inCrm.length} ${inCrm.length === 1 ? 'is' : 'are'} already in Zoho, so check the account owner before reaching out.` : '')
+            + (dueSoon.length ? ` ${plural(dueSoon.length, 'deadline')} fall${dueSoon.length === 1 ? 's' : ''} in the next two weeks.` : ''),
+        }
+      : { lead: '', text: 'No leads were ranked in this brief.' };
+
+    // Act this week: deadlines inside 7 days, and anyone who looked at the Contact or Request Services page.
+    const act = [];
+    main.forEach(({ lead }) => {
+      const d = daysUntil(lead.deadline_date);
+      if (d !== null && d >= 0 && d <= 7) act.push({ d, org: lead.organization, text: `due ${fmtDay(lead.deadline_date)} (${d === 0 ? 'today' : plural(d, 'day')})` });
+    });
+    act.sort((a, b) => a.d - b.d);
+    vetted.forEach(({ lead }) => {
+      const pages = Object.keys(vettedOf(lead).visits.pages).map(id => SIGNALS.find(s => s.id === id));
+      if (pages.some(s => s.pageType === 'high_intent')) act.push({ org: lead.organization, text: 'visited our Contact / Request Services page' });
+    });
+
+    // Watch outs: anything that blocks or weakens a lead.
+    const watch = [];
+    main.forEach(({ lead }) => {
+      if (lead.site_state && lead.site_licensed === false) watch.push({ org: lead.organization, text: `work is in ${lead.site_state}, outside our licensed states` });
+      const d = daysUntil(lead.deadline_date);
+      if (d !== null && d < 0) watch.push({ org: lead.organization, text: 'deadline already passed' });
+      if (lead.vetted && !lead.vetted.ok) watch.push({ org: lead.organization, text: 'lookups failed, not vetted' });
+    });
+
+    return {
+      kpis, bottom, top, act, watch, more: main.length - top.length,
+      actNone: 'No deadlines in the next 7 days and no Contact page visits.',
+      watchNone: 'Nothing blocking found: no unlicensed states, passed deadlines or failed lookups.',
+    };
+  }
+
+  function execSummaryHtml(main) {
+    const d = execData(main);
+    const item = (x, pos) => {
+      const v = vettedOf(x.lead);
+      const tier = v ? `<div><span class="tng-tier sm ${v.tier.tier}">TNG ${v.total} · ${v.tier.label}</span></div>` : '';
+      return `<div class="tng-exec-item">
+        <div class="tng-exec-item-head">
+          <div class="tng-brief-pos">${pos}</div>
+          <div class="tng-exec-item-title">
+            <div class="tng-exec-org">${escapeHtml(x.lead.organization)}</div>
+            <div class="tng-exec-opp">${escapeHtml(execSubtitle(x.lead))}</div>
+          </div>
+          <div class="tng-exec-pr"><div class="num">${x.pr.total.toFixed(1)}</div>${tier}</div>
+        </div>
+        <dl class="tng-exec-facts">${execRows(x).map(([dt, dd, caveat]) => `<dt>${dt}</dt><dd${caveat ? ' class="caveat"' : ''}>${escapeHtml(dd)}</dd>`).join('')}</dl>
+      </div>`;
+    };
+    const list = (items, none) => items.length
+      ? `<ul>${items.map(i => `<li><b>${escapeHtml(i.org)}</b>: ${escapeHtml(i.text)}</li>`).join('')}</ul>`
+      : `<div class="none">${none}</div>`;
+    return `
+      <div class="tng-exec-bottom">${d.bottom.lead ? `<b>${escapeHtml(d.bottom.lead)}</b>` : ''}${escapeHtml(d.bottom.text)}</div>
+      <div class="tng-exec-kpis">${d.kpis.map(([n, label]) => `<div class="tng-exec-kpi"><div class="num">${n}</div><div class="label">${label}</div></div>`).join('')}</div>
+      <div class="tng-exec-h">Top ${d.top.length} opportunities</div>
+      ${d.top.map((x, i) => item(x, i + 1)).join('')}
+      ${d.more > 0 ? `<div class="tng-exec-more">${plural(d.more, 'more ranked lead')} in the details below.</div>` : ''}
+      <div class="tng-exec-cols">
+        <div class="tng-exec-box"><div class="tng-exec-h">Act this week</div>${list(d.act, d.actNone)}</div>
+        <div class="tng-exec-box"><div class="tng-exec-h">Watch outs</div>${list(d.watch, d.watchNone)}</div>
+      </div>`;
+  }
 
   function briefReportHtml() {
     const { main, rest } = orderedBriefLeads();
@@ -3085,23 +3266,216 @@
   <div class="tng-logo-banner">${logo}</div>
   <div class="tng-header">
     <div class="tng-header-title-block">
-      <h1>Hunter Brief Report</h1>
-      <div class="tng-version-line">${escapeHtml(briefHeading())}</div>
+      <h1>Executive Report</h1>
+      <div class="tng-version-line">Client Hunter Brief · ${escapeHtml(briefHeading())}</div>
     </div>
-    <span class="tng-header-note">Vetted ${escapeHtml(new Date().toLocaleString())}<br>Internal: contains contact details</span>
+    <span class="tng-header-note">Prepared ${escapeHtml(new Date().toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }))}<br>Internal: contains contact details</span>
   </div>
-  <div class="tng-report-meta"><strong>${escapeHtml(briefCountsText(main))}</strong><br>Ranked best first. Priority starts from Steve's score and moves with what the lookups found (see the note at the end).</div>
-  ${main.map((x, i) => leadCardHtml(x.lead, x.pr, i + 1, true)).join('')}
-  ${rest.length ? `<div class="tng-section-label" style="margin-top:32px;">Watchlist, not vetted</div>${rest.map(x => leadCardHtml(x.lead, x.pr, '–', true)).join('')}` : ''}
+  ${execSummaryHtml(main)}
+  <div class="tng-exec-appendix">
+    <h2>Lead details</h2>
+    <div class="tng-report-meta"><strong>${escapeHtml(briefCountsText(main))}</strong><br>Ranked best first. Priority starts from Steve's score and moves with what the lookups found (see the note at the end).</div>
+    ${main.map((x, i) => leadCardHtml(x.lead, x.pr, i + 1, true)).join('')}
+    ${rest.length ? `<div class="tng-section-label" style="margin-top:32px;">Watchlist, not vetted</div>${rest.map(x => leadCardHtml(x.lead, x.pr, '–', true)).join('')}` : ''}
+  </div>
   <div class="tng-footnote">${footnote}<br><br>${escapeHtml(version)} · Generated by the TNG Opportunity Score tool.</div>
 </div>
 </body>
 </html>`;
   }
 
-  function downloadBriefReport() {
-    downloadFile(`tng-hunter-brief-${briefFileStem()}.html`, briefReportHtml(), 'text/html;charset=utf-8');
-    showExportConfirm('Report downloaded', 'tng-brief-confirm');
+  // ----- Executive Report as a Word document -----
+  // Built in the browser with the docx library, loaded only when the button is clicked.
+  // It's pinned to one version and checked against its hash, so a changed file is refused.
+  const DOCX_LIB = {
+    src: 'https://cdn.jsdelivr.net/npm/docx@9.8.0/dist/index.iife.js',
+    integrity: 'sha384-lCKTCWZeluOZCSCIWVBq+0SitTe1BSFfuOT35fIwxeY1mb4SI1pdD4FtzMngrpe2',
+  };
+  let docxLoading = null;
+  function loadDocx() {
+    if (window.docx) return Promise.resolve(window.docx);
+    if (!docxLoading) {
+      docxLoading = new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = DOCX_LIB.src;
+        s.integrity = DOCX_LIB.integrity;
+        s.crossOrigin = 'anonymous';
+        s.onload = () => window.docx ? resolve(window.docx) : reject(new Error('the Word library loaded empty'));
+        s.onerror = () => { docxLoading = null; s.remove(); reject(new Error("couldn't load the Word library. Check your internet connection")); };
+        document.head.appendChild(s);
+      });
+    }
+    return docxLoading;
+  }
+
+  // The white TNG logo as a PNG for the black title band (Word can't use the page's inline SVG).
+  function logoPng() {
+    const svg = document.querySelector('.tng-logo-img').cloneNode(true);
+    svg.setAttribute('width', '864');
+    svg.setAttribute('height', '155');
+    const src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(new XMLSerializer().serializeToString(svg));
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 864;
+        canvas.height = 155;
+        canvas.getContext('2d').drawImage(img, 0, 0, 864, 155);
+        canvas.toBlob(b => b ? b.arrayBuffer().then(resolve, reject) : reject(new Error('logo')), 'image/png');
+      };
+      img.onerror = () => reject(new Error('logo'));
+      img.src = src;
+    });
+  }
+
+  // TNG's document palette: white page, black type, #333 rules, light grey panels; color only for status.
+  const WORD = { black: '000000', text: '1A1A1A', grey: '666666', mid: '888888', light: 'A0A0A0', rule: '333333', panel: 'F5F5F5', white: 'FFFFFF', spicy: 'C62828', warm: 'E65100' };
+  const WORD_FONT = 'Calibri';
+  const WORD_WIDTH = 10080; // letter page, 0.75" margins, in twentieths of a point
+
+  async function briefDocxBlob() {
+    const D = await loadDocx();
+    const logo = await logoPng().catch(() => null);
+    const { main } = orderedBriefLeads();
+    const d = execData(main);
+
+    const run = (text, o = {}) => new D.TextRun({ text: String(text), font: WORD_FONT, size: 21, color: WORD.text, ...o });
+    const para = (children, o = {}) => new D.Paragraph({ children, spacing: { after: 60 }, ...o });
+    const none = { style: D.BorderStyle.NONE, size: 0, color: WORD.white };
+    const noBorders = { top: none, bottom: none, left: none, right: none, insideHorizontal: none, insideVertical: none };
+    const cell = (children, o = {}) => new D.TableCell({ children, margins: { top: 100, bottom: 100, left: 160, right: 160 }, ...o });
+    const shade = fill => ({ fill, type: D.ShadingType.CLEAR, color: 'auto' });
+    const table = (rows, widths, o = {}) => new D.Table({
+      rows, columnWidths: widths, width: { size: WORD_WIDTH, type: D.WidthType.DXA }, layout: D.TableLayoutType.FIXED, borders: noBorders, ...o,
+    });
+    const heading = text => para([run(text.toUpperCase(), { bold: true, size: 20, color: WORD.black, characterSpacing: 30 })], {
+      spacing: { before: 320, after: 140 }, keepNext: true,
+      border: { bottom: { style: D.BorderStyle.SINGLE, size: 6, color: WORD.rule, space: 4 } },
+    });
+    const tierColor = t => t === 'spicy' ? WORD.spicy : t === 'heating_up' ? WORD.warm : WORD.grey;
+    const tierText = v => `TNG ${v.total} · ${v.tier.label.replace(/\s*🌶️/, '')}`;
+    const orgLine = (i, opts) => [run(i.org, { bold: true, ...opts }), run(': ' + i.text, opts)];
+    const bullets = (items, emptyText) => items.length
+      ? items.map(i => para(orgLine(i), { bullet: { level: 0 } }))
+      : [para([run(emptyText, { color: WORD.grey })])];
+
+    const children = [];
+
+    // Title band: white logo and title on black, the TNG signature.
+    const band = [];
+    if (logo) band.push(para([new D.ImageRun({ type: 'png', data: logo, transformation: { width: 230, height: 41 } })], { spacing: { after: 200 } }));
+    else band.push(para([run('THE NORTH GROUP', { bold: true, color: WORD.white, characterSpacing: 40 })], { spacing: { after: 200 } }));
+    band.push(para([run('EXECUTIVE REPORT', { bold: true, size: 40, color: WORD.white, characterSpacing: 40 })], { spacing: { after: 40 } }));
+    band.push(para([run('Client Hunter Brief · ' + briefHeading(), { size: 22, color: WORD.light })], { spacing: { after: 40 } }));
+    band.push(para([run(`Prepared ${new Date().toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })} · Internal: contains contact details`, { size: 17, color: WORD.mid })], { spacing: { after: 0 } }));
+    children.push(table([new D.TableRow({ children: [cell(band, { shading: shade(WORD.black), margins: { top: 360, bottom: 360, left: 400, right: 400 } })] })], [WORD_WIDTH]));
+
+    // Bottom line.
+    children.push(heading('Bottom line'));
+    children.push(table([new D.TableRow({ children: [cell([para([
+      ...(d.bottom.lead ? [run(d.bottom.lead, { bold: true, color: WORD.black })] : []), run(d.bottom.text),
+    ], { spacing: { after: 0, line: 300 } })], {
+      shading: shade(WORD.panel), margins: { top: 180, bottom: 180, left: 240, right: 240 },
+      borders: { top: none, bottom: none, right: none, left: { style: D.BorderStyle.SINGLE, size: 24, color: WORD.black } },
+    })] })], [WORD_WIDTH]));
+
+    // At a glance: six counts in two rows of three, separated by white gutters.
+    children.push(heading('At a glance'));
+    const gutter = { style: D.BorderStyle.SINGLE, size: 24, color: WORD.white };
+    const kpiRows = [d.kpis.slice(0, 3), d.kpis.slice(3)].map(group => new D.TableRow({ cantSplit: true, children: group.map(([n, label]) => cell([
+      para([run(n, { bold: true, size: 40, color: WORD.black })], { spacing: { after: 0 } }),
+      para([run(label.toUpperCase(), { size: 15, color: WORD.grey, characterSpacing: 10 })], { spacing: { after: 0 } }),
+    ], { shading: shade(WORD.panel), borders: { top: gutter, bottom: gutter, left: gutter, right: gutter }, margins: { top: 140, bottom: 140, left: 200, right: 200 } })) }));
+    children.push(table(kpiRows, [3360, 3360, 3360]));
+
+    // Top opportunities: a heading row (rank, name, priority, TNG tier) and a facts table each.
+    children.push(heading(`Top ${d.top.length} opportunities`));
+    d.top.forEach((x, i) => {
+      const v = vettedOf(x.lead);
+      // keepNext on every paragraph but the last fact holds each opportunity on one page.
+      const rightOpts = { alignment: D.AlignmentType.RIGHT, spacing: { after: 0 }, keepNext: true };
+      const right = [para([run(x.pr.total.toFixed(1), { bold: true, size: 30, color: WORD.black })], rightOpts),
+        para([run('PRIORITY', { size: 14, color: WORD.grey, characterSpacing: 20 })], rightOpts)];
+      if (v) right.push(para([run(tierText(v), { bold: true, size: 16, color: tierColor(v.tier.tier) })], rightOpts));
+      children.push(table([new D.TableRow({ cantSplit: true, children: [
+        cell([
+          para([run(`${i + 1}.  `, { bold: true, size: 26, color: WORD.grey }), run(x.lead.organization, { bold: true, size: 26, color: WORD.black })], { spacing: { after: 20 }, keepNext: true }),
+          para([run(execSubtitle(x.lead), { size: 19, color: WORD.grey })], { spacing: { after: 0 }, keepNext: true }),
+        ], { margins: { top: 60, bottom: 60, left: 0, right: 120 } }),
+        cell(right, { margins: { top: 60, bottom: 60, left: 120, right: 0 } }),
+      ] })], [7680, 2400], { borders: { ...noBorders, top: { style: D.BorderStyle.SINGLE, size: 6, color: 'D0D0D0' } } }));
+      const facts = execRows(x);
+      children.push(table(facts.map(([label, text, caveat], r) => {
+        const opts = { spacing: { after: 0 }, keepNext: r < facts.length - 1 };
+        return new D.TableRow({ cantSplit: true, children: [
+          cell([para([run(label.toUpperCase(), { bold: true, size: 15, color: WORD.grey, characterSpacing: 10 })], opts)], { margins: { top: 50, bottom: 50, left: 0, right: 120 } }),
+          cell([para([run(text, { size: 20, color: caveat ? WORD.warm : WORD.text })], opts)], { margins: { top: 50, bottom: 50, left: 120, right: 0 } }),
+        ] });
+      }), [1700, 8380]));
+      children.push(para([], { spacing: { after: 160 } }));
+    });
+    if (d.more > 0) children.push(para([run(`${plural(d.more, 'more ranked lead')} in the table below.`, { color: WORD.grey, size: 19 })]));
+
+    children.push(heading('Act this week'));
+    children.push(...bullets(d.act, d.actNone));
+    children.push(heading('Watch outs'));
+    children.push(...bullets(d.watch, d.watchNone));
+
+    // Every ranked lead in one table, best first.
+    children.push(heading('All ranked leads'));
+    const th = text => cell([para([run(text.toUpperCase(), { bold: true, size: 15, color: WORD.white, characterSpacing: 10 })], { spacing: { after: 0 } })], { shading: shade(WORD.black), margins: { top: 80, bottom: 80, left: 100, right: 100 } });
+    const td = (text, fill, o = {}) => cell([para([run(text, { size: 18, ...o })], { spacing: { after: 0 } })], { shading: shade(fill), margins: { top: 60, bottom: 60, left: 100, right: 100 } });
+    const leadRows = main.map(({ lead, pr }, i) => {
+      const v = vettedOf(lead);
+      const fill = i % 2 ? WORD.white : WORD.panel;
+      const days = daysUntil(lead.deadline_date);
+      const due = days === null ? (lead.deadline || '—') : days < 0 ? 'Passed' : `${fmtDay(lead.deadline_date)} (${days === 0 ? 'today' : days + 'd'})`;
+      return new D.TableRow({ cantSplit: true, children: [
+        td(i + 1, fill, { color: WORD.grey }), td(lead.organization, fill, { bold: true, color: WORD.black }), td(pr.total.toFixed(1), fill, { bold: true }),
+        td(v ? tierText(v) : lead.vetted ? 'Lookups failed' : 'Not vetted', fill, { color: v ? tierColor(v.tier.tier) : WORD.grey }),
+        td(v ? (v.crmFound ? 'Yes' : v.crm.error ? 'Check failed' : 'No') : '—', fill), td(due, fill, { color: days !== null && days < 0 ? WORD.spicy : WORD.text }),
+      ] });
+    });
+    children.push(table([new D.TableRow({ tableHeader: true, children: ['#', 'Organization', 'Priority', 'TNG score', 'In Zoho', 'Deadline'].map(th) }), ...leadRows],
+      [500, 4180, 1000, 2000, 1000, 1400]));
+
+    children.push(para([run("How to read this: priority starts from Steve's score in the brief and moves with what the lookups found (Zoho CRM, security incidents and trigger events in the news, tngdefense.com visits, firmographic fit, a security contact, licensing and deadlines). The TNG score is the tool's Opportunity Score from Apollo, Zoho and news data. Full lead details, contacts and sources are in the tool and its PDF report.", { size: 16, color: WORD.mid })], { spacing: { before: 320 } }));
+
+    const smallCaps = (text, o = {}) => run(text, { size: 15, color: WORD.mid, characterSpacing: 20, ...o });
+    const doc = new D.Document({
+      creator: 'TNG Opportunity Score',
+      title: reportTitle(),
+      styles: { default: { document: { run: { font: WORD_FONT, size: 21 } } } },
+      sections: [{
+        properties: { page: { size: { width: 12240, height: 15840 }, margin: { top: 1000, bottom: 1000, left: 1080, right: 1080, header: 500, footer: 500 } } },
+        headers: { default: new D.Header({ children: [para([smallCaps('THE NORTH GROUP  |  EXECUTIVE REPORT', { bold: true })], { alignment: D.AlignmentType.RIGHT })] }) },
+        footers: { default: new D.Footer({ children: [new D.Paragraph({
+          tabStops: [{ type: D.TabStopType.RIGHT, position: WORD_WIDTH }],
+          children: [smallCaps('INTERNAL · CONTAINS CONTACT DETAILS · TNGDEFENSE.COM'),
+            new D.TextRun({ children: [new D.Tab(), 'Page ', D.PageNumber.CURRENT, ' of ', D.PageNumber.TOTAL_PAGES], font: WORD_FONT, size: 15, color: WORD.mid })],
+        })] }) },
+        children,
+      }],
+    });
+    return D.Packer.toBlob(doc);
+  }
+
+  async function downloadBriefReport(btn) {
+    if (btn.disabled) return;
+    btn.disabled = true;
+    const label = btn.textContent;
+    btn.textContent = 'Building...';
+    try {
+      const blob = await briefDocxBlob();
+      downloadFile(`tng-executive-report-${briefFileStem()}.docx`, blob, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+      showExportConfirm('Executive report downloaded (Word)', 'tng-brief-confirm');
+    } catch (err) {
+      console.error(err);
+      showExportConfirm("Couldn't build the Word report: " + err.message, 'tng-brief-confirm');
+    } finally {
+      btn.disabled = false;
+      btn.textContent = label;
+    }
   }
 
   // Prints the report from a hidden frame; the browser's print window offers "Save as PDF".
@@ -3177,7 +3551,7 @@
       case 'new': resetBrief(); break;
       case 'copy': copyText(briefSummaryText(), 'tng-brief-confirm'); break;
       case 'csv': briefCsv(); break;
-      case 'report': downloadBriefReport(); break;
+      case 'report': downloadBriefReport(btn); break;
       case 'pdf': printBriefReport(); break;
       case 'reveal': revealBriefContact(lead, Number(btn.dataset.contact), btn); break;
       case 'retry':

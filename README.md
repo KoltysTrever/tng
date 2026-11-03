@@ -126,6 +126,17 @@ The page then runs each lead the user ticks through `analyze-lead` + `check-crm`
 ranks them: Steve's score is the base, adjusted for Zoho CRM, site visits,
 firmographic fit, a security contact, licensing and passed deadlines.
 
+**Executive Report** downloads an editable Word document (.docx) for leadership, in
+TNG's document style (white pages, black title band with the white logo, TNG header
+and footer, page numbers): a bottom line naming the lead to start with, six counts
+(ranked, hot, in Zoho, site visitors, in the news, due in 14 days), the top 5
+opportunities with why now, what to pitch, next step, contact and value or deadline,
+"Act this week" / "Watch outs" lists, and a table of every ranked lead. It's built in
+the browser with the `docx` library (9.8.0 from jsDelivr, loaded on click and checked
+against a pinned SRI hash). **Save as PDF** prints the same summary in the tool's dark
+style, followed by the full lead-by-lead cards. Both use only results already on
+screen: no credits, no Claude.
+
 While the brief is being read, the page shows the steps and a countdown. Reading the
 brief is a single Claude call, so the middle steps are paced by the expected time
 (the average of past reads, saved in the browser) rather than reported by the server;
