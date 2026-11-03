@@ -16,6 +16,8 @@ const TNG_ICON_PATHS = {
   check: '<circle cx="12" cy="12" r="10"/><path d="m8.5 12 2.5 2.5 4.5-5"/>',
   sliders: '<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>',
   chevron: '<path d="m6 9 6 6 6-6"/>',
+  search: '<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+  external: '<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
   mail: '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/>',
   userPlus: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>',
   info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
@@ -88,7 +90,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   .tng-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-end;
+    align-items: center;
     gap: 24px;
     padding-bottom: 28px;
     margin-bottom: 28px;
@@ -104,6 +106,11 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     color: var(--tng-white);
   }
   .tng-version-line { font-size: 13px; color: var(--tng-text-tertiary); }
+  .tng-header-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 18px; }
+  .tng-header-tools .tng-zoho-help-btn { margin-top: 0; }
+  .tng-header-link { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--tng-text-secondary); text-decoration: none; }
+  .tng-header-link:hover { color: var(--tng-white); }
+  .tng-header-link .tng-ico { width: 14px; height: 14px; }
   .tng-header-note {
     font-size: 13px;
     color: var(--tng-text-tertiary);
@@ -805,27 +812,31 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   }
 
   /* ---------- Mode switch: Single Lead / Hunter Brief ---------- */
+  .tng-mode-bar { display: flex; justify-content: center; margin-bottom: 32px; }
   .tng-mode-tabs {
     display: inline-flex;
     gap: 4px;
     padding: 4px;
-    margin-bottom: 28px;
     background: var(--tng-surface);
     border: 1px solid var(--tng-hairline);
     border-radius: 999px;
   }
   .tng-mode-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
     background: transparent;
     border: none;
     color: var(--tng-text-secondary);
     font-family: inherit;
     font-size: 14px;
     font-weight: 600;
-    padding: 8px 20px;
+    padding: 9px 22px;
     border-radius: 999px;
     cursor: pointer;
     transition: background 0.2s, color 0.2s;
   }
+  .tng-mode-tab .tng-ico { width: 16px; height: 16px; }
   .tng-mode-tab:hover { color: var(--tng-white); }
   .tng-mode-tab[aria-selected="true"] { background: var(--tng-white); color: var(--tng-black); }
 
@@ -887,6 +898,12 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   .tng-brief-summary-text { font-size: 15px; color: var(--tng-text-secondary); line-height: 1.5; }
   .tng-brief-summary-text strong { color: var(--tng-white); font-weight: 600; }
   .tng-brief-summary .tng-export-row { margin-top: 0; }
+  /* The results header (title, counts, exports) stays in view while a long brief scrolls under it. */
+  .tng-results-bar { position: sticky; top: 0; z-index: 6; margin: 0 0 6px; padding: 14px 0; background: var(--tng-black); border-bottom: 1px solid var(--tng-hairline); }
+  .tng-results-bar .tng-help-link { margin-top: 6px; }
+  .tng-brief-export-note { margin: 0 0 20px; }
+  /* Kept for the exported report, which reuses its text; on screen it's the How priority works pop-up. */
+  #tng-mode-brief > .tng-footnote { display: none; }
   .tng-brief-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; margin-top: 20px; }
   /* The top Vet bar stays in view while the lead list scrolls under it. */
   .tng-brief-actions.top { position: sticky; top: 0; z-index: 5; margin: 16px 0 0; padding: 12px 0; background: var(--tng-black); border-bottom: 1px solid var(--tng-hairline); }
@@ -966,6 +983,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   .tng-chip.bad { color: #FF8A80; background: rgba(198,40,40,0.16); }
   .tng-chip .tng-radar { width: 12px; height: 12px; min-width: 12px; }
   .tng-tier.sm { padding: 4px 12px; font-size: 13px; }
+  .tng-brief-quiet { font-size: 13px; color: var(--tng-text-tertiary); margin-top: 10px; line-height: 1.5; }
   .tng-brief-why { font-size: 13px; color: var(--tng-text-tertiary); margin-top: 10px; font-variant-numeric: tabular-nums; }
   .tng-brief-facts { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 8px 16px; margin: 16px 0 0; font-size: 15px; line-height: 1.55; }
   .tng-brief-facts dt { font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tng-text-tertiary); padding-top: 3px; }
@@ -1000,8 +1018,11 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
 
   /* ---------- Narrower windows: stack the header and search row ---------- */
   @media (max-width: 760px) {
-    .tng-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+    .tng-header { flex-direction: column; align-items: flex-start; gap: 14px; }
     .tng-header-note { text-align: left; max-width: none; }
+    .tng-mode-bar { justify-content: stretch; }
+    .tng-mode-tabs { display: flex; width: 100%; }
+    .tng-mode-tab { flex: 1; justify-content: center; padding: 9px 12px; }
     .tng-input-row { flex-wrap: wrap; }
     .tng-input-row input { flex: 1 1 100%; }
     .tng-analyze-btn { flex: 1; }
@@ -1037,15 +1058,19 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   <div class="tng-header">
     <div class="tng-header-title-block">
       <h1>TNG Opportunity Score</h1>
-      <div class="tng-version-line">TNG OP TOOL V.4.0 · Created by Trever Koltys</div>
+      <div class="tng-version-line">TNG OP TOOL V.4.1 · Created by Trever Koltys</div>
     </div>
-    <span class="tng-header-note">This tool is to be used in conjunction with <a href="https://app.apollo.io/" target="_blank" rel="noopener">app.apollo.io</a><br>
-      <button class="tng-zoho-help-btn" onclick="tngZohoHelp()">${ZOHO_MARK}Zoho push instructions</button></span>
+    <div class="tng-header-tools">
+      <a class="tng-header-link" href="https://app.apollo.io/" target="_blank" rel="noopener" title="This tool works alongside Apollo">Open Apollo${tngIcon('external')}</a>
+      <button class="tng-zoho-help-btn" onclick="tngZohoHelp()">${ZOHO_MARK}Zoho push instructions</button>
+    </div>
   </div>
 
-  <div class="tng-mode-tabs" role="tablist" aria-label="Mode">
-    <button class="tng-mode-tab" role="tab" id="tng-tab-single" aria-selected="true" onclick="tngSetMode('single')">Single Lead</button>
-    <button class="tng-mode-tab" role="tab" id="tng-tab-brief" aria-selected="false" onclick="tngSetMode('brief')">Hunter Brief</button>
+  <div class="tng-mode-bar">
+    <div class="tng-mode-tabs" role="tablist" aria-label="Mode">
+      <button class="tng-mode-tab" role="tab" id="tng-tab-single" aria-selected="true" onclick="tngSetMode('single')">${tngIcon('search')}Single Lead</button>
+      <button class="tng-mode-tab" role="tab" id="tng-tab-brief" aria-selected="false" onclick="tngSetMode('brief')">${tngIcon('doc')}Hunter Brief</button>
+    </div>
   </div>
 
   <div id="tng-mode-single" class="is-empty">
@@ -3178,18 +3203,19 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     if (!brief || !brief.started) { el.innerHTML = ''; return; }
     const { main, rest } = orderedBriefLeads();
     el.innerHTML = `
-      <div class="tng-brief-summary">
-        <div class="tng-brief-summary-text"><strong>${escapeHtml(briefHeading())}</strong><br>${escapeHtml(briefCountsText(main))}</div>
+      <div class="tng-brief-summary tng-results-bar">
+        <div class="tng-brief-summary-text"><strong>${escapeHtml(briefHeading())}</strong><br>${escapeHtml(briefCountsText(main))}
+          <br><button class="tng-help-link" onclick="tngPriorityHelp()">${tngIcon('info')}How priority works</button></div>
         <div class="tng-export-row">
           <button class="tng-export-btn primary" data-brief-action="report" ${briefRunning ? 'disabled title="Available when vetting finishes"' : 'title="Download a Word document for leadership"'}>${tngIcon('doc')}Executive Report</button>
           <button class="tng-export-btn" data-brief-action="pdf" ${briefRunning ? 'disabled title="Available when vetting finishes"' : 'title="Print the full report, or save it as a PDF"'}>${tngIcon('print')}Save as PDF</button>
           <button class="tng-export-btn" data-brief-action="csv" title="Every lead as a spreadsheet">${tngIcon('sheet')}Download CSV</button>
           <button class="tng-export-btn" data-brief-action="copy" title="Copy a plain-text summary to paste into email or Teams">${tngIcon('copy')}Copy Summary</button>
           <button class="tng-export-btn ghost" data-brief-action="new" title="Clear these results and choose another brief">${tngIcon('plus')}New Brief</button>
-          <div class="tng-export-note">${tngIcon('info')}<span>Apollo contacts are included in every export with their full name and email only after you pull them from Apollo with <b>Reveal email</b> (1 Apollo credit each). Contacts named in Steve's brief are always included.</span></div>
           <span class="tng-export-confirm" id="tng-brief-confirm"></span>
         </div>
       </div>
+      <div class="tng-export-note tng-brief-export-note">${tngIcon('info')}<span>Apollo contacts are included in every export with their full name and email only after you pull them from Apollo with <b>Reveal email</b> (1 Apollo credit each). Contacts named in Steve's brief are always included.</span></div>
       ${main.map((x, i) => leadCardHtml(x.lead, x.pr, i + 1)).join('')}
       ${rest.length ? `<details class="tng-brief-watch" ${brief.watchOpen ? 'open' : ''}><summary>Watchlist, not vetted (${rest.length})</summary>${rest.map(x => leadCardHtml(x.lead, x.pr, '–')).join('')}</details>` : ''}`;
   }
@@ -3197,26 +3223,26 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   // report = true builds the same card for the exported report: no buttons, details shown in full.
   function leadCardHtml(lead, pr, pos, report) {
     const v = lead.vetted && lead.vetted.ok ? lead.vetted : null;
+    // Chips only for what should catch the eye (good news, a reason to act, a problem);
+    // routine facts go on one quiet line underneath.
     const chips = [];
+    const quiet = [];
     if (lead.pending) {
       chips.push(pendingChipHtml(lead));
     } else if (v) {
       chips.push(`<span class="tng-tier sm ${v.tier.tier}">TNG ${v.total} · ${v.tier.label}</span>`);
       if (v.crmFound) chips.push('<span class="tng-chip good">In Zoho CRM</span>');
-      else if (v.crm.error) chips.push('<span class="tng-chip">Zoho check failed</span>');
-      else if (v.crm.configured === false) chips.push('<span class="tng-chip">Zoho not connected</span>');
-      else chips.push('<span class="tng-chip">Not in Zoho</span>');
+      else quiet.push(v.crm.error ? 'Zoho check failed' : v.crm.configured === false ? 'Zoho not connected' : 'Not in Zoho');
       const sv = v.result.site_visits;
-      if (!sv || !sv.available) chips.push('<span class="tng-chip">Site visits unavailable</span>');
-      else if (sv.total_visits) chips.push(`<span class="tng-chip info">${sv.total_visits} site visit${sv.total_visits === 1 ? '' : 's'}</span>`);
-      else chips.push('<span class="tng-chip">No site visits</span>');
+      if (sv && sv.available && sv.total_visits) chips.push(`<span class="tng-chip info">${sv.total_visits} site visit${sv.total_visits === 1 ? '' : 's'}</span>`);
+      else quiet.push(!sv || !sv.available ? 'Site visits unavailable' : 'No site visits');
       const inc = v.incidents;
       if (inc && inc.available && inc.recent_count) {
         chips.push(`<span class="tng-chip warn">⚠ ${inc.recent_count} recent incident${inc.recent_count === 1 ? '' : 's'}</span>`);
       }
       if (v.recentEvent) chips.push(`<span class="tng-chip info">📌 ${escapeHtml(recentEventLabels(v.events))}</span>`);
-      if (v.result.data_source === 'web_research') chips.push('<span class="tng-chip warn">Not in Apollo · web profile</span>');
-      if (v.result.cached_at) chips.push(`<span class="tng-chip">Saved lookup · ${escapeHtml(fmtSavedDate(v.result.cached_at))} · no credits</span>`);
+      if (v.result.data_source === 'web_research') quiet.push('Not in Apollo (web profile)');
+      if (v.result.cached_at) quiet.push(`Saved lookup from ${fmtSavedDate(v.result.cached_at)}, no credits used`);
     } else if (lead.vetted) {
       chips.push('<span class="tng-chip bad">Vetting failed</span>');
     } else {
@@ -3224,14 +3250,13 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     }
     const days = daysUntil(lead.deadline_date);
     if (days !== null) {
-      chips.push(days < 0
-        ? '<span class="tng-chip bad">Deadline passed</span>'
-        : `<span class="tng-chip ${days <= 7 ? 'warn' : ''}">Due ${escapeHtml(fmtDay(lead.deadline_date))} · ${days === 0 ? 'today' : days + ' day' + (days === 1 ? '' : 's')}</span>`);
+      if (days < 0) chips.push('<span class="tng-chip bad">Deadline passed</span>');
+      else if (days <= 14) chips.push(`<span class="tng-chip ${days <= 7 ? 'warn' : ''}">Due ${escapeHtml(fmtDay(lead.deadline_date))} · ${days === 0 ? 'today' : days + ' day' + (days === 1 ? '' : 's')}</span>`);
+      else quiet.push(`Due ${fmtDay(lead.deadline_date)}`);
     }
     if (lead.site_state) {
-      chips.push(lead.site_licensed
-        ? `<span class="tng-chip good">Licensed: ${escapeHtml(lead.site_state)}</span>`
-        : `<span class="tng-chip warn">Not licensed: ${escapeHtml(lead.site_state)}</span>`);
+      if (lead.site_licensed) quiet.push(`Licensed in ${lead.site_state}`);
+      else chips.push(`<span class="tng-chip warn">Not licensed: ${escapeHtml(lead.site_state)}</span>`);
     }
 
     const errorRow = lead.vetted && !lead.vetted.ok
@@ -3249,6 +3274,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
         <div class="tng-brief-priority"><div class="tng-brief-priority-num">${pr.total.toFixed(1)}</div><div class="tng-brief-priority-label">Priority</div></div>
       </div>
       <div class="tng-brief-chips">${chips.join('')}</div>
+      ${quiet.length ? `<div class="tng-brief-quiet">${quiet.map(escapeHtml).join(' · ')}</div>` : ''}
       <div class="tng-brief-why">${escapeHtml(priorityText(pr))}</div>
       ${errorRow}
       <dl class="tng-brief-facts">
@@ -4399,6 +4425,25 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
       ${row('Viewed a service or Licensing page', '+20')}
       ${row('Viewed the Home or About page / the Blog', '+10 / +5')}
       <p class="tng-help-p" style="margin-top:14px;">Site visits come from Apollo's Website Visitors data (top 5 pages per company over the last 90 days). Every page also tells you which services to pitch.</p>`);
+  };
+
+  // How a Hunter Brief lead's priority is worked out (the same rules as priorityFor).
+  window.tngPriorityHelp = function() {
+    const row = (what, pts) => `<div class="tng-help-row"><span>${what}</span><b>${pts}</b></div>`;
+    openInfoModal('How priority works',
+      'Priority starts from Steve\'s score in the brief and moves with what the lookups find. Leads are ranked by it, best first.',
+      `<div class="tng-help-h">Moves it up</div>
+      ${row('Visited Contact Us or Request Security Services on tngdefense.com', '+1.5')}
+      ${row('Viewed service pages (otherwise any site visit: +0.5)', '+1')}
+      ${row('Already in Zoho CRM', '+1')}
+      ${row('Security incident at their sites in the news, last 12 months', '+1')}
+      ${row('Trigger event in the news, last 6 months', '+0.5')}
+      ${row('Strong firmographic fit (50+ firmographic points)', '+0.5')}
+      ${row('Apollo found a security, safety or facilities contact', '+0.5')}
+      <div class="tng-help-h">Moves it down</div>
+      ${row('The work is outside TNG\'s licensed states', '−0.5')}
+      ${row('The deadline has already passed', '−2')}
+      <p class="tng-help-p" style="margin-top:14px;">The TNG score on each card is the same Opportunity Score as Single Lead, from its automatic signals. Each vetted lead uses 2 Apollo credits, unless the company was looked up in the last 7 days; reading the brief uses none.</p>`);
   };
 
   document.addEventListener('keydown', e => {
