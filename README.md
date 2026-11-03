@@ -187,6 +187,12 @@ against a pinned SRI hash). **Save as PDF** prints the same summary in the tool'
 style, followed by the full lead-by-lead cards. Both use only results already on
 screen: no credits, no Claude.
 
+Single Lead has its own **Executive Report** (V.4.6) from the same builder: page one
+is a bottom line (verdict, why now, who to start with, what to lead with), six counts,
+the best contact and what to pitch; the pages after hold the company facts, the score
+breakdown, every trigger event and incident with sources, the Zoho result, site visits
+and all contacts. Also built only from what's on screen.
+
 While the brief is being read, the page shows the steps and a countdown. Reading the
 brief is a single Claude call, so the middle steps are paced by the expected time
 (the average of past reads, saved in the browser) rather than reported by the server;

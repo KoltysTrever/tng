@@ -619,6 +619,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   .tng-export-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
   .tng-export-btn { flex: 1; white-space: nowrap; }
   .tng-export-confirm { flex-basis: 100%; text-align: center; }
+  .tng-export-wide { flex-basis: 100%; }
   .tng-export-btn {
     background: var(--tng-surface-2);
     color: var(--tng-text);
@@ -1084,7 +1085,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   <div class="tng-header">
     <div class="tng-header-title-block">
       <h1>TNG Opportunity Score</h1>
-      <div class="tng-version-line">TNG OP TOOL V.4.5 · Created by Trever Koltys</div>
+      <div class="tng-version-line">TNG OP TOOL V.4.6 · Created by Trever Koltys</div>
     </div>
     <div class="tng-header-tools">
       <a class="tng-header-link" href="https://app.apollo.io/" target="_blank" rel="noopener" title="This tool works alongside Apollo">Open Apollo${tngIcon('external')}</a>
@@ -1244,6 +1245,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     </div>
 
     <div class="tng-export-row">
+      <button class="tng-export-btn primary tng-export-wide" onclick="tngSingleReport(this)" title="Download a Word document for leadership">${tngIcon('doc')}Executive Report</button>
       <button class="tng-export-btn" onclick="tngCopySummary()">${tngIcon('copy')}Copy Summary</button>
       <button class="tng-export-btn" onclick="tngExportCsv()">${tngIcon('sheet')}Download CSV</button>
       <div class="tng-export-note">${tngIcon('info')}<span>Contacts are exported with their full name and email only after you pull them from Apollo with <b>Reveal Full Name &amp; Email</b> (1 Apollo credit each).</span></div>
@@ -2285,6 +2287,8 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
         more_people: Array.isArray(result.more_people) ? result.more_people : [],
         typed_contact_email: email || '',
         data_source: result.data_source || 'apollo',
+        licensed_state: result.licensed_state_match ? result.licensed_state_name || '' : '',
+        linkedin_url: result.company_linkedin_url || '',
       };
       currentContactIndex = 0;
       revealedByIndex = {};
@@ -3859,12 +3863,9 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   const WORD_FONT = 'Calibri';
   const WORD_WIDTH = 10080; // letter page, 0.75" margins, in twentieths of a point
 
-  async function briefDocxBlob() {
-    const D = await loadDocx();
-    const logo = await logoPng().catch(() => null);
-    const { main } = orderedBriefLeads();
-    const d = execData(main);
-
+  // The building blocks both Word reports share: TNG type, grey panels, rules, the black title
+  // band, the count tiles, and the page with its header and footer.
+  function wordKit(D) {
     const run = (text, o = {}) => new D.TextRun({ text: String(text), font: WORD_FONT, size: 21, color: WORD.text, ...o });
     const para = (children, o = {}) => new D.Paragraph({ children, spacing: { after: 60 }, ...o });
     const none = { style: D.BorderStyle.NONE, size: 0, color: WORD.white };
@@ -3879,6 +3880,62 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
       border: { bottom: { style: D.BorderStyle.SINGLE, size: 6, color: WORD.rule, space: 4 } },
     });
     const tierColor = t => t === 'spicy' ? WORD.spicy : t === 'heating_up' ? WORD.warm : WORD.grey;
+
+    // Title band: white logo and title on black, the TNG signature.
+    const band = (logo, subtitle) => {
+      const lines = [];
+      if (logo) lines.push(para([new D.ImageRun({ type: 'png', data: logo, transformation: { width: 230, height: 41 } })], { spacing: { after: 200 } }));
+      else lines.push(para([run('THE NORTH GROUP', { bold: true, color: WORD.white, characterSpacing: 40 })], { spacing: { after: 200 } }));
+      lines.push(para([run('EXECUTIVE REPORT', { bold: true, size: 40, color: WORD.white, characterSpacing: 40 })], { spacing: { after: 40 } }));
+      lines.push(para([run(subtitle, { size: 22, color: WORD.light })], { spacing: { after: 40 } }));
+      lines.push(para([run(`Prepared ${new Date().toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })} · Internal: contains contact details`, { size: 17, color: WORD.mid })], { spacing: { after: 0 } }));
+      return table([new D.TableRow({ children: [cell(lines, { shading: shade(WORD.black), margins: { top: 360, bottom: 360, left: 400, right: 400 } })] })], [WORD_WIDTH]);
+    };
+
+    // The bottom line in a grey panel with a black bar down its left side.
+    const bottomLine = (lead, text) => table([new D.TableRow({ children: [cell([para([
+      ...(lead ? [run(lead, { bold: true, color: WORD.black })] : []), run(text),
+    ], { spacing: { after: 0, line: 300 } })], {
+      shading: shade(WORD.panel), margins: { top: 180, bottom: 180, left: 240, right: 240 },
+      borders: { top: none, bottom: none, right: none, left: { style: D.BorderStyle.SINGLE, size: 24, color: WORD.black } },
+    })] })], [WORD_WIDTH]);
+
+    // Six counts in two rows of three, separated by white gutters.
+    const kpiGrid = kpis => {
+      const gutter = { style: D.BorderStyle.SINGLE, size: 24, color: WORD.white };
+      const rows = [kpis.slice(0, 3), kpis.slice(3)].map(group => new D.TableRow({ cantSplit: true, children: group.map(([n, label, color]) => cell([
+        para([run(n, { bold: true, size: 40, color: color || WORD.black })], { spacing: { after: 0 } }),
+        para([run(label.toUpperCase(), { size: 15, color: WORD.grey, characterSpacing: 10 })], { spacing: { after: 0 } }),
+      ], { shading: shade(WORD.panel), borders: { top: gutter, bottom: gutter, left: gutter, right: gutter }, margins: { top: 140, bottom: 140, left: 200, right: 200 } })) }));
+      return table(rows, [3360, 3360, 3360]);
+    };
+
+    const smallCaps = (text, o = {}) => run(text, { size: 15, color: WORD.mid, characterSpacing: 20, ...o });
+    const toBlob = (title, children) => D.Packer.toBlob(new D.Document({
+      creator: 'TNG Opportunity Score',
+      title,
+      styles: { default: { document: { run: { font: WORD_FONT, size: 21 } } } },
+      sections: [{
+        properties: { page: { size: { width: 12240, height: 15840 }, margin: { top: 1000, bottom: 1000, left: 1080, right: 1080, header: 500, footer: 500 } } },
+        headers: { default: new D.Header({ children: [para([smallCaps('THE NORTH GROUP  |  EXECUTIVE REPORT', { bold: true })], { alignment: D.AlignmentType.RIGHT })] }) },
+        footers: { default: new D.Footer({ children: [new D.Paragraph({
+          tabStops: [{ type: D.TabStopType.RIGHT, position: WORD_WIDTH }],
+          children: [smallCaps('INTERNAL · CONTAINS CONTACT DETAILS · TNGDEFENSE.COM'),
+            new D.TextRun({ children: [new D.Tab(), 'Page ', D.PageNumber.CURRENT, ' of ', D.PageNumber.TOTAL_PAGES], font: WORD_FONT, size: 15, color: WORD.mid })],
+        })] }) },
+        children,
+      }],
+    }));
+
+    return { run, para, none, noBorders, cell, shade, table, heading, tierColor, band, bottomLine, kpiGrid, toBlob };
+  }
+
+  async function briefDocxBlob() {
+    const D = await loadDocx();
+    const logo = await logoPng().catch(() => null);
+    const { main } = orderedBriefLeads();
+    const d = execData(main);
+    const { run, para, noBorders, cell, shade, table, heading, tierColor, band, bottomLine, kpiGrid, toBlob } = wordKit(D);
     const tierText = v => `TNG ${v.total} · ${v.tier.label.replace(/\s*🌶️/, '')}`;
     const orgLine = (i, opts) => [run(i.org, { bold: true, ...opts }), run(': ' + i.text, opts)];
     const bullets = (items, emptyText) => items.length
@@ -3887,32 +3944,11 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
 
     const children = [];
 
-    // Title band: white logo and title on black, the TNG signature.
-    const band = [];
-    if (logo) band.push(para([new D.ImageRun({ type: 'png', data: logo, transformation: { width: 230, height: 41 } })], { spacing: { after: 200 } }));
-    else band.push(para([run('THE NORTH GROUP', { bold: true, color: WORD.white, characterSpacing: 40 })], { spacing: { after: 200 } }));
-    band.push(para([run('EXECUTIVE REPORT', { bold: true, size: 40, color: WORD.white, characterSpacing: 40 })], { spacing: { after: 40 } }));
-    band.push(para([run('Client Hunter Brief · ' + briefHeading(), { size: 22, color: WORD.light })], { spacing: { after: 40 } }));
-    band.push(para([run(`Prepared ${new Date().toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })} · Internal: contains contact details`, { size: 17, color: WORD.mid })], { spacing: { after: 0 } }));
-    children.push(table([new D.TableRow({ children: [cell(band, { shading: shade(WORD.black), margins: { top: 360, bottom: 360, left: 400, right: 400 } })] })], [WORD_WIDTH]));
-
-    // Bottom line.
+    children.push(band(logo, 'Client Hunter Brief · ' + briefHeading()));
     children.push(heading('Bottom line'));
-    children.push(table([new D.TableRow({ children: [cell([para([
-      ...(d.bottom.lead ? [run(d.bottom.lead, { bold: true, color: WORD.black })] : []), run(d.bottom.text),
-    ], { spacing: { after: 0, line: 300 } })], {
-      shading: shade(WORD.panel), margins: { top: 180, bottom: 180, left: 240, right: 240 },
-      borders: { top: none, bottom: none, right: none, left: { style: D.BorderStyle.SINGLE, size: 24, color: WORD.black } },
-    })] })], [WORD_WIDTH]));
-
-    // At a glance: six counts in two rows of three, separated by white gutters.
+    children.push(bottomLine(d.bottom.lead, d.bottom.text));
     children.push(heading('At a glance'));
-    const gutter = { style: D.BorderStyle.SINGLE, size: 24, color: WORD.white };
-    const kpiRows = [d.kpis.slice(0, 3), d.kpis.slice(3)].map(group => new D.TableRow({ cantSplit: true, children: group.map(([n, label]) => cell([
-      para([run(n, { bold: true, size: 40, color: WORD.black })], { spacing: { after: 0 } }),
-      para([run(label.toUpperCase(), { size: 15, color: WORD.grey, characterSpacing: 10 })], { spacing: { after: 0 } }),
-    ], { shading: shade(WORD.panel), borders: { top: gutter, bottom: gutter, left: gutter, right: gutter }, margins: { top: 140, bottom: 140, left: 200, right: 200 } })) }));
-    children.push(table(kpiRows, [3360, 3360, 3360]));
+    children.push(kpiGrid(d.kpis));
 
     // Top opportunities: a heading row (rank, name, priority, TNG tier) and a facts table each.
     children.push(heading(`Top ${d.top.length} opportunities`));
@@ -3967,42 +4003,199 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
 
     children.push(para([run("How to read this: priority starts from Steve's score in the brief and moves with what the lookups found (Zoho CRM, security incidents and trigger events in the news, tngdefense.com visits, firmographic fit, a security contact, licensing and deadlines). The TNG score is the tool's Opportunity Score from Apollo, Zoho and news data. Full lead details, contacts and sources are in the tool and its PDF report.", { size: 16, color: WORD.mid })], { spacing: { before: 320 } }));
 
-    const smallCaps = (text, o = {}) => run(text, { size: 15, color: WORD.mid, characterSpacing: 20, ...o });
-    const doc = new D.Document({
-      creator: 'TNG Opportunity Score',
-      title: reportTitle(),
-      styles: { default: { document: { run: { font: WORD_FONT, size: 21 } } } },
-      sections: [{
-        properties: { page: { size: { width: 12240, height: 15840 }, margin: { top: 1000, bottom: 1000, left: 1080, right: 1080, header: 500, footer: 500 } } },
-        headers: { default: new D.Header({ children: [para([smallCaps('THE NORTH GROUP  |  EXECUTIVE REPORT', { bold: true })], { alignment: D.AlignmentType.RIGHT })] }) },
-        footers: { default: new D.Footer({ children: [new D.Paragraph({
-          tabStops: [{ type: D.TabStopType.RIGHT, position: WORD_WIDTH }],
-          children: [smallCaps('INTERNAL · CONTAINS CONTACT DETAILS · TNGDEFENSE.COM'),
-            new D.TextRun({ children: [new D.Tab(), 'Page ', D.PageNumber.CURRENT, ' of ', D.PageNumber.TOTAL_PAGES], font: WORD_FONT, size: 15, color: WORD.mid })],
-        })] }) },
-        children,
-      }],
-    });
-    return D.Packer.toBlob(doc);
+    return toBlob(reportTitle(), children);
   }
 
-  async function downloadBriefReport(btn) {
+  // ----- Single Lead: a one-company Executive Report -----
+  // Page one is the summary (bottom line, counts, who to contact, what to pitch); the pages after
+  // hold every detail from the lookup. Built only from what's on screen, so it costs nothing.
+  async function singleDocxBlob() {
+    const D = await loadDocx();
+    const logo = await logoPng().catch(() => null);
+    const { run, para, cell, shade, table, heading, tierColor, band, bottomLine, kpiGrid, toBlob } = wordKit(D);
+    const { info, checkedSignals, pagesVisited, total } = buildScoreSummary();
+    const tier = tierFor(total);
+    const company = info.company_name;
+    const events = lastEvents && lastEvents.available ? lastEvents.events : [];
+    const incidents = lastIncidents && lastIncidents.available ? lastIncidents.incidents : [];
+    const recentEvents = events.filter(e => e.recent);
+    const recentIncidents = incidents.filter(i => i.recent);
+    const sv = lastSiteVisits && lastSiteVisits.available ? lastSiteVisits : null;
+    const contacts = info.key_contacts || [];
+    const services = eventServices(events);
+
+    const link = (url, text) => isWebLink(url)
+      ? new D.ExternalHyperlink({ link: url, children: [run(text || url, { size: 19, color: '1565C0', underline: {} })] })
+      : run(text || '', { size: 19, color: WORD.grey });
+    const muted = text => para([run(text, { color: WORD.grey })]);
+    // Label / value rows, like the facts under each opportunity in the brief report.
+    const facts = rows => table(rows.filter(r => r[1]).map(([label, value]) => new D.TableRow({ cantSplit: true, children: [
+      cell([para([run(label.toUpperCase(), { bold: true, size: 15, color: WORD.grey, characterSpacing: 10 })], { spacing: { after: 0 } })], { margins: { top: 50, bottom: 50, left: 0, right: 120 } }),
+      cell([para(Array.isArray(value) ? value : [run(value, { size: 20 })], { spacing: { after: 0 } })], { margins: { top: 50, bottom: 50, left: 120, right: 0 } }),
+    ] })), [1900, 8180]);
+    const th = text => cell([para([run(text.toUpperCase(), { bold: true, size: 15, color: WORD.white, characterSpacing: 10 })], { spacing: { after: 0 } })], { shading: shade(WORD.black), margins: { top: 80, bottom: 80, left: 100, right: 100 } });
+    const td = (children, fill) => cell([para(children, { spacing: { after: 0 } })], { shading: shade(fill), margins: { top: 60, bottom: 60, left: 100, right: 100 } });
+    // One news item: date · site · kind, the summary, then the pitch and source in small type.
+    const newsItem = (x, kind, pitch) => [
+      para([run([fmtIncidentDate(x.date), x.site, kind].filter(Boolean).join(' · ') + (x.recent ? '' : ' (older, no points)'), { bold: true, size: 19, color: WORD.black })], { spacing: { before: 80, after: 20 }, keepNext: true }),
+      para([run(x.summary, { size: 20 })], { spacing: { after: 20 }, keepNext: true }),
+      para([...(pitch ? [run(`Pitch: ${pitch}   `, { size: 18, color: WORD.grey })] : []), link(x.source_url, x.source_name || 'Source')], { spacing: { after: 100 } }),
+    ];
+    const reach = (c, revealed) => {
+      if (revealed && revealed.email) return revealed.email;
+      if (revealed) return 'Revealed: no email on file';
+      if (c.has_email === undefined) return 'Not checked';
+      return c.has_email ? 'Email on file in Apollo (reveal it in the tool, 1 credit)' : 'No email in Apollo';
+    };
+    const phone = c => c.has_direct_phone === 'yes' ? 'Direct phone on file in Apollo' : c.has_direct_phone === 'maybe' ? 'Maybe on file in Apollo' : '';
+
+    const children = [band(logo, `Single company review · ${company}${info.domain && info.domain !== company ? ' · ' + info.domain : ''}`)];
+
+    // Bottom line: the verdict, then why now, who, and what to lead with.
+    const verdict = { spicy: 'Work this one now. ', heating_up: 'Worth working this week. ', luke_warm: 'Worth a look. ' }[tier.tier] || 'Low priority for now. ';
+    const best = contacts[0];
+    const bestName = best && ((revealedByIndex[0] && revealedByIndex[0].full_name) || best.name);
+    const tierWords = plainTier(tier.label).charAt(0) + plainTier(tier.label).slice(1).toLowerCase(); // "Heating up"
+    const lines = [`${company} scores ${total} (${tierWords}).`];
+    if (recentEvents.length) lines.push(`Recent news points to an opening: ${recentEventLabels(lastEvents)}.`);
+    if (recentIncidents.length) lines.push(`${plural(recentIncidents.length, 'security incident')} reported in the last 12 months (background, not an opener).`);
+    if (sv && sv.total_visits) lines.push(`${plural(sv.total_visits, 'visit')} to tngdefense.com in the last 90 days.`);
+    lines.push(state.crm.checked ? 'Already in Zoho CRM.' : /^Not found/.test(state.crm.detail) ? 'Not in Zoho CRM yet.' : '');
+    if (bestName) lines.push(`Start with ${bestName}${best.title ? ', ' + best.title : ''}.`);
+    if (services) lines.push(`Lead with ${services}.`);
+    children.push(heading('Bottom line'));
+    children.push(bottomLine(verdict, lines.filter(Boolean).join(' ')));
+
+    children.push(heading('At a glance'));
+    children.push(kpiGrid([
+      [total, 'Opportunity score', tierColor(tier.tier)], [plainTier(tier.label), 'Tier', tierColor(tier.tier)], [checkedSignals.length, 'Signals matched'],
+      [lastEvents && lastEvents.available ? recentEvents.length : '—', 'Trigger events, 6 months'],
+      [lastIncidents && lastIncidents.available ? recentIncidents.length : '—', 'Incidents, 12 months'],
+      [sv ? sv.total_visits || 0 : '—', 'Site visits, 90 days'],
+    ]));
+
+    children.push(heading('Who to contact'));
+    if (best) {
+      const revealed = revealedByIndex[0];
+      children.push(facts([
+        ['Name', bestName], ['Title', best.title || ''], ['Email', reach(best, revealed)], ['Phone', phone(best)],
+        ['LinkedIn', best.linkedin_url ? [link(best.linkedin_url, best.linkedin_url)] : ''], ['Why them', best.reasoning || ''],
+      ]));
+      if (contacts.length > 1) children.push(muted(`${plural(contacts.length - 1, 'more contact')} in the details below.`));
+    } else {
+      children.push(muted('No clear contact found. Check LinkedIn for this account.'));
+    }
+
+    if (services || pagesVisited.length) {
+      children.push(heading('What to pitch'));
+      children.push(facts([
+        ['From the news', services],
+        ['Pages they read', pagesVisited.join(', ')],
+      ]));
+    }
+
+    // ----- The details, from page two -----
+    children.push(para([new D.PageBreak()], { spacing: { after: 0 } }));
+    children.push(heading('Company'));
+    children.push(facts([
+      ['Website', info.domain || ''], ['Industry', info.industry || ''],
+      ['Employees', info.employee_count ? Number(info.employee_count).toLocaleString() : ''], ['Revenue', info.estimated_revenue || ''],
+      ['Headquarters', info.headquarters ? info.headquarters + (info.licensed_state ? ` (TNG licensed in ${info.licensed_state})` : '') : ''],
+      ['Founded', info.founded_year ? String(info.founded_year) : ''],
+      ['LinkedIn', info.linkedin_url ? [link(info.linkedin_url, info.linkedin_url)] : ''],
+      ['Source', info.data_source === 'web_research' ? 'Web search (not in Apollo)' : ''],
+    ]));
+    if (info.company_description) children.push(para([run(info.company_description, { size: 20 })], { spacing: { before: 120, after: 60, line: 290 } }));
+
+    children.push(heading(`Score breakdown: ${total}`));
+    if (checkedSignals.length) {
+      const rows = checkedSignals.map((sig, i) => {
+        const fill = i % 2 ? WORD.white : WORD.panel;
+        return new D.TableRow({ cantSplit: true, children: [
+          td([run(sig.label, { size: 18, bold: true, color: WORD.black })], fill), td([run('+' + sig.pts, { size: 18, bold: true })], fill),
+          td([run(state[sig.id].detail || '', { size: 18, color: WORD.grey })], fill),
+        ] });
+      });
+      children.push(table([new D.TableRow({ tableHeader: true, children: ['Signal', 'Points', 'What we found'].map(th) }), ...rows], [3400, 900, 5780]));
+    } else {
+      children.push(muted('No signals ticked.'));
+    }
+
+    children.push(heading('Trigger events in the news (last 12 months)'));
+    if (!lastEvents) children.push(muted('Not checked.'));
+    else if (!lastEvents.available) children.push(muted('The news check was unavailable for this lookup.'));
+    else if (!events.length) children.push(muted('None found in the last 12 months.'));
+    else events.forEach(e => children.push(...newsItem(e, EVENT_TYPE_LABELS[e.type] || 'Event', EVENT_SERVICES[e.type] || '')));
+
+    children.push(heading('Security incidents (last 24 months, background only)'));
+    if (!lastIncidents) children.push(muted('Not checked.'));
+    else if (!lastIncidents.available) children.push(muted('The news check was unavailable for this lookup.'));
+    else if (!incidents.length) children.push(muted('None reported in the last 24 months.'));
+    else incidents.forEach(x => children.push(...newsItem(x, INCIDENT_TYPE_LABELS[x.type] || 'Incident', '')));
+
+    children.push(heading('Zoho CRM'));
+    children.push(para([run(state.crm.detail || 'Not checked.')]));
+
+    children.push(heading('tngdefense.com visits (last 90 days)'));
+    if (!sv) children.push(muted("Visits couldn't be loaded from Apollo for this lookup."));
+    else if (!sv.total_visits) children.push(muted('No visits in the last 90 days.'));
+    else children.push(facts([
+      ['Visits', `${plural(sv.total_visits, 'visit')}${sv.unique_visitors ? `, ${plural(sv.unique_visitors, 'unique visitor')}` : ''}`],
+      ['Pages', pagesVisited.join(', ')],
+    ]));
+
+    children.push(heading('All contacts'));
+    if (contacts.length) {
+      const rows = contacts.map((c, i) => {
+        const fill = i % 2 ? WORD.white : WORD.panel;
+        const revealed = revealedByIndex[i];
+        return new D.TableRow({ cantSplit: true, children: [
+          td([run(i + 1, { size: 18, color: WORD.grey })], fill),
+          td([run((revealed && revealed.full_name) || c.name, { size: 18, bold: true, color: WORD.black }), ...(c.title ? [new D.TextRun({ break: 1 }), run(c.title, { size: 17, color: WORD.grey })] : [])], fill),
+          td([run(reach(c, revealed), { size: 17 }), ...(phone(c) ? [new D.TextRun({ break: 1 }), run(phone(c), { size: 17, color: WORD.grey })] : [])], fill),
+          td(c.linkedin_url ? [link(c.linkedin_url, 'LinkedIn')] : [run('—', { size: 17, color: WORD.grey })], fill),
+        ] });
+      });
+      children.push(table([new D.TableRow({ tableHeader: true, children: ['#', 'Name', 'Email / phone', 'Profile'].map(th) }), ...rows], [500, 4000, 4180, 1400]));
+    } else {
+      children.push(muted('No contacts found.'));
+    }
+    if ((info.more_people || []).length) children.push(muted(`${info.more_people.length} more ${info.more_people.length === 1 ? 'person' : 'people'} at this company can be added from the tool.`));
+
+    children.push(para([run('How to read this: the Opportunity Score adds up the signals above from Apollo (company size, industry, people, tngdefense.com visits), Zoho CRM and a news search, plus any ticked by hand. 100 or more is Spicy, 75 Heating up, 50 Luke warm, 25 Room temp. Contact emails appear only for people revealed in the tool.', { size: 16, color: WORD.mid })], { spacing: { before: 320 } }));
+
+    return toBlob(`TNG Executive Report ${company}`, children);
+  }
+
+  // Builds a Word report and downloads it, with the button showing progress meanwhile.
+  async function downloadWordReport(btn, build, filename, confirmId) {
     if (btn.disabled) return;
     btn.disabled = true;
     const label = btn.innerHTML; // icon and text
     btn.textContent = 'Building...';
     try {
-      const blob = await briefDocxBlob();
-      downloadFile(`tng-executive-report-${briefFileStem()}.docx`, blob, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-      showExportConfirm('Executive report downloaded (Word)', 'tng-brief-confirm');
+      const blob = await build();
+      downloadFile(filename(), blob, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+      showExportConfirm('Executive report downloaded (Word)', confirmId);
     } catch (err) {
       console.error(err);
-      showExportConfirm("Couldn't build the Word report: " + err.message, 'tng-brief-confirm');
+      showExportConfirm("Couldn't build the Word report: " + err.message, confirmId);
     } finally {
       btn.disabled = false;
       btn.innerHTML = label;
     }
   }
+
+  function downloadBriefReport(btn) {
+    return downloadWordReport(btn, briefDocxBlob, () => `tng-executive-report-${briefFileStem()}.docx`, 'tng-brief-confirm');
+  }
+
+  window.tngSingleReport = function(btn) {
+    return downloadWordReport(btn, singleDocxBlob, () => {
+      const { info } = buildScoreSummary();
+      return `tng-executive-report-${(info.company_name || 'lead').replace(/[^a-z0-9]+/gi, '-').toLowerCase()}.docx`;
+    });
+  };
 
   // Prints the report from a hidden frame; the browser's print window offers "Save as PDF".
   function printBriefReport() {
