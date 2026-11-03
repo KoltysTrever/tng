@@ -1081,7 +1081,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   <div class="tng-header">
     <div class="tng-header-title-block">
       <h1>TNG Opportunity Score</h1>
-      <div class="tng-version-line">TNG OP TOOL V.4.3 · Created by Trever Koltys</div>
+      <div class="tng-version-line">TNG OP TOOL V.4.4 · Created by Trever Koltys</div>
     </div>
     <div class="tng-header-tools">
       <a class="tng-header-link" href="https://app.apollo.io/" target="_blank" rel="noopener" title="This tool works alongside Apollo">Open Apollo${tngIcon('external')}</a>
@@ -4174,24 +4174,47 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
 
   function closePush() {
     if (!pushState || pushState.busy === 'pushing') return;
+    clearTimeout(pushCheckTimer);
     pushState = null;
     const el = document.getElementById('tng-push-modal');
     if (el) el.remove();
   }
 
-  async function runPushPreview() {
+  // quiet: an automatic re-check while someone types. It redraws only the status and the
+  // buttons, so the cursor stays where it is, and leaves the fields editable.
+  async function runPushPreview(quiet) {
     if (!pushState || pushState.busy) return;
-    pushState.busy = 'checking';
-    pushState.error = '';
-    renderPush();
+    const s = pushState;
+    s.busy = 'checking';
+    s.error = '';
+    if (quiet) updatePushStatus(); else renderPush();
     const key = pushKey();
     const { ok, data } = await postOnce(ZOHO_PUSH_URL, { action: 'preview', ...pushPayload() }, 60000);
-    if (!pushState) return;
-    pushState.busy = '';
-    if (ok && data.configured === false) pushState.error = 'Push to Zoho isn\'t set up on the server yet.';
-    else if (ok) { pushState.preview = data; pushState.previewFor = key; pushState.ack = false; }
-    else pushState.error = data.error || 'The check failed.';
-    renderPush();
+    if (pushState !== s) return;
+    s.busy = '';
+    if (ok && data.configured === false) s.error = 'Push to Zoho isn\'t set up on the server yet.';
+    else if (ok) { s.preview = data; s.previewFor = key; s.ack = false; }
+    else s.error = data.error || 'The check failed.';
+    if (quiet) updatePushStatus(); else renderPush();
+    // Typed more while it was checking? Check those changes too.
+    if (!s.result && s.previewFor !== pushKey()) schedulePushCheck();
+  }
+
+  // Re-checks by itself once typing pauses, so Push unlocks without pressing Check again.
+  let pushCheckTimer = 0;
+  function schedulePushCheck() {
+    clearTimeout(pushCheckTimer);
+    pushCheckTimer = setTimeout(() => {
+      if (!pushState || pushState.result) return;
+      if (pushState.busy) { schedulePushCheck(); return; }
+      if (pushState.previewFor !== pushKey()) runPushPreview(true);
+    }, 800);
+  }
+
+  function updatePushStatus() {
+    const status = document.getElementById('tng-push-status');
+    if (status) status.innerHTML = pushStatusHtml();
+    refreshPushControls();
   }
 
   async function runPush() {
@@ -4345,7 +4368,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
       </details>
       <div class="tng-push-status" id="tng-push-status" aria-live="polite">${pushStatusHtml()}</div>
       <div class="tng-push-foot">
-        <span class="stale" id="tng-push-stale" ${s.preview && s.previewFor !== pushKey() && !busy ? '' : 'hidden'}>Details changed: check again before pushing.</span>
+        <span class="stale" id="tng-push-stale" ${s.preview && s.previewFor !== pushKey() && !busy ? '' : 'hidden'}>Checking your changes…</span>
         <button class="tng-export-btn" data-push="check" ${busy ? 'disabled' : ''}>Check again</button>
         <button class="tng-export-btn" data-push="close" ${s.busy === 'pushing' ? 'disabled' : ''}>Cancel</button>
         <button class="tng-export-btn primary" data-push="push" id="tng-push-go" ${pushReady() && !busy ? '' : 'disabled'}>${ZOHO_TILE}${s.busy === 'pushing' ? 'Pushing...' : 'Push to Zoho'}</button>
@@ -4367,6 +4390,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     if (name === 'note') pushState.note = e.target.value;
     else pushState.fields[name] = e.target.value;
     refreshPushControls();
+    schedulePushCheck();
   }
 
   function onPushChange(e) {
