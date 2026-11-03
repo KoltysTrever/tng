@@ -97,7 +97,7 @@ For each lead:
 - signal: at most 2 short sentences: what happened and when, with the key numbers.
 - why_tng and first_move: one sentence each.
 - buyers: the named people the brief lists as buyers or contacts, with their email and phone when given.
-- deadline: the brief's deadline wording ("" if none); deadline_date: the date proposals or responses are due, as YYYY-MM-DD. Use "" when the brief gives no such date or calls the deadline unconfirmed; any other date (a contract or bridge ending, a vote, an event) is not a deadline_date.
+- deadline: the brief's deadline wording ("" if none); deadline_date: whenever the brief gives a due date for the lead (e.g. "due Nov 10", "proposals due Nov 13"), that date as YYYY-MM-DD in the brief's year. Use "" only when there is no due date or the brief calls the deadline unconfirmed. Other dates, such as a contract or bridge ending, a vote or an event, are not a deadline_date.
 - site_location: where the work would be (city and state); site_state: that US state's full name ("" if national, unknown or outside the US).
 - caveats: anything that blocks or qualifies pursuit (licensing, partner needed, issuer unconfirmed, unverified), "" if none. TNG is directly licensed in ${LICENSED_STATE_NAMES.join(', ')} (per tngdefense.com/licensing). If the brief says TNG lacks a license in one of those states, that claim is out of date: leave it out of caveats.
 - sources: the brief's source links for this lead (label + url).

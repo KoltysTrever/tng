@@ -60,7 +60,7 @@ it alongside Analyze and scores "Already in Zoho CRM" (+30) from the result.
 
 ## Saved lookups (cache)
 
-`analyze-lead` and `incident-scan` save each company's result for 7 days in Upstash
+`analyze-lead`, `news-scan` and `parse-brief` save results for 7 days in Upstash
 Redis (`lib/cache.js`), so looking the same company up again — a re-run, "Open in
 Single Lead" from a brief, the same organization in the next brief — costs no Apollo
 credits and no Claude call. Site visits and the Zoho check always run live. The page
@@ -73,31 +73,31 @@ connect it to the project. That adds `KV_REST_API_URL` and `KV_REST_API_TOKEN` (
 `UPSTASH_REDIS_REST_*` names also work); redeploy. Without them nothing is saved and
 every lookup is fresh, as before.
 
-## Security incidents (news search)
+## Security incidents and trigger events (one news search)
 
-`/api/incident-scan` (body `{ "domain": "...", "company_name": "optional" }`, same
-header) asks Claude (Haiku 5.5 with the basic server-side web search tool, low effort,
-at most 4 searches) for physical security incidents reported in the news in the last 24
-months at the company's own sites or against its executives: assaults on staff,
-weapons, lockdowns, threats. See `lib/incident-scan.js`. Only incidents with a real
-source link and a readable date are kept; those in the last 12 months tick "Recent
-security incident" (+20) on the page and add +1 to a Hunter Brief lead's priority.
-Finding nothing never costs points. It never fails the request: errors come back as
-`{ "available": false, "reason": "..." }`. No Apollo credits; roughly the web search
-fee (4 searches, about 4 cents) plus a small Haiku call per lookup. The page calls it alongside Analyze and fills in
-the Security Incidents section when it finishes (20-40s).
+`/api/news-scan` (body `{ "domain": "...", "company_name": "optional" }`, same header)
+asks Claude (Haiku 5.5 with the basic server-side web search tool, low effort, at most
+6 searches: 3 for incidents, 3 for business events) for two lists, and returns each in
+the shape the page uses (`incidents: {...}`, `events: {...}`). See `lib/news-scan.js`.
 
-## Trigger events (news search)
+- **Security incidents:** physical incidents in the news in the last 24 months at the
+  company's own sites or against its executives (assaults on staff, weapons, lockdowns,
+  threats). Those in the last 12 months tick "Recent security incident" (+20) and add +1
+  to a Hunter Brief lead's priority.
+- **Trigger events:** business news in the last 12 months that creates a need for a TNG
+  service: layoffs or WARN notices (Workplace Termination Support), a new or exposed
+  executive (Executive Protection), a new or expanded facility (guard services), strikes
+  and protests, large events. Those in the last 6 months tick "Trigger event" (+15) and
+  add +0.5 to a brief lead's priority; each names the service to pitch.
 
-`/api/trigger-events` (same body and header as `incident-scan`) looks for business
-events in the last 12 months that create a need for a TNG service: layoffs or WARN
-notices (Workplace Termination Support), a new or exposed executive (Executive
-Protection), a new or expanded facility (guard services), strikes and protests, and
-large events the company hosts. See `lib/trigger-events.js`; it shares its search code
-with the incident check in `lib/news-search.js` (Haiku 5.5, basic web search, at most 4
-searches, about 4-5 cents). Events in the last 6 months tick "Trigger event" (+15) on
-the page and add +0.5 to a Hunter Brief lead's priority, and each one names the service
-to pitch. Saved for 7 days like the other lookups.
+Only items with a real source link and a readable date are kept, and finding nothing
+never costs points. It never fails the request: errors come back as
+`{ "available": false, "reason": "..." }`. No Apollo credits; about 6 cents of web
+search plus about 1 cent of Haiku per new company, saved for 7 days. In a test on five
+health systems, one shared search found as much as the two separate checks did with 8
+searches. The separate `/api/incident-scan` and `/api/trigger-events` endpoints
+(`lib/incident-scan.js`, `lib/trigger-events.js`, which keep each check's rules and
+cleanup) still work, but the page no longer calls them.
 
 ## The page (tool/app.js) and the SharePoint launcher
 
@@ -115,11 +115,12 @@ files.
 The page's **Hunter Brief** tab takes one of Steve's daily Client Hunter Brief
 `.html` files. The page turns the brief into plain text (links kept, outreach
 drafts set aside) and posts `{ "text": "..." }` to `/api/parse-brief`. Claude
-(Opus 5.5, low effort, structured JSON output) returns each ranked and watchlist
+(Sonnet 5.5, low effort, structured JSON output) returns each ranked and watchlist
 lead with only the fields needed to work it, plus the buying organization's
 website domain and the state where the work would be (`site_licensed` comes from
 the same licensed-state list as `analyze-lead`, now in `lib/licensing.js`). No
-Apollo credits; one Claude call per brief. `vercel.json` gives it up to 300s.
+Apollo credits; one Claude call per brief (about 8 cents), and the same brief uploaded
+again within 7 days is served from the saved copy. `vercel.json` gives it up to 300s.
 
 The page then runs each lead the user ticks through `analyze-lead` + `check-crm`
 (2 Apollo credits per lead, two leads at a time, waiting and retrying on 429) and
@@ -141,7 +142,7 @@ While the brief is being read, the page shows the steps and a countdown. Reading
 brief is a single Claude call, so the middle steps are paced by the expected time
 (the average of past reads, saved in the browser) rather than reported by the server;
 the last step stays open until the answer arrives. While vetting, each lead's chip
-shows which of its four lookups (Apollo, Zoho, incidents, events) have come back, and
+shows which of its three lookups (Apollo, Zoho, news) have come back, and
 the status line estimates the time left from the leads finished so far.
 
 ## Endpoint
@@ -153,14 +154,26 @@ Once deployed on Vercel, the live endpoint is:
 Send a POST request with JSON body `{ "domain": "example.com", "email": "optional@example.com" }`
 and the `x-tng-access-code` header. All endpoints share `lib/guard.js`, which also
 applies a best-effort limit of 60 requests per minute per IP (each Analyze click
-uses four: `analyze-lead`, `check-crm`, `incident-scan` and `trigger-events`).
+uses three: `analyze-lead`, `check-crm` and `news-scan`).
+
+## Scoring model
+
+`analyze-lead` scores with Haiku 5.5 at low effort. In a side-by-side test on five
+health systems it matched Sonnet 4.6 on 89 of 90 signals at about 1/16 of the cost.
+The one miss came from Apollo listing a $103.6M revenue for a 160,000-employee system, so
+`applyRevenueFloor` now raises the revenue tier when the headcount makes the reported
+figure impossible. Each fresh lookup also saves its scoring input for 7 days
+(`scoreinput:v1:...`), so `{ "debug": true, "compare_models": [...] }` can compare
+models on it later without new Apollo credits.
 
 ## Costs to expect
 
 - Apollo: 2 credits per lookup (org enrichment + job postings). People
   search is free.
-- Anthropic: roughly a fraction of a cent per lookup at Sonnet rates.
-  Set a spend limit in the Anthropic Console as a safety net.
+- Anthropic, per new company: about 6 cents of web search plus 1 cent of Haiku for the
+  news check, and a fraction of a cent for scoring. About 8 cents per brief read.
+  Repeat lookups within 7 days are free. Set a spend limit in the Anthropic Console as
+  a safety net.
 - Vercel: free tier covers this comfortably at low volume.
 
 ## Security notes

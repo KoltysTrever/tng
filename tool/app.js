@@ -883,7 +883,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   <div class="tng-header">
     <div class="tng-header-title-block">
       <h1>TNG Opportunity Score</h1>
-      <div class="tng-version-line">TNG OP TOOL V.3.6 · Created by Trever Koltys</div>
+      <div class="tng-version-line">TNG OP TOOL V.3.7 · Created by Trever Koltys</div>
     </div>
     <span class="tng-header-note">This tool is to be used in conjunction with <a href="https://app.apollo.io/" target="_blank" rel="noopener">app.apollo.io</a></span>
   </div>
@@ -1053,8 +1053,9 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   const BACKEND_URL = "https://tng-lead.vercel.app/api/analyze-lead";
   const REVEAL_URL = "https://tng-lead.vercel.app/api/reveal-contact";
   const CRM_URL = "https://tng-lead.vercel.app/api/check-crm";
-  const INCIDENT_URL = "https://tng-lead.vercel.app/api/incident-scan";
-  const EVENTS_URL = "https://tng-lead.vercel.app/api/trigger-events";
+  // One news search answers both Security Incidents and Trigger Events (shared searches cost less).
+  const NEWS_URL = "https://tng-lead.vercel.app/api/news-scan";
+  const newsHalf = (pending, key) => pending.then(d => d.available ? d[key] : { available: false, reason: d.reason });
   // The access code lives only in the SharePoint launcher (window.TNG_CONFIG), never in
   // this file: it must match TNG_ACCESS_CODE in Vercel. If it leaks, change both and
   // hand out a new launcher.
@@ -1435,12 +1436,13 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     recompute();
   }
 
-  async function runIncidentScan(domain, refresh) {
+  // pending: the incidents half of the shared news search (newsHalf).
+  async function runIncidentScan(pending) {
     const requestId = ++incidentRequestId;
     lastIncidents = null;
     setIncidentResult(false, 'Checking the news...', '<span class="tng-radar"></span> Searching the news for incidents at their sites (20-40s)...');
     try {
-      const data = await postJson(INCIDENT_URL, refresh ? { domain, refresh: true } : { domain }, 240000);
+      const data = await pending;
       if (requestId !== incidentRequestId) return; // a newer lookup (or Reset) superseded this one
       lastIncidents = data;
       if (!data.available) {
@@ -1521,12 +1523,13 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     recompute();
   }
 
-  async function runEventScan(domain, refresh) {
+  // pending: the trigger-events half of the shared news search (newsHalf).
+  async function runEventScan(pending) {
     const requestId = ++eventRequestId;
     lastEvents = null;
-    setTriggerResult(false, 'Checking the news...', '<span class="tng-radar"></span> Searching the news for layoffs, new executives, new facilities and more (10-30s)...');
+    setTriggerResult(false, 'Checking the news...', '<span class="tng-radar"></span> Searching the news for layoffs, new executives, new facilities and more (20-40s)...');
     try {
-      const data = await postJson(EVENTS_URL, refresh ? { domain, refresh: true } : { domain }, 240000);
+      const data = await pending;
       if (requestId !== eventRequestId) return; // a newer lookup (or Reset) superseded this one
       lastEvents = data;
       if (!data.available) {
@@ -1744,8 +1747,10 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     }
     setError('');
     runCrmCheck(domain, email); // not awaited — fills in the CRM Check section on its own
-    runIncidentScan(domain, refresh); // not awaited either — fills in Security Incidents when the search finishes
-    runEventScan(domain, refresh); // and Trigger Events
+    // Not awaited either: one news search fills in Security Incidents and Trigger Events when it finishes.
+    const news = postJson(NEWS_URL, refresh ? { domain, refresh: true } : { domain }, 240000);
+    runIncidentScan(newsHalf(news, 'incidents'));
+    runEventScan(newsHalf(news, 'events'));
     const btn = document.getElementById('tng-analyze-btn');
     btn.disabled = true;
     let seconds = 0;
@@ -2648,8 +2653,8 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     renderBriefResults();
   }
 
-  // The four lookups behind each lead, in the order the "Vetting" chip lists them.
-  const LOOKUPS = [['apollo', 'Apollo'], ['crm', 'Zoho'], ['news', 'Incidents'], ['events', 'Events']];
+  // The three lookups behind each lead, in the order the "Vetting" chip lists them.
+  const LOOKUPS = [['apollo', 'Apollo'], ['crm', 'Zoho'], ['news', 'News']];
 
   // A queued lead waits its turn; a running one shows which lookups have come back.
   function pendingChipHtml(lead) {
@@ -2669,18 +2674,18 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     lead.lookups = {};
     updatePendingChip(lead);
     const track = (key, promise) => promise.finally(() => { lead.lookups[key] = true; updatePendingChip(lead); });
-    const [analysis, crm, news, trig] = await Promise.allSettled([
+    const [analysis, crm, news] = await Promise.allSettled([
       track('apollo', postJson(BACKEND_URL, { domain: lead.domain }, 150000)),
       track('crm', postJson(CRM_URL, { domain: lead.domain }, 60000)),
-      track('news', postJson(INCIDENT_URL, { domain: lead.domain, company_name: lead.organization }, 240000)),
-      track('events', postJson(EVENTS_URL, { domain: lead.domain, company_name: lead.organization }, 240000)),
+      track('news', postJson(NEWS_URL, { domain: lead.domain, company_name: lead.organization }, 240000)),
     ]);
     lead.lookups = null;
     if (analysis.status === 'rejected') return { ok: false, error: analysis.reason.message };
     const result = analysis.value;
     const crmData = crm.status === 'fulfilled' ? crm.value : { error: crm.reason.message };
-    const incidents = news.status === 'fulfilled' ? news.value : { available: false, reason: news.reason.message };
-    const events = trig.status === 'fulfilled' ? trig.value : { available: false, reason: trig.reason.message };
+    const newsData = news.status === 'fulfilled' ? news.value : { available: false, reason: news.reason.message };
+    const incidents = newsData.available ? newsData.incidents : { available: false, reason: newsData.reason };
+    const events = newsData.available ? newsData.events : { available: false, reason: newsData.reason };
     const auto = autoSignalsFromResult(result);
     const visits = pagesFromVisits(result.site_visits);
     const crmFound = !!(crmData.configured && crmData.found);
