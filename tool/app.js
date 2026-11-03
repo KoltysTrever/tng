@@ -788,6 +788,9 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   .tng-push-status a { color: var(--tng-intel-text); }
   .tng-push-status label { display: flex; gap: 8px; align-items: flex-start; margin-top: 8px; color: var(--tng-text); cursor: pointer; }
   .tng-push-status .tng-radar { display: inline-block; vertical-align: -3px; margin-right: 8px; }
+  .tng-push-status .tng-push-acct { margin: 2px 0 10px; padding: 10px 12px; border: 1px solid var(--tng-hairline-strong); border-radius: var(--tng-radius-sm); background: var(--tng-surface); }
+  .tng-push-acct input { margin-top: 3px; }
+  .tng-push-acct small { display: block; margin-top: 2px; font-size: 12.5px; color: var(--tng-text-tertiary); }
   .tng-push-foot { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
   .tng-push-foot .stale { margin-right: auto; font-size: 13px; color: #FFC977; }
   .tng-push-foot .tng-export-btn { flex: 0 0 auto; }
@@ -1081,7 +1084,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   <div class="tng-header">
     <div class="tng-header-title-block">
       <h1>TNG Opportunity Score</h1>
-      <div class="tng-version-line">TNG OP TOOL V.4.4 · Created by Trever Koltys</div>
+      <div class="tng-version-line">TNG OP TOOL V.4.5 · Created by Trever Koltys</div>
     </div>
     <div class="tng-header-tools">
       <a class="tng-header-link" href="https://app.apollo.io/" target="_blank" rel="noopener" title="This tool works alongside Apollo">Open Apollo${tngIcon('external')}</a>
@@ -4145,7 +4148,8 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   let pushState = null; // the open push window, or null
 
   function pushPayload() {
-    return { ...pushState.fields, note_title: pushState.noteTitle, note: pushState.note };
+    return { ...pushState.fields, note_title: pushState.noteTitle, note: pushState.note,
+      create_account: !!pushState.createAccount, account_info: pushState.accountInfo || {} };
   }
   const pushKey = () => JSON.stringify(pushPayload());
 
@@ -4161,7 +4165,8 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
 
   // ctx: { company, website, candidates, refreshCandidates(), startIndex, noteTitle, note, onDone(result) }
   function openPush(ctx) {
-    pushState = { ...ctx, fields: null, chosen: 0, preview: null, previewFor: '', ack: false, busy: '', result: null, error: '' };
+    pushState = { ...ctx, fields: null, chosen: 0, preview: null, previewFor: '', ack: false, busy: '', result: null, error: '',
+      createAccount: HOT_TIERS.includes(ctx.tier) };
     // Start on someone pushable as they stand, else the first person Apollo has an email for.
     const ready = ctx.candidates.findIndex(c => c.first && c.last && (c.email || c.phone));
     const reachable = ctx.candidates.findIndex(c => c.hasEmail);
@@ -4296,7 +4301,10 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     const s = pushState;
     if (s.busy === 'checking') return '<span class="tng-radar"></span>Checking Zoho for this person and the company...';
     if (s.busy === 'revealing') return '<span class="tng-radar"></span>Revealing the contact in Apollo...';
-    if (s.busy === 'pushing') return '<span class="tng-radar"></span>Creating the Contact in Zoho...';
+    if (s.busy === 'pushing') {
+      const withAccount = s.preview && s.preview.account_create && s.preview.account_create.will;
+      return `<span class="tng-radar"></span>Creating ${withAccount ? 'the company and the Contact' : 'the Contact'} in Zoho...`;
+    }
     const parts = [];
     if (s.error) parts.push(`<div class="bad">${escapeHtml(s.error)}</div>`);
     const p = s.preview;
@@ -4309,9 +4317,17 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
         parts.push(`<ul class="warn">${p.warnings.map(w => `<li>${escapeHtml(w)}</li>`).join('')}</ul>`);
         if (!p.errors.length) parts.push(`<label><input type="checkbox" data-push="ack" ${s.ack ? 'checked' : ''}> I've read the warning above and still want to push this person.</label>`);
       }
+      const ac = p.account_create;
+      if (ac && ac.possible) {
+        parts.push(`<label class="tng-push-acct"><input type="checkbox" data-push="acct" ${s.createAccount ? 'checked' : ''} ${ac.allowed ? '' : 'disabled'}>
+          <span>Also create <b>${escapeHtml(ac.name)}</b> as an Account in Zoho
+          <small>${ac.allowed ? 'Website, size and location from Apollo. Leave unticked to push just the contact.' : 'Needs one more Zoho permission (create Accounts) before it can be used.'}</small></span></label>`);
+      }
       if (!p.errors.length) {
-        parts.push(`<div class="good">${p.enabled ? 'Ready: creates' : 'When pushing is switched on, this would create'} 1 Contact (Contact Type: Prospect) owned by ${escapeHtml(p.owner || '')}, ${p.account
-          ? `linked to the Account <a href="${escapeHtml(p.account.url)}" target="_blank" rel="noopener">${escapeHtml(p.account.name)}</a>` : 'not linked to an Account (the company isn\'t in Zoho yet)'}, plus the note.</div>`);
+        const where = p.account
+          ? `linked to the Account <a href="${escapeHtml(p.account.url)}" target="_blank" rel="noopener">${escapeHtml(p.account.name)}</a>${p.account.by_name ? ' (matched by name)' : ''}`
+          : ac && ac.will ? `with a new Account, <b>${escapeHtml(ac.name)}</b>` : 'not linked to an Account (the company isn\'t in Zoho yet)';
+        parts.push(`<div class="good">${p.enabled ? 'Ready: creates' : 'When pushing is switched on, this would create'} 1 Contact (Contact Type: Prospect) owned by ${escapeHtml(p.owner || '')}, ${where}, plus the note.</div>`);
       }
       parts.push(`<div>${p.caps.today} of ${p.caps.limit} team pushes used today · you: ${p.caps.yours} of ${p.caps.your_limit}</div>`);
     }
@@ -4342,6 +4358,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
         <div class="tng-modal-head"><h2 id="tng-push-title">Pushed to Zoho</h2><button class="tng-modal-x" data-push="close" aria-label="Close">×</button></div>
         <div class="tng-push-status"><div class="good">Created ${escapeHtml(s.fields.first_name + ' ' + s.fields.last_name)} as a Prospect Contact${s.result.owner ? ', owned by ' + escapeHtml(s.result.owner) : ''}.</div>
           ${s.result.note_added ? '<div>The opportunity-score note was added.</div>' : '<div class="warn">The note wasn\'t added. Paste it into the Contact by hand if you need it.</div>'}
+          ${s.result.account && s.result.account.created ? `<div>Created the Account <a href="${escapeHtml(s.result.account.url)}" target="_blank" rel="noopener">${escapeHtml(s.result.account.name)}</a> too, and linked the Contact to it.</div>` : ''}
           ${s.result.warning ? `<div class="warn">${escapeHtml(s.result.warning)}</div>` : ''}
           <div><a href="${escapeHtml(s.result.url)}" target="_blank" rel="noopener">Open the Contact in Zoho →</a></div></div>
         <div class="tng-push-foot"><button class="tng-export-btn" data-push="close">Done</button></div>
@@ -4399,6 +4416,10 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
       useCandidate(Number(e.target.value));
       renderPush();
       runPushPreview();
+    } else if (e.target.dataset.push === 'acct') {
+      pushState.createAccount = e.target.checked;
+      refreshPushControls();
+      schedulePushCheck();
     } else if (e.target.dataset.push === 'ack') {
       pushState.ack = e.target.checked;
       refreshPushControls();
@@ -4529,6 +4550,8 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
       refreshCandidates: () => briefPushCandidates(lead),
       noteTitle: `TNG Opportunity Score: ${v.total} (${plainTier(v.tier.label)}) · Hunter Brief ${brief.date || brief.title}`,
       note: briefPushNote(lead, pr),
+      tier: v.tier.tier,
+      accountInfo: { industry: v.result.industry || '', employees: v.result.employee_count || 0, headquarters: v.result.headquarters || '' },
       onDone: result => { lead.zohoPushed = { url: result.url }; renderBriefResults(); },
     });
   }
@@ -4544,6 +4567,8 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
       startIndex: currentContactIndex,
       noteTitle: `TNG Opportunity Score: ${total} (${tier})`,
       note: singlePushNote(),
+      tier: tierFor(total).tier,
+      accountInfo: { industry: lastCompanyInfo.industry || '', employees: lastCompanyInfo.employee_count || 0, headquarters: lastCompanyInfo.headquarters || '' },
       onDone: result => {
         document.getElementById('tng-zoho-result').innerHTML =
           `✓ Pushed to Zoho as a Prospect. <a href="${escapeHtml(result.url)}" target="_blank" rel="noopener">View the Contact →</a>`;
