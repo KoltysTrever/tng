@@ -10,6 +10,12 @@ const TNG_ICON_PATHS = {
   doc: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/>',
   print: '<path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',
+  building: '<rect x="4" y="2" width="16" height="20" rx="2"/><path d="M9 22v-4h6v4M8 6h.01M12 6h.01M16 6h.01M8 10h.01M12 10h.01M16 10h.01M8 14h.01M12 14h.01M16 14h.01"/>',
+  user: '<circle cx="12" cy="8" r="4"/><path d="M4 21v-1a7 7 0 0 1 16 0v1"/>',
+  bolt: '<path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/>',
+  check: '<circle cx="12" cy="12" r="10"/><path d="m8.5 12 2.5 2.5 4.5-5"/>',
+  sliders: '<path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/>',
+  chevron: '<path d="m6 9 6 6 6-6"/>',
   mail: '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/>',
   userPlus: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>',
   info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
@@ -19,6 +25,8 @@ const ZOHO_MARK = '<svg class="tng-zoho-mark" viewBox="0 0 24 24" fill="none" st
   + '<path d="M4 15V7a3 3 0 0 1 3-3h4" stroke="#E42527"/><path d="M11 4h6a3 3 0 0 1 3 3v2" stroke="#089949"/>'
   + '<path d="M20 9v8a3 3 0 0 1-3 3h-4" stroke="#F9B21D"/><path d="M13 20H7a3 3 0 0 1-3-3v-2" stroke="#226DB4"/></svg>';
 const ZOHO_TILE = `<span class="tng-zoho-tile">${ZOHO_MARK}</span>`;
+const LINKEDIN_LOGO = '<svg class="tng-linkedin-logo" viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="4" fill="#0A66C2"/>'
+  + '<path fill="#FFFFFF" d="M7.1 9.5H4.6V19h2.5V9.5zM5.85 5a1.45 1.45 0 1 0 0 2.9 1.45 1.45 0 0 0 0-2.9zM19.4 13.6c0-2.6-1.4-4.3-3.7-4.3-1.3 0-2.2.7-2.6 1.4V9.5h-2.4V19h2.5v-5c0-1.3.6-2.1 1.7-2.1 1 0 1.5.8 1.5 2.1v5h2.5v-5.4z"/></svg>';
 const REVEAL_LABEL = 'Reveal Full Name &amp; Email (1 Apollo credit)';
 const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${TNG_ICON_PATHS[name]}</svg>`;
 
@@ -274,7 +282,10 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   .tng-incidents .muted, .tng-incident-note { color: var(--tng-text-tertiary); }
   .tng-incident-note { margin-top: 10px; font-size: 13px; }
 
-  .tng-company-linkedin, .tng-contact-link { display: inline-block; margin-top: 16px; font-size: 14px; font-weight: 600; }
+  .tng-company-linkedin, .tng-contact-link { display: inline-flex; align-items: center; gap: 8px; margin-top: 16px; font-size: 14px; font-weight: 600; }
+  .tng-linkedin-logo { width: 18px; height: 18px; flex: none; }
+  .tng-li-inline { display: inline-flex; align-items: center; gap: 5px; vertical-align: -3px; }
+  .tng-li-inline .tng-linkedin-logo { width: 15px; height: 15px; }
 
   /* Contact card */
   .tng-contact-label-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px; }
@@ -627,6 +638,65 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   .tng-export-note b { color: var(--tng-text-secondary); font-weight: 600; }
   .tng-export-confirm { font-size: 14px; color: var(--tng-clear-text); opacity: 0; transition: opacity 0.3s; }
 
+  /* ---------- Single Lead: a calm start, results first, the full checklist on request ---------- */
+  .tng-empty { display: none; margin-top: 20px; padding: 28px 28px 22px; background: var(--tng-surface); border: 1px solid var(--tng-hairline); border-radius: 18px; }
+  #tng-mode-single.is-empty .tng-empty { display: block; }
+  #tng-mode-single.is-empty .tng-section, #tng-mode-single.is-empty .tng-adjust,
+  #tng-mode-single.is-empty .tng-export-row, #tng-mode-single.is-empty .tng-score-row,
+  #tng-mode-single.is-empty .tng-breakdown, #tng-mode-single.is-empty .tng-score-help { display: none; }
+  .tng-score-empty { display: none; font-size: 15px; line-height: 1.5; color: var(--tng-text-tertiary); margin: 10px 0 4px; }
+  #tng-mode-single.is-empty .tng-score-empty { display: block; }
+  .tng-empty-title { font-size: 22px; font-weight: 700; letter-spacing: -0.015em; color: var(--tng-white); }
+  .tng-empty-sub { font-size: 15px; color: var(--tng-text-secondary); margin: 6px 0 24px; line-height: 1.5; }
+  .tng-empty-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px 28px; }
+  .tng-empty-item { display: flex; gap: 14px; align-items: flex-start; }
+  .tng-empty-item .tng-ico { width: 20px; height: 20px; flex: none; padding: 9px; box-sizing: content-box; color: var(--tng-intel-text); background: rgba(21,101,192,0.14); border-radius: 12px; }
+  .tng-empty-item b { display: block; font-size: 15px; color: var(--tng-white); margin-bottom: 3px; }
+  .tng-empty-item span { font-size: 14px; color: var(--tng-text-tertiary); line-height: 1.45; }
+  .tng-empty .tng-help-link { margin-top: 24px; }
+
+  .tng-adjust { margin-top: 36px; background: var(--tng-surface); border: 1px solid var(--tng-hairline); border-radius: 18px; }
+  .tng-adjust > summary { list-style: none; cursor: pointer; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; padding: 18px 22px; border-radius: 18px; }
+  .tng-adjust > summary::-webkit-details-marker { display: none; }
+  .tng-adjust > summary:hover { background: var(--tng-surface-2); }
+  .tng-adjust-title { display: inline-flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 600; color: var(--tng-white); }
+  .tng-adjust-title .tng-ico { color: var(--tng-text-secondary); }
+  .tng-adjust-count { font-size: 13px; color: var(--tng-text-tertiary); font-variant-numeric: tabular-nums; }
+  .tng-adjust-chev { margin-left: auto; display: inline-flex; color: var(--tng-text-tertiary); transition: transform 0.2s; }
+  .tng-adjust[open] .tng-adjust-chev { transform: rotate(180deg); }
+  .tng-adjust-matched { flex-basis: 100%; font-size: 13px; color: var(--tng-clear-text); line-height: 1.5; }
+  .tng-adjust-matched:empty { display: none; }
+  .tng-adjust-body { padding: 4px 22px 24px; border-top: 1px solid var(--tng-hairline); }
+  .tng-adjust-body .tng-section { margin-top: 26px; }
+  .tng-section, .tng-adjust-body [id] { scroll-margin-top: 24px; }
+  .tng-flash { animation: tng-flash 1.4s ease-out; border-radius: 14px; }
+  @keyframes tng-flash { 0%, 35% { box-shadow: 0 0 0 2px rgba(91,158,240,0.75); } 100% { box-shadow: 0 0 0 2px rgba(91,158,240,0); } }
+  button.tng-breakdown-row { width: calc(100% + 12px); margin: 0 -6px; padding: 5px 6px; background: none; border: 0; border-radius: 6px; font-family: inherit; cursor: pointer; text-align: left; }
+  button.tng-breakdown-row:hover { background: var(--tng-surface-2); }
+  button.tng-breakdown-row:hover span:first-child { color: var(--tng-white); }
+  .tng-score-help { margin-top: 14px; }
+  .tng-help-tiers { display: flex; flex-wrap: wrap; gap: 6px; margin: 2px 0 6px; }
+  .tng-help-row { display: flex; justify-content: space-between; gap: 16px; padding: 7px 0; border-top: 1px solid var(--tng-hairline); font-size: 14px; line-height: 1.45; color: var(--tng-text-secondary); }
+  .tng-help-row b { color: var(--tng-clear-text); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  @media (max-width: 640px) {
+    .tng-empty-grid { grid-template-columns: minmax(0, 1fr); }
+    .tng-empty { padding: 22px 18px; }
+    .tng-adjust > summary { padding: 16px 18px; }
+    .tng-adjust-body { padding: 4px 18px 20px; }
+  }
+
+  /* ---------- Moments worth noticing: toasts and the heat wave ---------- */
+  .tng-toast-wrap { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 120; display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; width: max-content; max-width: calc(100vw - 32px); }
+  .tng-toast { padding: 12px 22px; border-radius: 999px; background: rgba(28,28,30,0.97); border: 1px solid var(--tng-hairline-strong); color: var(--tng-white); font-size: 15px; font-weight: 600; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,0.5); animation: tng-toast-in 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.25), tng-toast-out 0.4s ease-in 2.9s forwards; }
+  .tng-toast.spicy { background: linear-gradient(110deg, #B71C1C, #F4511E 55%, #FF8F00); border-color: rgba(255,183,77,0.6); box-shadow: 0 12px 44px rgba(244,81,30,0.55); font-size: 16px; }
+  .tng-toast.warm { border-color: rgba(255,152,0,0.55); color: #FFD08A; }
+  .tng-toast.good { border-color: rgba(111,207,127,0.5); color: var(--tng-clear-text); }
+  @keyframes tng-toast-in { from { opacity: 0; transform: translateY(18px) scale(0.94); } }
+  @keyframes tng-toast-out { to { opacity: 0; transform: translateY(10px); } }
+  .tng-heatwave { position: fixed; inset: 0; pointer-events: none; z-index: 49; background: radial-gradient(ellipse at 50% 115%, rgba(244,81,30,0.38), rgba(244,81,30,0) 60%), radial-gradient(ellipse at 85% -10%, rgba(255,143,0,0.2), rgba(255,143,0,0) 45%); animation: tng-heatwave 1.8s ease-out forwards; }
+  @keyframes tng-heatwave { 0% { opacity: 0; } 18% { opacity: 1; } 100% { opacity: 0; } }
+  .tng-burst-confetti { position: fixed; width: 9px; height: 13px; border-radius: 2px; will-change: transform, opacity; }
+
   /* ---------- Push to Zoho ---------- */
   .tng-zoho-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--tng-alert-clear); color: var(--tng-white); border: 1px solid rgba(255,255,255,0.14); padding: 10px 16px; font-size: 14px; font-weight: 600; border-radius: var(--tng-radius-sm); cursor: pointer; font-family: inherit; box-shadow: 0 4px 14px rgba(46,125,50,0.35); transition: background 0.2s, box-shadow 0.2s, transform 0.1s; }
   .tng-zoho-btn:hover { background: #388E3C; box-shadow: 0 6px 20px rgba(46,125,50,0.5); }
@@ -718,7 +788,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   }
   @keyframes tng-spin { to { transform: rotate(360deg); } }
 
-  .tng-burst-layer { position: fixed; inset: 0; pointer-events: none; z-index: 50; overflow: hidden; }
+  .tng-burst-layer { position: fixed; inset: 0; pointer-events: none; z-index: 110; overflow: hidden; } /* above pop-ups, below toasts */
   .tng-burst-ember, .tng-burst-chili { position: fixed; will-change: transform, opacity; }
   .tng-burst-ember {
     border-radius: 50%;
@@ -967,7 +1037,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   <div class="tng-header">
     <div class="tng-header-title-block">
       <h1>TNG Opportunity Score</h1>
-      <div class="tng-version-line">TNG OP TOOL V.3.10 · Created by Trever Koltys</div>
+      <div class="tng-version-line">TNG OP TOOL V.4.0 · Created by Trever Koltys</div>
     </div>
     <span class="tng-header-note">This tool is to be used in conjunction with <a href="https://app.apollo.io/" target="_blank" rel="noopener">app.apollo.io</a><br>
       <button class="tng-zoho-help-btn" onclick="tngZohoHelp()">${ZOHO_MARK}Zoho push instructions</button></span>
@@ -978,20 +1048,30 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     <button class="tng-mode-tab" role="tab" id="tng-tab-brief" aria-selected="false" onclick="tngSetMode('brief')">Hunter Brief</button>
   </div>
 
-  <div id="tng-mode-single">
+  <div id="tng-mode-single" class="is-empty">
   <div class="tng-layout">
   <div class="tng-main">
 
   <div class="tng-input-row">
-    <input type="text" id="tng-domain" placeholder="Company domain (e.g. acmehealth.com)" />
+    <input type="text" id="tng-domain" placeholder="Company website, e.g. acme.com" />
     <input type="text" id="tng-email" placeholder="Contact email (optional)" />
     <button class="tng-analyze-btn" id="tng-analyze-btn" onclick="tngAnalyze()">Analyze</button>
     <button class="tng-reset-btn" id="tng-reset-btn" onclick="tngReset()">Reset</button>
   </div>
-  <div class="tng-hint">Pulls Apollo firmographics and tngdefense.com visits, checks Zoho CRM, and searches the news for security incidents and trigger events, automatically. Tick any extra pages you know they viewed.</div>
-
   <div class="tng-status" id="tng-status"><span class="tng-radar"></span><span id="tng-status-text">Querying Apollo...</span></div>
   <div class="tng-error" id="tng-error"></div>
+
+  <div class="tng-empty" id="tng-empty">
+    <div class="tng-empty-title">Size up a company in about 30 seconds</div>
+    <div class="tng-empty-sub">Enter its website and press Analyze. Add a contact's email too if you have one.</div>
+    <div class="tng-empty-grid">
+      <div class="tng-empty-item">${tngIcon('building')}<div><b>Who they are</b><span>Industry, size and revenue, from Apollo</span></div></div>
+      <div class="tng-empty-item">${tngIcon('user')}<div><b>Who to call</b><span>The best contact, and whether Apollo has their email</span></div></div>
+      <div class="tng-empty-item">${tngIcon('bolt')}<div><b>Why now</b><span>Security incidents and trigger events in the news</span></div></div>
+      <div class="tng-empty-item">${tngIcon('check')}<div><b>Already know us?</b><span>Zoho CRM, and their visits to tngdefense.com</span></div></div>
+    </div>
+    <button class="tng-help-link" onclick="tngScoreByHand()">Or score a company by hand →</button>
+  </div>
 
   <div class="tng-company-card" id="tng-company-card">
     <div class="tng-company-header">
@@ -1006,7 +1086,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     <div class="tng-license-badge" id="tng-license-badge"></div>
     <div class="tng-corp-structure" id="tng-corp-structure"></div>
     <div class="tng-cache-note" id="tng-cache-note"></div>
-    <a href="#" target="_blank" rel="noopener" class="tng-company-linkedin" id="tng-company-linkedin" style="display:none;">View Company on LinkedIn →</a>
+    <a href="#" target="_blank" rel="noopener" class="tng-company-linkedin" id="tng-company-linkedin" style="display:none;">${LINKEDIN_LOGO}View Company on LinkedIn →</a>
   </div>
 
   <div class="tng-contact-card" id="tng-contact-card">
@@ -1019,7 +1099,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     <div class="tng-reach-row" id="tng-contact-reach"></div>
     <div class="tng-contact-reasoning" id="tng-contact-reasoning"></div>
     <div class="tng-contact-actions">
-      <a href="#" target="_blank" rel="noopener" class="tng-contact-link" id="tng-contact-link" style="display:none;">View LinkedIn →</a>
+      <a href="#" target="_blank" rel="noopener" class="tng-contact-link" id="tng-contact-link" style="display:none;">${LINKEDIN_LOGO}View LinkedIn →</a>
       <button class="tng-reveal-btn" id="tng-reveal-btn" onclick="tngRevealContact()" style="display:none;">${tngIcon('mail')}${REVEAL_LABEL}</button>
       <button class="tng-zoho-btn" id="tng-zoho-btn" onclick="tngPushToZoho()" style="display:none;">${ZOHO_TILE}Push to Zoho</button>
     </div>
@@ -1028,58 +1108,70 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   </div>
   <div id="tng-more-people"></div>
 
-  <div class="tng-section">
-    <div class="tng-section-label">CRM Check <span class="tng-source-tag auto"><b>Automatic</b> · via Zoho CRM</span></div>
-    <div id="tng-crm-signals"></div>
-    <div class="tng-crm-records" id="tng-crm-records"></div>
-  </div>
-
-  <div class="tng-section">
+  <div class="tng-section" id="tng-sec-incidents">
     <div class="tng-section-label">Security Incidents <span class="tng-source-tag auto"><b>Automatic</b> · via news search</span></div>
     <div id="tng-news-signals"></div>
     <div class="tng-incidents" id="tng-incidents"></div>
   </div>
 
-  <div class="tng-section">
+  <div class="tng-section" id="tng-sec-triggers">
     <div class="tng-section-label">Trigger Events <span class="tng-source-tag auto"><b>Automatic</b> · via news search</span></div>
     <div id="tng-trigger-signals"></div>
     <div class="tng-incidents" id="tng-triggers"></div>
   </div>
 
-  <div class="tng-section">
-    <div class="tng-auto-populated-section">
-      <div class="tng-section-label">Firmographic <span class="tng-source-tag auto"><b>Automatic</b> · via Apollo</span></div>
-      <div id="tng-vertical-signals"></div>
+  <div class="tng-section" id="tng-sec-crm">
+    <div class="tng-section-label">Zoho CRM <span class="tng-source-tag auto"><b>Automatic</b> · via Zoho CRM</span></div>
+    <div id="tng-crm-signals"></div>
+    <div class="tng-crm-records" id="tng-crm-records"></div>
+  </div>
 
-      <div class="tng-event-group">
-        <div class="tng-event-group-label">Recent Company Activity</div>
-        <div id="tng-event-signals"></div>
+  <div class="tng-section" id="tng-sec-visits">
+    <div class="tng-section-label">Visits to tngdefense.com <span class="tng-source-tag auto"><b>Automatic</b> · via Apollo</span></div>
+    <div class="tng-visit-summary" id="tng-visit-summary"></div>
+  </div>
+
+  <details class="tng-adjust" id="tng-adjust">
+    <summary>
+      <span class="tng-adjust-title">${tngIcon('sliders')}Adjust signals</span>
+      <span class="tng-adjust-count" id="tng-adjust-count"></span>
+      <span class="tng-adjust-chev">${tngIcon('chevron')}</span>
+      <span class="tng-adjust-matched" id="tng-adjust-matched"></span>
+    </summary>
+    <div class="tng-adjust-body">
+      <div class="tng-section">
+        <div class="tng-section-label">Firmographic <span class="tng-source-tag auto"><b>Automatic</b> · via Apollo</span></div>
+        <div id="tng-vertical-signals"></div>
+        <div class="tng-event-group">
+          <div class="tng-event-group-label">Recent Company Activity</div>
+          <div id="tng-event-signals"></div>
+        </div>
+      </div>
+
+      <div class="tng-section">
+        <div class="tng-section-label">Site Behavior <span class="tng-source-tag auto"><b>Automatic</b> · from the pages visited below</span></div>
+        <div id="tng-site-signals"></div>
+        <div class="tng-event-group">
+          <div class="tng-event-group-label">Pages Visited <span class="tng-source-tag auto"><b>Automatic</b> · from Apollo, tick any extras</span></div>
+          <div class="tng-hint" style="margin-top:0;">Ticked from Apollo's Website Visitors (each company's top 5 pages over the last 90 days). Service and contact pages tick the Site Behavior signals above; Home, About and Blog add a few points of their own.</div>
+          <div id="tng-page-signals"></div>
+        </div>
       </div>
     </div>
-  </div>
-
-  <div class="tng-section">
-    <div class="tng-section-label">Site Behavior <span class="tng-source-tag auto"><b>Automatic</b> · from the pages visited below</span></div>
-    <div id="tng-site-signals"></div>
-
-    <div class="tng-event-group">
-      <div class="tng-event-group-label">Pages Visited <span class="tng-source-tag auto"><b>Automatic</b> · from Apollo, tick any extras</span></div>
-      <div class="tng-visit-summary" id="tng-visit-summary"></div>
-      <div class="tng-hint" style="margin-top:0;">Ticked from Apollo's Website Visitors (it reports each company's top 5 pages over the last 90 days). Service and contact pages tick the Site Behavior signals above; Home, About and Blog add a few points of their own. All of them tell you which services to pitch.</div>
-      <div id="tng-page-signals"></div>
-    </div>
-  </div>
+  </details>
 
   </div><!-- /.tng-main -->
 
   <aside class="tng-rail">
     <div class="tng-result">
       <div class="tng-total-label">Opportunity Score</div>
+      <div class="tng-score-empty">Your score appears here after you analyze a company.</div>
       <div class="tng-score-row">
         <div class="tng-total-score" id="tng-total">0</div>
         <div class="tng-tier ice_cold" id="tng-tier">ICE COLD</div>
       </div>
       <div class="tng-breakdown" id="tng-breakdown"></div>
+      <button class="tng-help-link tng-score-help" onclick="tngScoringHelp()">${tngIcon('info')}How scoring works</button>
     </div>
 
     <div class="tng-export-row">
@@ -1090,10 +1182,6 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     </div>
   </aside>
   </div><!-- /.tng-layout -->
-
-  <div class="tng-footnote">
-    Firmographic (auto): Revenue Under $10M (+5), $10-100M (+10), $100-500M (+20), or $500M+ (+30) · Healthcare (+25) · Education (+20) · Government (+20) · Entertainment/Events (+15) · High-Net-Worth (+20) · IT/Network Security (+15) · Telecom (+15) · Financial Services (+20) · Manufacturing/Industrial (+20) · Retail/Hospitality (+20) · Energy/Utilities (+20) · Real Estate (+20) · Hiring security leadership (+15) · Recently funded (+15) · Rapid headcount growth (+15) · Uses physical security tech (+10) · Multi-site physical footprint (+20). CRM (auto): Already in Zoho CRM as an account, contact, or lead (+30). Security incidents (auto): a news search finds a reported assault, weapon, lockdown or threat at their sites in the last 12 months (+20); incidents 12-24 months old are listed for context with no points, and finding nothing never costs points. Trigger events (auto): a news search finds layoffs, a new or exposed executive, a new facility, a strike or protest, or a large event they're hosting in the last 6 months (+15); each event names the TNG service it points to, and older ones are listed for context only. Site behavior: Visited a high-intent page — Request Security Services or Contact Us (+30) · Showed interest in TNG services — any service or Licensing page (+20). Pages visited: service and contact pages set those two signals; Home Page (+10), About TNG (+10) and Blog/Insights (+5) score on their own (so site behavior adds at most +75). All pages show which services to pitch. Page visits come from Apollo's Website Visitors data (top 5 pages per company, last 90 days) and are ticked automatically; tick any others yourself.
-  </div>
   </div><!-- /#tng-mode-single -->
 
   <div id="tng-mode-brief" hidden>
@@ -1326,8 +1414,9 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
       }
     });
     const scoreEl = document.getElementById('tng-total');
-    scoreEl.textContent = total;
+    animateScore(scoreEl, prevTotal, total);
     renderBreakdown();
+    updateAdjustSummary();
     const tierEl = document.getElementById('tng-tier');
     const { tier, label } = tierFor(total);
     tierEl.className = 'tng-tier ' + tier;
@@ -1350,8 +1439,11 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
       void resultEl.offsetWidth;
       resultEl.classList.add('celebrate');
       heatBurst(true);
+      heatWave();
+      tngToast(pick(SPICY_LINES), 'spicy');
     } else if (tier === 'heating_up' && climbed) {
       heatBurst(false);
+      tngToast(pick(WARM_LINES), 'warm');
     }
 
     // Keep the company card + SPICY badge in sync with the current tier,
@@ -1370,20 +1462,63 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     prevTier = tier;
   }
 
+  // Each row of the score card jumps to where its points come from.
   const BREAKDOWN_GROUPS = [
-    { label: 'Firmographic', match: s => s.group === 'auto' && s.subgroup !== 'event' },
-    { label: 'Company activity', match: s => s.group === 'auto' && s.subgroup === 'event' },
-    { label: 'Zoho CRM', match: s => s.group === 'crm' },
-    { label: 'Security incidents', match: s => s.group === 'news' },
-    { label: 'Trigger events', match: s => s.group === 'triggers' },
-    { label: 'Site behavior', match: s => s.group === 'site' || s.group === 'pages' },
+    { label: 'Firmographic', match: s => s.group === 'auto' && s.subgroup !== 'event', target: 'tng-vertical-signals' },
+    { label: 'Company activity', match: s => s.group === 'auto' && s.subgroup === 'event', target: 'tng-event-signals' },
+    { label: 'Zoho CRM', match: s => s.group === 'crm', target: 'tng-sec-crm' },
+    { label: 'Security incidents', match: s => s.group === 'news', target: 'tng-sec-incidents' },
+    { label: 'Trigger events', match: s => s.group === 'triggers', target: 'tng-sec-triggers' },
+    { label: 'Site behavior', match: s => s.group === 'site' || s.group === 'pages', target: 'tng-sec-visits' },
   ];
 
   function renderBreakdown() {
     document.getElementById('tng-breakdown').innerHTML = BREAKDOWN_GROUPS.map(g => {
       const pts = SIGNALS.filter(s => g.match(s) && state[s.id].checked).reduce((sum, s) => sum + s.pts, 0);
-      return `<div class="tng-breakdown-row${pts ? ' on' : ''}"><span>${g.label}</span><span>${pts ? '+' + pts : '—'}</span></div>`;
+      return `<button class="tng-breakdown-row${pts ? ' on' : ''}" data-jump="${g.target}" title="Show where these points come from"><span>${g.label}</span><span>${pts ? '+' + pts : '—'}</span></button>`;
     }).join('');
+  }
+
+  // Scrolls to a section (opening Adjust signals when it's in there) and outlines it for a moment.
+  function jumpTo(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const details = el.closest('details');
+    if (details) details.open = true;
+    const box = el.closest('.tng-section') || el;
+    box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    box.classList.remove('tng-flash');
+    void box.offsetWidth;
+    box.classList.add('tng-flash');
+  }
+  document.getElementById('tng-breakdown').addEventListener('click', e => {
+    const row = e.target.closest('[data-jump]');
+    if (row) jumpTo(row.dataset.jump);
+  });
+
+  // The Adjust signals header: how many of its checkboxes are ticked, and what matched.
+  const IN_ADJUST = s => s.group === 'auto' || s.group === 'site' || s.group === 'pages';
+  function updateAdjustSummary() {
+    const list = SIGNALS.filter(IN_ADJUST);
+    const on = list.filter(s => state[s.id].checked);
+    document.getElementById('tng-adjust-count').textContent = `${on.length} of ${list.length} ticked`;
+    const names = on.filter(s => s.group === 'auto' || (s.group === 'pages' && s.pts > 0)).map(s => s.label.replace(/\s*\(.*\)$/, ''));
+    document.getElementById('tng-adjust-matched').textContent = names.length ? '✓ ' + names.join(' · ') : '';
+  }
+
+  // The number counts up (or down) to the new score instead of jumping.
+  let scoreAnim = 0;
+  function animateScore(el, from, to) {
+    const id = ++scoreAnim;
+    if (from === to || window.matchMedia('(prefers-reduced-motion: reduce)').matches) { el.textContent = to; return; }
+    const started = performance.now();
+    const step = now => {
+      if (id !== scoreAnim) return;
+      const t = Math.min(1, (now - started) / 700);
+      el.textContent = Math.round(from + (to - from) * (1 - Math.pow(1 - t, 3)));
+      if (t < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
   }
 
   const TIER_RANK = { ice_cold: 0, room_temp: 1, luke_warm: 2, heating_up: 3, spicy: 4 };
@@ -1409,11 +1544,11 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
 
   // Embers (and chilis, for SPICY) fly up out of the score bar. Particles are
   // fixed-position spans animated with the Web Animations API, then removed.
-  function heatBurst(spicy) {
+  function heatBurst(spicy, originEl) {
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    const origin = document.querySelector('.tng-result').getBoundingClientRect();
-    const x0 = origin.left + origin.width / 2;
-    const y0 = origin.top + Math.min(origin.height, 140) / 2;
+    const origin = (originEl || document.querySelector('.tng-result')).getBoundingClientRect();
+    const x0 = Math.min(Math.max(origin.left + origin.width / 2, 60), window.innerWidth - 60);
+    const y0 = Math.min(Math.max(origin.top + Math.min(origin.height, 140) / 2, 80), window.innerHeight - 80);
     const allAround = y0 < window.innerHeight * 0.4;
     const layer = document.createElement('div');
     layer.className = 'tng-burst-layer';
@@ -1449,6 +1584,80 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     }
     setTimeout(() => layer.remove(), 2400);
   }
+
+  // ----- Moments worth noticing -----
+  const SPICY_LINES = [
+    '🌶️ Spicy lead! This one is worth a call today.',
+    '🌶️ Spicy! Put this one in front of Steve.',
+    '🌶️ Hot one. Strike while it\'s spicy.',
+    '🌶️ Spicy lead. Clear some time for this one.',
+  ];
+  const WARM_LINES = ['🔥 Heating up. Worth a closer look.', '🔥 Heating up. Something here.'];
+  const pick = list => list[Math.floor(Math.random() * list.length)];
+
+  // A short line at the bottom of the screen that fades on its own.
+  function tngToast(text, tone) {
+    let wrap = document.getElementById('tng-toasts');
+    if (!wrap) {
+      wrap = document.createElement('div');
+      wrap.id = 'tng-toasts';
+      wrap.className = 'tng-toast-wrap';
+      wrap.setAttribute('aria-live', 'polite');
+      document.querySelector('.tng-lead-scorer').appendChild(wrap);
+    }
+    const t = document.createElement('div');
+    t.className = 'tng-toast' + (tone ? ' ' + tone : '');
+    t.textContent = text;
+    wrap.appendChild(t);
+    setTimeout(() => t.remove(), 3400);
+  }
+
+  // A warm glow washes over the screen when a lead turns spicy.
+  function heatWave() {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const el = document.createElement('div');
+    el.className = 'tng-heatwave';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1900);
+  }
+
+  // Confetti in the given colors (Zoho's four, for a push), flung up from an element.
+  function confettiBurst(originEl, colors) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !originEl) return;
+    const r = originEl.getBoundingClientRect();
+    const layer = document.createElement('div');
+    layer.className = 'tng-burst-layer';
+    document.body.appendChild(layer);
+    for (let i = 0; i < 40; i++) {
+      const p = document.createElement('span');
+      p.className = 'tng-burst-confetti';
+      p.style.background = colors[i % colors.length];
+      p.style.left = (r.left + r.width * (0.25 + Math.random() * 0.5)) + 'px';
+      p.style.top = (r.top + Math.min(r.height, 200) * 0.4) + 'px';
+      layer.appendChild(p);
+      const angle = (-90 + (Math.random() - 0.5) * 140) * Math.PI / 180;
+      const dist = 140 + Math.random() * 220;
+      const dx = Math.cos(angle) * dist;
+      const dy = Math.sin(angle) * dist;
+      const spin = (Math.random() - 0.5) * 900;
+      p.animate([
+        { transform: 'translate(-50%, -50%) rotate(0deg)', opacity: 1 },
+        { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) rotate(${spin * 0.6}deg)`, opacity: 1, offset: 0.55 },
+        { transform: `translate(calc(-50% + ${dx * 1.15}px), calc(-50% + ${dy + 260}px)) rotate(${spin}deg)`, opacity: 0 },
+      ], { duration: 1500 + Math.random() * 700, easing: 'cubic-bezier(0.2, 0.7, 0.4, 1)', delay: Math.random() * 100, fill: 'forwards' });
+    }
+    setTimeout(() => layer.remove(), 2600);
+  }
+
+  function setSingleEmpty(empty) {
+    document.getElementById('tng-mode-single').classList.toggle('is-empty', empty);
+  }
+
+  // Scoring without a lookup: show the checklist and open it.
+  window.tngScoreByHand = function() {
+    setSingleEmpty(false);
+    jumpTo('tng-vertical-signals');
+  };
 
   function setStatus(text) {
     const el = document.getElementById('tng-status');
@@ -1835,6 +2044,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
       return;
     }
     setError('');
+    setSingleEmpty(false);
     runCrmCheck(domain, email); // not awaited — fills in the CRM Check section on its own
     // Not awaited either: one news search fills in Security Incidents and Trigger Events when it finishes.
     const news = postJson(NEWS_URL, refresh ? { domain, refresh: true } : { domain }, 240000);
@@ -1909,7 +2119,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
         document.getElementById('tng-company-description').textContent = result.company_description || '';
         if (result.company_linkedin_url) {
           companyLinkedinEl.href = result.company_linkedin_url;
-          companyLinkedinEl.style.display = 'inline-block';
+          companyLinkedinEl.style.display = 'inline-flex';
         } else {
           companyLinkedinEl.style.display = 'none';
         }
@@ -2057,7 +2267,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
       document.getElementById('tng-contact-reasoning').textContent = contact.reasoning || '';
       if (contact.linkedin_url) {
         contactLink.href = contact.linkedin_url;
-        contactLink.style.display = 'inline-block';
+        contactLink.style.display = 'inline-flex';
       } else {
         contactLink.style.display = 'none';
       }
@@ -2254,6 +2464,8 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     setStatus(null);
     renderSignals();
     recompute();
+    document.getElementById('tng-adjust').open = false;
+    setSingleEmpty(true);
   };
 
   function buildScoreSummary() {
@@ -2854,6 +3066,14 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     document.title = '✅ Brief vetted';
     setTimeout(() => { document.title = originalTitle; }, 4000);
     renderBriefResults();
+    const spicyLeads = brief.leads.filter(l => vettedOf(l) && vettedOf(l).tier.tier === 'spicy').length;
+    if (spicyLeads) {
+      heatBurst(true, document.querySelector('#tng-brief-results .tng-brief-summary'));
+      heatWave();
+      tngToast(`🌶️ ${spicyLeads} spicy lead${spicyLeads === 1 ? '' : 's'} in this brief!`, 'spicy');
+    } else {
+      tngToast(`✓ Brief vetted: ${total} lead${total === 1 ? '' : 's'} ranked`, 'good');
+    }
   }
 
   // The three lookups behind each lead, in the order the "Vetting" chip lists them.
@@ -3065,7 +3285,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
           ?` <button class="tng-reveal-btn tng-brief-reveal" data-brief-action="reveal" data-key="${lead.key}" data-contact="${ci}">${tngIcon('mail')}Reveal email (1 credit)</button>` : '';
         parts.push(`<div class="tng-brief-person">
           <span class="name">${escapeHtml(name)}</span>${c.title ? ' — ' + escapeHtml(c.title) : ''}
-          ${isWebLink(c.linkedin_url) ? ` · <a href="${escapeHtml(c.linkedin_url)}" target="_blank" rel="noopener">LinkedIn</a>` : ''}${revealed}${!c.revealed && !report ? reachChips(c) : ''}${revealBtn}
+          ${isWebLink(c.linkedin_url) ? ` · <a class="tng-li-inline" href="${escapeHtml(c.linkedin_url)}" target="_blank" rel="noopener">${LINKEDIN_LOGO}LinkedIn</a>` : ''}${revealed}${!c.revealed && !report ? reachChips(c) : ''}${revealBtn}
           ${c.revealError ? `<div class="error">${escapeHtml(c.revealError)}</div>` : ''}
         </div>`);
       });
@@ -3925,6 +4145,8 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
       s.previewFor = '';
     }
     renderPush();
+    // A push that lands gets confetti in Zoho's four colors.
+    if (s.result) confettiBurst(document.querySelector('#tng-push-modal .tng-modal'), ['#E42527', '#089949', '#226DB4', '#F9B21D']);
   }
 
   async function revealForPush() {
@@ -4111,8 +4333,9 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     return !!el;
   }
 
-  window.tngZohoHelp = function() {
-    if (document.getElementById('tng-help-modal')) return;
+  // A small read-only pop-up (the how-tos). One at a time; Escape or a click outside closes it.
+  function openInfoModal(title, intro, bodyHtml) {
+    closeZohoHelp();
     const el = document.createElement('div');
     el.id = 'tng-help-modal';
     el.className = 'tng-modal-backdrop';
@@ -4120,9 +4343,22 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     el.setAttribute('aria-modal', 'true');
     el.setAttribute('aria-labelledby', 'tng-help-title');
     el.innerHTML = `<div class="tng-modal">
-      <div class="tng-modal-head"><h2 id="tng-help-title">Zoho push instructions</h2><button class="tng-modal-x" data-help="close" aria-label="Close">×</button></div>
-      <p class="tng-modal-sub">Push to Zoho adds one person to Zoho CRM as a Contact with Contact Type "Prospect", assigned to you, with the TNG score note. It never creates companies and never changes existing records.</p>
-      <ol class="tng-help-steps">
+      <div class="tng-modal-head"><h2 id="tng-help-title">${title}</h2><button class="tng-modal-x" data-help="close" aria-label="Close">×</button></div>
+      <p class="tng-modal-sub">${intro}</p>
+      ${bodyHtml}
+      <div class="tng-push-foot"><button class="tng-export-btn primary" data-help="close">Got it</button></div>
+    </div>`;
+    el.addEventListener('click', e => {
+      if (e.target === el || e.target.closest('[data-help="close"]')) closeZohoHelp();
+    });
+    document.querySelector('.tng-lead-scorer').appendChild(el);
+    el.querySelector('[data-help="close"]').focus();
+  }
+
+  window.tngZohoHelp = function() {
+    openInfoModal('Zoho push instructions',
+      'Push to Zoho adds one person to Zoho CRM as a Contact with Contact Type "Prospect", assigned to you, with the TNG score note. It never creates companies and never changes existing records.',
+      `<ol class="tng-help-steps">
         <li>Click <b>Push to Zoho</b> on a vetted Hunter Brief lead, or on the Single Lead contact card.</li>
         <li>Enter <b>your work email</b> (first time only). The Contact is assigned to you.</li>
         <li>Pick <b>who to push</b>. Apollo contacts need <b>Reveal</b> first (1 Apollo credit): a full name and an email or phone are required.</li>
@@ -4132,14 +4368,37 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
       <div class="tng-help-h">If it won't push</div>
       <p class="tng-help-p">The message says why. Most often the person is <b>already in Zoho</b> (open the linked record instead), the name or email is missing, or the daily limit is reached (<b>10 for you, 25 for the team</b>).</p>
       <div class="tng-help-h">Finding pushed Contacts later</div>
-      <p class="tng-help-p">Search Zoho Contacts for <b>"Added by the TNG lead tool"</b>. To clean up a dead prospect, change its Contact Type or delete it in Zoho.</p>
-      <div class="tng-push-foot"><button class="tng-export-btn primary" data-help="close">Got it</button></div>
-    </div>`;
-    el.addEventListener('click', e => {
-      if (e.target === el || e.target.closest('[data-help="close"]')) closeZohoHelp();
-    });
-    document.querySelector('.tng-lead-scorer').appendChild(el);
-    el.querySelector('[data-help="close"]').focus();
+      <p class="tng-help-p">Search Zoho Contacts for <b>"Added by the TNG lead tool"</b>. To clean up a dead prospect, change its Contact Type or delete it in Zoho.</p>`);
+  };
+
+  // What adds points, in the order people ask about it. Finding nothing never costs points.
+  window.tngScoringHelp = function() {
+    const row = (what, pts) => `<div class="tng-help-row"><span>${what}</span><b>${pts}</b></div>`;
+    openInfoModal('How scoring works',
+      'The Opportunity Score adds up what the lookups find. Finding nothing never costs points, and you can tick or untick any signal under Adjust signals.',
+      `<div class="tng-help-tiers">
+        <span class="tng-tier sm ice_cold">Ice cold 0–24</span><span class="tng-tier sm room_temp">Room temp 25–49</span>
+        <span class="tng-tier sm luke_warm">Luke warm 50–74</span><span class="tng-tier sm heating_up">Heating up 75–99</span>
+        <span class="tng-tier sm spicy">Spicy 🌶️ 100+</span>
+      </div>
+      <div class="tng-help-h">Who they are (Apollo)</div>
+      ${row('Revenue: under $10M / $10–100M / $100–500M / $500M+', '+5 / +10 / +20 / +30')}
+      ${row('Healthcare system', '+25')}
+      ${row('Education, government, financial services, manufacturing, retail and hospitality, energy, real estate, or high-net-worth', '+20')}
+      ${row('Entertainment and events, IT and network security, or telecom', '+15')}
+      <div class="tng-help-h">What they're doing (Apollo)</div>
+      ${row('Several sites (5+ locations)', '+20')}
+      ${row('Hiring security leadership, recently funded, or growing fast', '+15 each')}
+      ${row('Uses physical security or access control tech', '+10')}
+      <div class="tng-help-h">Why now (news search)</div>
+      ${row('Security incident at their sites in the last 12 months (older ones are listed, no points)', '+20')}
+      ${row('Trigger event in the last 6 months: layoffs, a new executive, a new facility, a strike, a big event', '+15')}
+      <div class="tng-help-h">Already know us</div>
+      ${row('Already in Zoho CRM (account, contact or lead)', '+30')}
+      ${row('Visited Contact Us or Request Security Services on tngdefense.com', '+30')}
+      ${row('Viewed a service or Licensing page', '+20')}
+      ${row('Viewed the Home or About page / the Blog', '+10 / +5')}
+      <p class="tng-help-p" style="margin-top:14px;">Site visits come from Apollo's Website Visitors data (top 5 pages per company over the last 90 days). Every page also tells you which services to pitch.</p>`);
   };
 
   document.addEventListener('keydown', e => {
