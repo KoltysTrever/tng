@@ -58,6 +58,36 @@ at that domain. It returns counts, a few linked records, and whether a typed
 contact email is already in the CRM. Read-only, no Apollo credits. The page calls
 it alongside Analyze and scores "Already in Zoho CRM" (+30) from the result.
 
+## Push to Zoho
+
+A **Push to Zoho** button on each vetted Hunter Brief lead (and on the Single Lead contact
+card) creates **one Contact** in Zoho CRM: Contact Type (`Contact_Status`) = Prospect,
+owned by the person pushing (matched by the work email they enter, remembered in their
+browser), linked to the company's Account only when exactly one Account already has its
+website, plus one Note with the opportunity score. It never creates Accounts and can't
+edit or delete anything. `/api/zoho-push` takes `action: "check"` (setup check),
+`"preview"` (what would be created and what blocks it; reads only) and `"create"`.
+
+Setup: `ZOHO_PUSH_REFRESH_TOKEN`, a second refresh token from the same Self Client with
+scopes `ZohoCRM.modules.contacts.CREATE`, `ZohoCRM.modules.contacts.READ`,
+`ZohoCRM.modules.accounts.READ`, `ZohoCRM.modules.notes.CREATE`, `ZohoCRM.users.READ`,
+`ZohoCRM.settings.fields.READ`. Pushing stays off until `ZOHO_PUSH_ENABLED=true` is set
+(and redeployed); set it back to `false` to switch pushing off again (the kill switch).
+
+Safeguards, all on the server (`lib/zoho-push.js`), whatever the page sends:
+- every field checked: a real first and last name (no masked Apollo names or
+  placeholders), a valid email or phone, a company, an active Zoho user as owner; text
+  cleaned and length-capped; shared inboxes (info@, procurement@...) need a confirmation;
+- not created when Zoho already has the person (same email in Contacts or Leads, or the
+  same name at the same company; checked with the read-only token) or the tool pushed
+  them in the last 90 days;
+- a 5-minute lock per person (two clicks or two people at once create one Contact), one
+  push per 10 seconds per person, and daily caps of 25 for the team and 10 per person;
+- exactly one create call, never retried; on a timeout it looks the person up instead;
+- Zoho workflows and approvals aren't triggered (`trigger: []`); every Contact's
+  Description says it was added by the tool, on what date and by whom;
+- if Zoho or the Upstash store can't be checked, nothing is created.
+
 ## Saved lookups (cache)
 
 `analyze-lead`, `news-scan` and `parse-brief` save results for 7 days in Upstash

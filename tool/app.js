@@ -10,6 +10,7 @@ const TNG_ICON_PATHS = {
   doc: '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/>',
   print: '<path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8" rx="1"/>',
   plus: '<path d="M12 5v14M5 12h14"/>',
+  userPlus: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>',
   info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
 };
 const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${TNG_ICON_PATHS[name]}</svg>`;
@@ -611,6 +612,47 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   .tng-export-note .tng-ico { width: 14px; height: 14px; margin-top: 2px; color: var(--tng-intel-text); }
   .tng-export-note b { color: var(--tng-text-secondary); font-weight: 600; }
   .tng-export-confirm { font-size: 14px; color: var(--tng-clear-text); opacity: 0; transition: opacity 0.3s; }
+
+  /* ---------- Push to Zoho ---------- */
+  .tng-zoho-btn { display: inline-flex; align-items: center; gap: 8px; background: rgba(46,125,50,0.16); color: var(--tng-clear-text); border: none; padding: 10px 16px; font-size: 14px; font-weight: 600; border-radius: var(--tng-radius-sm); cursor: pointer; font-family: inherit; transition: background 0.2s; }
+  .tng-zoho-btn:hover { background: rgba(46,125,50,0.28); }
+  .tng-zoho-row { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 14px; font-size: 14px; }
+  .tng-zoho-row a, .tng-zoho-result a { color: var(--tng-intel-text); }
+  .tng-zoho-result { margin-top: 10px; font-size: 14px; color: var(--tng-clear-text); }
+  .tng-modal-backdrop { position: fixed; inset: 0; z-index: 100; display: flex; align-items: flex-start; justify-content: center; padding: 6vh 16px; background: rgba(0,0,0,0.72); overflow-y: auto; }
+  .tng-modal { width: 100%; max-width: 640px; background: var(--tng-surface); border: 1px solid var(--tng-hairline-strong); border-radius: var(--tng-radius-lg); padding: 24px; box-shadow: 0 24px 80px rgba(0,0,0,0.6); }
+  .tng-modal-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .tng-modal-head h2 { margin: 0; font-size: 20px; font-weight: 700; color: var(--tng-white); }
+  .tng-modal-x { background: none; border: none; color: var(--tng-text-secondary); font-size: 26px; line-height: 1; cursor: pointer; padding: 0 4px; }
+  .tng-modal-x:hover { color: var(--tng-white); }
+  .tng-modal-sub { font-size: 13px; line-height: 1.5; color: var(--tng-text-tertiary); margin: 6px 0 16px; }
+  .tng-modal-off { padding: 10px 14px; margin-bottom: 14px; border-radius: var(--tng-radius-sm); background: rgba(230,81,0,0.14); color: #FFC977; font-size: 13px; line-height: 1.5; }
+  .tng-push-label { display: block; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--tng-text-tertiary); margin: 12px 0 5px; }
+  .tng-push-input, .tng-push-select, .tng-push-note { width: 100%; box-sizing: border-box; background: var(--tng-surface-2); border: 1px solid var(--tng-hairline-strong); color: var(--tng-text); border-radius: var(--tng-radius-sm); padding: 9px 11px; font-family: inherit; font-size: 14px; }
+  .tng-push-input:focus, .tng-push-select:focus, .tng-push-note:focus { outline: none; border-color: rgba(91,158,240,0.6); }
+  .tng-push-note { min-height: 140px; resize: vertical; line-height: 1.5; font-size: 13px; }
+  .tng-push-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 12px; }
+  .tng-push-pick-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .tng-push-pick-row .tng-push-select { flex: 1; min-width: 220px; }
+  .tng-push-more { margin-top: 14px; }
+  .tng-push-more > summary { cursor: pointer; font-size: 14px; color: var(--tng-text-secondary); }
+  .tng-push-note-title { font-size: 13px; font-weight: 600; color: var(--tng-text-secondary); margin: 10px 0 6px; }
+  .tng-push-status { margin-top: 16px; padding: 12px 14px; border-radius: var(--tng-radius-sm); background: var(--tng-surface-2); font-size: 14px; line-height: 1.55; color: var(--tng-text-secondary); }
+  .tng-push-status:empty { display: none; }
+  .tng-push-status ul { margin: 4px 0 0; padding-left: 18px; }
+  .tng-push-status .bad { color: #FF8A80; }
+  .tng-push-status .warn { color: #FFC977; }
+  .tng-push-status .good { color: var(--tng-clear-text); }
+  .tng-push-status a { color: var(--tng-intel-text); }
+  .tng-push-status label { display: flex; gap: 8px; align-items: flex-start; margin-top: 8px; color: var(--tng-text); cursor: pointer; }
+  .tng-push-status .tng-radar { display: inline-block; vertical-align: -3px; margin-right: 8px; }
+  .tng-push-foot { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+  .tng-push-foot .stale { margin-right: auto; font-size: 13px; color: #FFC977; }
+  .tng-push-foot .tng-export-btn { flex: 0 0 auto; }
+  @media (max-width: 640px) {
+    .tng-push-grid { grid-template-columns: minmax(0, 1fr); }
+    .tng-modal { padding: 18px; }
+  }
   .tng-export-confirm.active { opacity: 1; }
 
   .tng-footnote {
@@ -883,7 +925,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   <div class="tng-header">
     <div class="tng-header-title-block">
       <h1>TNG Opportunity Score</h1>
-      <div class="tng-version-line">TNG OP TOOL V.3.7 · Created by Trever Koltys</div>
+      <div class="tng-version-line">TNG OP TOOL V.3.8 · Created by Trever Koltys</div>
     </div>
     <span class="tng-header-note">This tool is to be used in conjunction with <a href="https://app.apollo.io/" target="_blank" rel="noopener">app.apollo.io</a></span>
   </div>
@@ -935,8 +977,10 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     <div class="tng-contact-actions">
       <a href="#" target="_blank" rel="noopener" class="tng-contact-link" id="tng-contact-link" style="display:none;">View LinkedIn →</a>
       <button class="tng-reveal-btn" id="tng-reveal-btn" onclick="tngRevealContact()" style="display:none;">Reveal Full Name &amp; Email (1 Apollo credit)</button>
+      <button class="tng-zoho-btn" id="tng-zoho-btn" onclick="tngPushToZoho()" style="display:none;">${tngIcon('userPlus')}Push to Zoho</button>
     </div>
     <div class="tng-reveal-result" id="tng-reveal-result"></div>
+    <div class="tng-zoho-result" id="tng-zoho-result"></div>
   </div>
 
   <div class="tng-section">
@@ -1917,6 +1961,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
       };
       currentContactIndex = 0;
       revealedByIndex = {};
+      document.getElementById('tng-zoho-result').innerHTML = '';
 
       renderContactCard(email);
 
@@ -2002,6 +2047,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
       revealResultEl.textContent = 'Found via web search. This company isn\'t in Apollo\'s database, so there\'s no contact record to reveal.';
     }
 
+    document.getElementById('tng-zoho-btn').style.display = 'inline-flex';
     document.getElementById('tng-contact-card').classList.add('active');
   }
 
@@ -2046,6 +2092,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     lastCompanyInfo = null;
     currentContactIndex = 0;
     revealedByIndex = {};
+    document.getElementById('tng-zoho-result').innerHTML = '';
     setError('');
     setStatus(null);
     renderSignals();
@@ -2836,6 +2883,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
         ${notVettedNote}
       </dl>
       ${peopleHtml(lead, v, report)}
+      ${zohoActionHtml(lead, v, report)}
       ${moreHtml(lead, v, report)}
     </article>`;
   }
@@ -3525,6 +3573,401 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     showExportConfirm('Choose "Save as PDF" in the print window', 'tng-brief-confirm');
   }
 
+  // ----- Push to Zoho: one person at a time, as a Contact with Contact Type "Prospect" -----
+  // Every safeguard lives on the server (api/zoho-push.js): it re-checks everything on each
+  // push. This window only gathers the details, shows the server's preview, and sends one
+  // create when the person confirms. The create is never retried automatically.
+  const ZOHO_PUSH_URL = "https://tng-lead.vercel.app/api/zoho-push";
+  const OWNER_KEY = 'tngPushOwnerEmail';
+  const savedOwner = () => { try { return localStorage.getItem(OWNER_KEY) || ''; } catch (e) { return ''; } };
+  const saveOwner = email => { try { localStorage.setItem(OWNER_KEY, email); } catch (e) { /* remembered for this visit only */ } };
+  const PUSH_FIELDS = [
+    ['first_name', 'First name'], ['last_name', 'Last name'], ['title', 'Title'], ['email', 'Email'],
+    ['phone', 'Phone'], ['company', 'Company'], ['website', 'Website'],
+  ];
+  const plainTier = label => String(label || '').replace(/\s*🌶️/, '').trim();
+
+  function splitName(full) {
+    const parts = String(full || '').trim().split(/\s+/).filter(Boolean);
+    return { first: parts[0] || '', last: parts.slice(1).join(' ') };
+  }
+
+  // People who can be pushed for a brief lead: Steve's named buyers, then the lookup's
+  // contacts. Apollo shows only a first name until revealed (1 credit), so an unrevealed
+  // Apollo contact comes with a reveal option and no last name.
+  function briefPushCandidates(lead) {
+    const out = [];
+    (lead.buyers || []).filter(b => b.name).forEach(b => {
+      const n = splitName(b.name);
+      out.push({ label: `${b.name}${b.title ? ', ' + b.title : ''} (Steve's brief)`, first: n.first, last: n.last, title: b.title || '', email: b.email || '', phone: b.phone || '' });
+    });
+    const v = vettedOf(lead);
+    if (v) {
+      const fromWeb = v.result.data_source === 'web_research';
+      v.contacts.forEach((c, ci) => {
+        const r = c.revealed;
+        const n = splitName((r && r.full_name) || c.name);
+        out.push({
+          label: `${(r && r.full_name) || c.name}${c.title ? ', ' + c.title : ''} (${fromWeb ? 'web research' : r ? 'Apollo, revealed' : 'Apollo, not revealed'})`,
+          first: n.first, last: r || fromWeb ? n.last : '', title: c.title || '', email: (r && r.email) || '', phone: '',
+          reveal: r || fromWeb ? null : { kind: 'brief', lead, ci },
+        });
+      });
+    }
+    return out;
+  }
+
+  function singlePushCandidates() {
+    const info = lastCompanyInfo || {};
+    const fromWeb = info.data_source === 'web_research';
+    return (info.key_contacts || []).map((c, i) => {
+      const r = revealedByIndex[i];
+      const n = splitName((r && r.full_name) || c.name);
+      return {
+        label: `${(r && r.full_name) || c.name}${c.title ? ', ' + c.title : ''} (${fromWeb ? 'web research' : r ? 'Apollo, revealed' : 'Apollo, not revealed'})`,
+        first: n.first, last: r || fromWeb ? n.last : '', title: c.title || '', email: (r && r.email) || '', phone: '',
+        reveal: r || fromWeb ? null : { kind: 'single', index: i },
+      };
+    });
+  }
+
+  // The note saved on the Contact: the opportunity score and why, in plain text.
+  function briefPushNote(lead, pr) {
+    const v = vettedOf(lead);
+    const lines = [`${lead.organization}${lead.opportunity ? ': ' + lead.opportunity : ''}`,
+      `Client Hunter Brief: ${briefHeading()}. Priority ${pr.total.toFixed(1)} (${priorityText(pr)})`];
+    if (v) lines.push(`TNG Opportunity Score: ${v.total} (${plainTier(v.tier.label)})`);
+    lines.push('');
+    execRows({ lead, pr }).filter(([label]) => label !== 'Contact').forEach(([label, text]) => lines.push(`${label}: ${text}`));
+    if (v && v.incidents && v.incidents.available && v.incidents.incidents.length) {
+      lines.push('', 'Security incidents in the news (background, not an opener):', incidentsText(v.incidents.incidents, '- ').trimEnd());
+    }
+    if (v && v.events && v.events.available && v.events.events.length) {
+      lines.push('', 'Trigger events in the news:', eventsText(v.events.events, '- ').trimEnd());
+    }
+    const sources = (lead.sources || []).filter(s => isWebLink(s.url));
+    if (sources.length) lines.push('', 'Sources: ' + sources.map(s => s.url).join(' '));
+    return lines.join('\n');
+  }
+
+  function singlePushNote() {
+    const { info, checkedSignals, pagesVisited, total, tier } = buildScoreSummary();
+    const lines = [`TNG Opportunity Score: ${total} (${tier})`, ''];
+    const company = [info.industry, info.employee_count ? Number(info.employee_count).toLocaleString() + ' employees' : '',
+      info.estimated_revenue, info.headquarters].filter(Boolean).join(' · ');
+    if (company) lines.push(`Company: ${company}`);
+    if (checkedSignals.length) lines.push(`Signals: ${checkedSignals.map(s => `${s.label} (+${s.pts})`).join(' · ')}`);
+    if (pagesVisited.length) lines.push(`Pages visited on tngdefense.com: ${pagesVisited.join(', ')}`);
+    if (lastIncidents && lastIncidents.available && lastIncidents.incidents.length) {
+      lines.push('', 'Security incidents in the news (background, not an opener):', incidentsText(lastIncidents.incidents, '- ').trimEnd());
+    }
+    if (lastEvents && lastEvents.available && lastEvents.events.length) {
+      lines.push('', 'Trigger events in the news:', eventsText(lastEvents.events, '- ').trimEnd());
+    }
+    return lines.join('\n');
+  }
+
+  // One POST, no waiting and retrying on a busy answer (postJson does that for lookups;
+  // a create must never be sent twice by the page).
+  async function postOnce(url, body, timeoutMs) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), timeoutMs);
+    try {
+      const resp = await fetch(url, { method: 'POST', headers: API_HEADERS, body: JSON.stringify(body), signal: ctrl.signal });
+      return { ok: resp.ok, status: resp.status, data: await resp.json().catch(() => ({})) };
+    } catch (err) {
+      if (err.name === 'AbortError') return { ok: false, status: 0, data: { error: "No answer from the TNG backend in time. Don't push again yet: check Zoho for this person first." } };
+      return { ok: false, status: 0, data: { error: "Couldn't reach the TNG backend. Check your connection, then check Zoho before trying again." } };
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  let pushState = null; // the open push window, or null
+
+  function pushPayload() {
+    return { ...pushState.fields, note_title: pushState.noteTitle, note: pushState.note };
+  }
+  const pushKey = () => JSON.stringify(pushPayload());
+
+  function useCandidate(i) {
+    const c = pushState.candidates[i] || {};
+    pushState.chosen = i;
+    pushState.fields = {
+      owner_email: pushState.fields ? pushState.fields.owner_email : savedOwner(),
+      first_name: c.first || '', last_name: c.last || '', title: c.title || '', email: c.email || '', phone: c.phone || '',
+      company: pushState.company || '', website: pushState.website || '',
+    };
+  }
+
+  // ctx: { company, website, candidates, refreshCandidates(), startIndex, noteTitle, note, onDone(result) }
+  function openPush(ctx) {
+    pushState = { ...ctx, fields: null, chosen: 0, preview: null, previewFor: '', ack: false, busy: '', result: null, error: '' };
+    const ready = ctx.candidates.findIndex(c => c.first && c.last && (c.email || c.phone));
+    const start = ctx.startIndex != null && ctx.candidates[ctx.startIndex] ? ctx.startIndex : (ready >= 0 ? ready : 0);
+    useCandidate(start);
+    renderPush();
+    runPushPreview();
+  }
+
+  function closePush() {
+    if (!pushState || pushState.busy === 'pushing') return;
+    pushState = null;
+    const el = document.getElementById('tng-push-modal');
+    if (el) el.remove();
+  }
+
+  async function runPushPreview() {
+    if (!pushState || pushState.busy) return;
+    pushState.busy = 'checking';
+    pushState.error = '';
+    renderPush();
+    const key = pushKey();
+    const { ok, data } = await postOnce(ZOHO_PUSH_URL, { action: 'preview', ...pushPayload() }, 60000);
+    if (!pushState) return;
+    pushState.busy = '';
+    if (ok && data.configured === false) pushState.error = 'Push to Zoho isn\'t set up on the server yet.';
+    else if (ok) { pushState.preview = data; pushState.previewFor = key; pushState.ack = false; }
+    else pushState.error = data.error || 'The check failed.';
+    renderPush();
+  }
+
+  async function runPush() {
+    const s = pushState;
+    if (!s || s.busy || !pushReady()) return;
+    s.busy = 'pushing';
+    s.error = '';
+    renderPush();
+    const { ok, data } = await postOnce(ZOHO_PUSH_URL, { action: 'create', ...pushPayload(), confirm_warnings: s.ack }, 45000);
+    if (pushState !== s) return;
+    s.busy = '';
+    if (ok && data.created) {
+      s.result = data;
+      saveOwner(s.fields.owner_email);
+      s.onDone(data);
+    } else {
+      s.error = data.error || 'The push failed.';
+      s.preview = null; // a fresh check is needed before trying again
+      s.previewFor = '';
+    }
+    renderPush();
+  }
+
+  async function revealForPush() {
+    const s = pushState;
+    const c = s && s.candidates[s.chosen];
+    if (!c || !c.reveal || s.busy) return;
+    if (!window.confirm('This will use 1 Apollo credit to reveal this contact\'s full name and email address.\n\nContinue?')) return;
+    s.busy = 'revealing';
+    s.error = '';
+    renderPush();
+    try {
+      if (c.reveal.kind === 'brief') {
+        const { lead, ci } = c.reveal;
+        const ac = lead.vetted.contacts[ci];
+        const payload = ac.apollo_id ? { apollo_id: ac.apollo_id } : { first_name: (ac.name || '').split(' ')[0], domain: lead.domain, title: ac.title };
+        const data = await postJson(REVEAL_URL, payload, 60000);
+        if (data.revealed) ac.revealed = { full_name: data.full_name || '', email: data.email || '' };
+        else s.error = data.message || 'Apollo couldn\'t confidently match this contact.';
+        renderBriefResults();
+      } else {
+        const i = c.reveal.index;
+        const contact = lastCompanyInfo.key_contacts[i];
+        const payload = contact.apollo_id ? { apollo_id: contact.apollo_id } : { first_name: (contact.name || '').split(' ')[0], domain: lastCompanyInfo.domain, title: contact.title };
+        const data = await postJson(REVEAL_URL, payload, 60000);
+        if (data.revealed) {
+          revealedByIndex[i] = { full_name: data.full_name || '', email: data.email || '' };
+          if (i === currentContactIndex) renderContactCard(document.getElementById('tng-email').value.trim());
+        } else {
+          s.error = data.message || 'Apollo couldn\'t confidently match this contact.';
+        }
+      }
+    } catch (err) {
+      s.error = 'Reveal failed: ' + err.message;
+    }
+    if (pushState !== s) return;
+    s.busy = '';
+    s.candidates = s.refreshCandidates();
+    useCandidate(s.chosen);
+    renderPush();
+    runPushPreview();
+  }
+
+  // Push is allowed only right after a clean check of exactly these details.
+  function pushReady() {
+    const s = pushState;
+    const p = s && s.preview;
+    return !!(p && s.previewFor === pushKey() && p.enabled && !p.errors.length && (!p.warnings.length || s.ack));
+  }
+
+  function pushStatusHtml() {
+    const s = pushState;
+    if (s.busy === 'checking') return '<span class="tng-radar"></span>Checking Zoho for this person and the company...';
+    if (s.busy === 'revealing') return '<span class="tng-radar"></span>Revealing the contact in Apollo...';
+    if (s.busy === 'pushing') return '<span class="tng-radar"></span>Creating the Contact in Zoho...';
+    const parts = [];
+    if (s.error) parts.push(`<div class="bad">${escapeHtml(s.error)}</div>`);
+    const p = s.preview;
+    if (p && s.previewFor === pushKey()) {
+      const links = list => list.map(f => `<a href="${escapeHtml(f.url)}" target="_blank" rel="noopener">${escapeHtml(f.name || 'record')}</a>`).join(', ');
+      if (p.errors.length) parts.push(`<div class="bad">Can't push yet:</div><ul class="bad">${p.errors.map(e => `<li>${escapeHtml(e)}</li>`).join('')}</ul>`);
+      if (p.existing.length) parts.push(`<div>Already in Zoho: ${links(p.existing)}</div>`);
+      if (p.already_pushed && p.already_pushed.url) parts.push(`<div>Pushed before: <a href="${escapeHtml(p.already_pushed.url)}" target="_blank" rel="noopener">view in Zoho</a></div>`);
+      if (p.warnings.length) {
+        parts.push(`<ul class="warn">${p.warnings.map(w => `<li>${escapeHtml(w)}</li>`).join('')}</ul>`);
+        if (!p.errors.length) parts.push(`<label><input type="checkbox" data-push="ack" ${s.ack ? 'checked' : ''}> I've read the warning above and still want to push this person.</label>`);
+      }
+      if (!p.errors.length) {
+        parts.push(`<div class="good">${p.enabled ? 'Ready: creates' : 'When pushing is switched on, this would create'} 1 Contact (Contact Type: Prospect) owned by ${escapeHtml(p.owner || '')}, ${p.account
+          ? `linked to the Account <a href="${escapeHtml(p.account.url)}" target="_blank" rel="noopener">${escapeHtml(p.account.name)}</a>` : 'not linked to an Account (the company isn\'t in Zoho yet)'}, plus the note.</div>`);
+      }
+      parts.push(`<div>${p.caps.today} of ${p.caps.limit} team pushes used today · you: ${p.caps.yours} of ${p.caps.your_limit}</div>`);
+    }
+    return parts.join('');
+  }
+
+  function renderPush() {
+    const s = pushState;
+    let el = document.getElementById('tng-push-modal');
+    if (!s) { if (el) el.remove(); return; }
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'tng-push-modal';
+      el.className = 'tng-modal-backdrop';
+      el.setAttribute('role', 'dialog');
+      el.setAttribute('aria-modal', 'true');
+      el.setAttribute('aria-labelledby', 'tng-push-title');
+      document.querySelector('.tng-lead-scorer').appendChild(el);
+      el.addEventListener('click', onPushClick);
+      el.addEventListener('input', onPushInput);
+      el.addEventListener('change', onPushChange);
+    }
+    const busy = !!s.busy;
+    const off = s.preview && !s.preview.enabled
+      ? '<div class="tng-modal-off">Pushing is switched off while it\'s being tested. You can check a contact here, but nothing is sent to Zoho.</div>' : '';
+    if (s.result) {
+      el.innerHTML = `<div class="tng-modal">
+        <div class="tng-modal-head"><h2 id="tng-push-title">Pushed to Zoho</h2><button class="tng-modal-x" data-push="close" aria-label="Close">×</button></div>
+        <div class="tng-push-status"><div class="good">Created ${escapeHtml(s.fields.first_name + ' ' + s.fields.last_name)} as a Prospect Contact${s.result.owner ? ', owned by ' + escapeHtml(s.result.owner) : ''}.</div>
+          ${s.result.note_added ? '<div>The opportunity-score note was added.</div>' : '<div class="warn">The note wasn\'t added. Paste it into the Contact by hand if you need it.</div>'}
+          ${s.result.warning ? `<div class="warn">${escapeHtml(s.result.warning)}</div>` : ''}
+          <div><a href="${escapeHtml(s.result.url)}" target="_blank" rel="noopener">Open the Contact in Zoho →</a></div></div>
+        <div class="tng-push-foot"><button class="tng-export-btn" data-push="close">Done</button></div>
+      </div>`;
+      return;
+    }
+    const cand = s.candidates[s.chosen];
+    const picker = s.candidates.length ? `<label class="tng-push-label" for="tng-push-pick">Who to push</label>
+      <div class="tng-push-pick-row"><select class="tng-push-select" id="tng-push-pick" data-push="pick" ${busy ? 'disabled' : ''}>
+        ${s.candidates.map((c, i) => `<option value="${i}" ${i === s.chosen ? 'selected' : ''}>${escapeHtml(c.label)}</option>`).join('')}
+      </select>${cand && cand.reveal ? `<button class="tng-reveal-btn" data-push="reveal" ${busy ? 'disabled' : ''}>Reveal full name &amp; email (1 Apollo credit)</button>` : ''}</div>` : '';
+    const input = (name, label) => `<div><label class="tng-push-label" for="tng-push-${name}">${label}</label>
+      <input class="tng-push-input" id="tng-push-${name}" data-field="${name}" value="${escapeHtml(s.fields[name])}" ${busy ? 'disabled' : ''} autocomplete="off" spellcheck="false"></div>`;
+    el.innerHTML = `<div class="tng-modal">
+      <div class="tng-modal-head"><h2 id="tng-push-title">Push to Zoho</h2><button class="tng-modal-x" data-push="close" aria-label="Close">×</button></div>
+      <p class="tng-modal-sub">Creates one Contact in Zoho CRM with Contact Type "Prospect" and adds the opportunity-score note. It never creates companies and never changes existing records. Check the details, then push.</p>
+      ${off}
+      ${input('owner_email', 'Your work email (the Contact is assigned to you)')}
+      ${picker}
+      <div class="tng-push-grid">${PUSH_FIELDS.map(([name, label]) => input(name, label)).join('')}</div>
+      <details class="tng-push-more"><summary>Note that will be added</summary>
+        <div class="tng-push-note-title">${escapeHtml(s.noteTitle)}</div>
+        <textarea class="tng-push-note" data-field="note" ${busy ? 'disabled' : ''}>${escapeHtml(s.note)}</textarea>
+      </details>
+      <div class="tng-push-status" id="tng-push-status" aria-live="polite">${pushStatusHtml()}</div>
+      <div class="tng-push-foot">
+        <span class="stale" id="tng-push-stale" ${s.preview && s.previewFor !== pushKey() && !busy ? '' : 'hidden'}>Details changed: check again before pushing.</span>
+        <button class="tng-export-btn" data-push="check" ${busy ? 'disabled' : ''}>Check again</button>
+        <button class="tng-export-btn" data-push="close" ${s.busy === 'pushing' ? 'disabled' : ''}>Cancel</button>
+        <button class="tng-export-btn primary" data-push="push" id="tng-push-go" ${pushReady() && !busy ? '' : 'disabled'}>${tngIcon('userPlus')}${s.busy === 'pushing' ? 'Pushing...' : 'Push to Zoho'}</button>
+      </div>
+    </div>`;
+  }
+
+  // Typing doesn't redraw the window (focus stays put); it only marks the check as stale.
+  function refreshPushControls() {
+    const stale = document.getElementById('tng-push-stale');
+    if (stale) stale.hidden = !(pushState.preview && pushState.previewFor !== pushKey() && !pushState.busy);
+    const go = document.getElementById('tng-push-go');
+    if (go) go.disabled = !(pushReady() && !pushState.busy);
+  }
+
+  function onPushInput(e) {
+    const name = e.target.dataset.field;
+    if (!pushState || !name) return;
+    if (name === 'note') pushState.note = e.target.value;
+    else pushState.fields[name] = e.target.value;
+    refreshPushControls();
+  }
+
+  function onPushChange(e) {
+    if (!pushState) return;
+    if (e.target.dataset.push === 'pick') {
+      useCandidate(Number(e.target.value));
+      renderPush();
+      runPushPreview();
+    } else if (e.target.dataset.push === 'ack') {
+      pushState.ack = e.target.checked;
+      refreshPushControls();
+    }
+  }
+
+  function onPushClick(e) {
+    if (e.target === e.currentTarget) { closePush(); return; } // a click on the dimmed background
+    const btn = e.target.closest('[data-push]');
+    if (!btn || btn.disabled) return;
+    switch (btn.dataset.push) {
+      case 'close': closePush(); break;
+      case 'check': runPushPreview(); break;
+      case 'push': runPush(); break;
+      case 'reveal': revealForPush(); break;
+    }
+  }
+
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && pushState) closePush(); });
+
+  function openBriefPush(lead) {
+    const v = vettedOf(lead);
+    if (!v) return;
+    const pr = priorityFor(lead);
+    openPush({
+      company: v.result.company_name || lead.organization,
+      website: lead.domain,
+      candidates: briefPushCandidates(lead),
+      refreshCandidates: () => briefPushCandidates(lead),
+      noteTitle: `TNG Opportunity Score: ${v.total} (${plainTier(v.tier.label)}) · Hunter Brief ${brief.date || brief.title}`,
+      note: briefPushNote(lead, pr),
+      onDone: result => { lead.zohoPushed = { url: result.url }; renderBriefResults(); },
+    });
+  }
+
+  window.tngPushToZoho = function() {
+    if (!lastCompanyInfo) return;
+    const { total, tier } = buildScoreSummary();
+    openPush({
+      company: lastCompanyInfo.company_name,
+      website: lastCompanyInfo.domain,
+      candidates: singlePushCandidates(),
+      refreshCandidates: singlePushCandidates,
+      startIndex: currentContactIndex,
+      noteTitle: `TNG Opportunity Score: ${total} (${tier})`,
+      note: singlePushNote(),
+      onDone: result => {
+        document.getElementById('tng-zoho-result').innerHTML =
+          `✓ Pushed to Zoho as a Prospect. <a href="${escapeHtml(result.url)}" target="_blank" rel="noopener">View the Contact →</a>`;
+      },
+    });
+  };
+
+  // The card's push button, or the link once this lead's contact has been pushed.
+  function zohoActionHtml(lead, v, report) {
+    if (report || !v) return '';
+    if (lead.zohoPushed) {
+      return `<div class="tng-zoho-row"><span class="tng-chip good">✓ Pushed to Zoho</span><a href="${escapeHtml(lead.zohoPushed.url)}" target="_blank" rel="noopener">View the Contact →</a></div>`;
+    }
+    return `<div class="tng-zoho-row"><button class="tng-zoho-btn" data-brief-action="zoho" data-key="${lead.key}">${tngIcon('userPlus')}Push to Zoho</button></div>`;
+  }
+
   function resetBrief() {
     if (briefRunning) return;
     brief = null;
@@ -3583,6 +4026,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
       case 'report': downloadBriefReport(btn); break;
       case 'pdf': printBriefReport(); break;
       case 'reveal': revealBriefContact(lead, Number(btn.dataset.contact), btn); break;
+      case 'zoho': openBriefPush(lead); break;
       case 'retry':
         if (lead.pending) break;
         lead.pending = true;
