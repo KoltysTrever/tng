@@ -108,8 +108,8 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   .tng-version-line { font-size: 13px; color: var(--tng-text-tertiary); }
   .tng-header-tools { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 18px; }
   .tng-header-tools .tng-zoho-help-btn { margin-top: 0; }
-  .tng-header-link { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--tng-text-secondary); text-decoration: none; }
-  .tng-header-link:hover { color: var(--tng-white); }
+  .tng-lead-scorer .tng-header-link { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--tng-text-secondary); text-decoration: none; }
+  .tng-lead-scorer .tng-header-link:hover { color: var(--tng-white); text-decoration: none; }
   .tng-header-link .tng-ico { width: 14px; height: 14px; }
   .tng-header-note {
     font-size: 13px;
@@ -301,7 +301,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     font-weight: 600;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: var(--tng-intel-text);
+    color: var(--tng-text-tertiary);
   }
   .tng-contact-cycle-btn {
     background: var(--tng-surface-2);
@@ -356,9 +356,9 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     align-items: center;
     flex-wrap: wrap;
     gap: 8px 12px;
-    font-size: 14px;
+    font-size: 12px;
     font-weight: 600;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.08em;
     text-transform: uppercase;
     color: var(--tng-text-secondary);
     margin: 0 4px 10px;
@@ -368,16 +368,16 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
     letter-spacing: 0;
     text-transform: none;
-    padding: 4px 12px;
+    padding: 3px 10px;
     border-radius: 999px;
     white-space: nowrap;
   }
-  .tng-source-tag b { font-weight: 700; letter-spacing: 0.02em; }
-  .tng-source-tag.auto { color: #8DBDF7; background: rgba(21,101,192,0.18); box-shadow: inset 0 0 0 1px rgba(91,158,240,0.35); }
+  .tng-source-tag b { font-weight: 600; letter-spacing: 0.02em; }
+  .tng-source-tag.auto { color: var(--tng-text-tertiary); background: transparent; box-shadow: inset 0 0 0 1px var(--tng-hairline-strong); }
   .tng-source-tag.manual { color: #FFC977; background: rgba(230,81,0,0.16); box-shadow: inset 0 0 0 1px rgba(255,167,38,0.4); }
 
   .tng-auto-populated-section { background: none; border: none; padding: 0; }
@@ -692,6 +692,19 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     .tng-adjust-body { padding: 4px 18px 20px; }
   }
 
+  /* ---------- Loading placeholders (shown while the lookup runs) ---------- */
+  .tng-skeletons, .tng-score-loading { display: none; }
+  #tng-mode-single.is-loading .tng-skeletons { display: block; }
+  #tng-mode-single.is-loading .tng-score-loading { display: block; }
+  #tng-mode-single.is-loading .tng-score-row, #tng-mode-single.is-loading .tng-breakdown,
+  #tng-mode-single.is-loading .tng-score-help, #tng-mode-single.is-loading .tng-export-row { display: none; }
+  .tng-skel-card { padding: 28px; margin-bottom: 16px; background: var(--tng-surface); border: 1px solid var(--tng-hairline); border-radius: 18px; }
+  .tng-skel { height: 14px; margin-top: 10px; border-radius: 6px; background: linear-gradient(90deg, var(--tng-surface-2) 0%, var(--tng-surface-3) 50%, var(--tng-surface-2) 100%); background-size: 200% 100%; animation: tng-shimmer 1.4s ease-in-out infinite; }
+  .tng-skel:first-child { margin-top: 0; }
+  .tng-skel-row { display: flex; gap: 12px; margin-top: 18px; }
+  .tng-skel-row .tng-skel { margin-top: 0; border-radius: var(--tng-radius-sm); max-width: 100%; }
+  @keyframes tng-shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+
   /* ---------- Moments worth noticing: toasts and the heat wave ---------- */
   .tng-toast-wrap { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 120; display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; width: max-content; max-width: calc(100vw - 32px); }
   .tng-toast { padding: 12px 22px; border-radius: 999px; background: rgba(28,28,30,0.97); border: 1px solid var(--tng-hairline-strong); color: var(--tng-white); font-size: 15px; font-weight: 600; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,0.5); animation: tng-toast-in 0.4s cubic-bezier(0.2, 0.9, 0.3, 1.25), tng-toast-out 0.4s ease-in 2.9s forwards; }
@@ -991,7 +1004,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   .tng-brief-facts dd.caveat { color: #FFC977; }
   .tng-brief-facts .muted { color: var(--tng-text-tertiary); }
   .tng-brief-people { margin-top: 16px; padding: 14px 16px; background: var(--tng-surface-2); border-radius: var(--tng-radius-sm); font-size: 14px; line-height: 1.6; }
-  .tng-brief-people-label { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--tng-intel-text); margin-bottom: 4px; }
+  .tng-brief-people-label { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--tng-text-tertiary); margin-bottom: 4px; }
   .tng-brief-people-label + .tng-brief-person { margin-top: 0; }
   .tng-brief-person { margin-top: 6px; color: var(--tng-text-secondary); }
   .tng-brief-person + .tng-brief-people-label { margin-top: 12px; }
@@ -1058,7 +1071,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   <div class="tng-header">
     <div class="tng-header-title-block">
       <h1>TNG Opportunity Score</h1>
-      <div class="tng-version-line">TNG OP TOOL V.4.1 · Created by Trever Koltys</div>
+      <div class="tng-version-line">TNG OP TOOL V.4.2 · Created by Trever Koltys</div>
     </div>
     <div class="tng-header-tools">
       <a class="tng-header-link" href="https://app.apollo.io/" target="_blank" rel="noopener" title="This tool works alongside Apollo">Open Apollo${tngIcon('external')}</a>
@@ -1085,6 +1098,22 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   </div>
   <div class="tng-status" id="tng-status"><span class="tng-radar"></span><span id="tng-status-text">Querying Apollo...</span></div>
   <div class="tng-error" id="tng-error"></div>
+
+  <div class="tng-skeletons" aria-hidden="true">
+    <div class="tng-skel-card">
+      <div class="tng-skel" style="width:45%;height:26px;"></div>
+      <div class="tng-skel" style="width:70%;"></div>
+      <div class="tng-skel" style="width:92%;margin-top:18px;"></div>
+      <div class="tng-skel" style="width:80%;"></div>
+      <div class="tng-skel" style="width:30%;height:22px;border-radius:999px;margin-top:18px;"></div>
+    </div>
+    <div class="tng-skel-card">
+      <div class="tng-skel" style="width:35%;height:12px;"></div>
+      <div class="tng-skel" style="width:25%;height:24px;margin-top:12px;"></div>
+      <div class="tng-skel" style="width:40%;"></div>
+      <div class="tng-skel-row"><div class="tng-skel" style="width:260px;height:40px;"></div><div class="tng-skel" style="width:150px;height:40px;"></div></div>
+    </div>
+  </div>
 
   <div class="tng-empty" id="tng-empty">
     <div class="tng-empty-title">Size up a company in about 30 seconds</div>
@@ -1191,6 +1220,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     <div class="tng-result">
       <div class="tng-total-label">Opportunity Score</div>
       <div class="tng-score-empty">Your score appears here after you analyze a company.</div>
+      <div class="tng-score-loading" aria-hidden="true"><div class="tng-skel" style="width:90px;height:44px;"></div><div class="tng-skel" style="width:100%;margin-top:18px;"></div><div class="tng-skel" style="width:85%;"></div><div class="tng-skel" style="width:90%;"></div></div>
       <div class="tng-score-row">
         <div class="tng-total-score" id="tng-total">0</div>
         <div class="tng-tier ice_cold" id="tng-tier">ICE COLD</div>
@@ -1685,6 +1715,8 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   };
 
   function setStatus(text) {
+    // While the lookup runs, placeholders hold the shape of the result.
+    document.getElementById('tng-mode-single').classList.toggle('is-loading', !!text);
     const el = document.getElementById('tng-status');
     const txt = document.getElementById('tng-status-text');
     if (text) {
@@ -2507,11 +2539,10 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     return { info, checkedSignals, pagesVisited, total, tier, timestamp };
   }
 
-  function showExportConfirm(message, elId) {
-    const el = document.getElementById(elId || 'tng-export-confirm');
-    el.textContent = message;
-    el.classList.add('active');
-    setTimeout(() => el.classList.remove('active'), 2500);
+  // Copy, download and print confirmations, as a toast (a failure without the check mark).
+  function showExportConfirm(message) {
+    const plain = /^Couldn|failed|^Choose/i.test(message); // failures and instructions get no check mark
+    tngToast((plain ? '' : '✓ ') + message, plain ? '' : 'good');
   }
 
   window.tngCopySummary = async function() {
