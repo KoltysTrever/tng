@@ -1085,7 +1085,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   <div class="tng-header">
     <div class="tng-header-title-block">
       <h1>TNG Opportunity Score</h1>
-      <div class="tng-version-line">TNG OP TOOL V.4.6 · Created by Trever Koltys</div>
+      <div class="tng-version-line">TNG OP TOOL V.4.7 · Created by Trever Koltys</div>
     </div>
     <div class="tng-header-tools">
       <a class="tng-header-link" href="https://app.apollo.io/" target="_blank" rel="noopener" title="This tool works alongside Apollo">Open Apollo${tngIcon('external')}</a>
@@ -1257,7 +1257,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
 
   <div id="tng-mode-brief" hidden>
     <ol class="tng-brief-steps" id="tng-brief-steps">
-      <li data-step="1"><span class="num">1</span><span><b>Choose the brief</b>Steve's Client Hunter Brief (.html). Reading it takes about a minute.</span></li>
+      <li data-step="1"><span class="num">1</span><span><b>Choose the brief</b>Steve's Client Hunter Brief, the .html file or a Word copy. Reading it takes about a minute.</span></li>
       <li data-step="2"><span class="num">2</span><span><b>Check the websites</b>Confirm each lead's website and untick any you want to skip.</span></li>
       <li data-step="3"><span class="num">3</span><span><b>Vet and work the list</b>Leads come back ranked best first, with who to contact.</span></li>
     </ol>
@@ -1267,9 +1267,9 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     <div class="tng-error" id="tng-brief-error"></div>
 
     <label class="tng-brief-drop" id="tng-brief-drop">
-      <input type="file" id="tng-brief-file" accept=".html,.htm,text/html" />
+      <input type="file" id="tng-brief-file" accept=".html,.htm,text/html,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" />
       <span class="tng-brief-drop-title">Choose a Hunter Brief</span>
-      <span class="tng-brief-drop-sub">or drag the brief's .html file here</span>
+      <span class="tng-brief-drop-sub">or drag the brief here: the .html file or a Word (.docx) copy</span>
     </label>
 
     <div id="tng-brief-review"></div>
@@ -2957,14 +2957,39 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     return { text, drafts };
   }
 
+  // A Word copy of the brief is turned into HTML in the browser by mammoth (pinned, checked
+  // by hash, loaded only when a .docx is chosen); links and tables come through.
+  const MAMMOTH_LIB = {
+    src: 'https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js',
+    integrity: 'sha384-/cXAMbzovUIKbBERjPmR3SnPTh8siWr5lsvFYj1Uq4XP0yaJUZJmsh0YXyGv5P0y',
+  };
+  async function wordToHtml(file) {
+    const mammoth = await loadLib(MAMMOTH_LIB, 'mammoth');
+    const result = await mammoth.convertToHtml({ arrayBuffer: await file.arrayBuffer() });
+    return result.value;
+  }
+
   async function loadBriefFile(file) {
     if (!file || briefRunning) return;
     setBriefError('');
-    if (!/\.html?$/i.test(file.name)) {
-      setBriefError(`"${file.name}" isn't an HTML file. Choose the brief's .html file.`);
+    const isWord = /\.docx$/i.test(file.name);
+    if (/\.doc$/i.test(file.name)) {
+      setBriefError(`"${file.name}" is an old Word format. Open it in Word, choose Save As, pick Word Document (.docx), and choose that file.`);
       return;
     }
-    const { text, drafts } = briefToText(await file.text());
+    if (!isWord && !/\.html?$/i.test(file.name)) {
+      setBriefError(`"${file.name}" isn't a brief file. Choose the brief's .html file or a Word (.docx) copy.`);
+      return;
+    }
+    let html;
+    try {
+      html = isWord ? await wordToHtml(file) : await file.text();
+    } catch (err) {
+      console.error(err);
+      setBriefError(`Couldn't open "${file.name}": ${err.message}. If it's open in Word, save and close it, then try again.`);
+      return;
+    }
+    const { text, drafts } = briefToText(html);
     if (text.length < 200) {
       setBriefError("That file doesn't look like a Hunter Brief (there's almost no text in it).");
       return;
@@ -2999,7 +3024,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
       clearInterval(tick);
       rememberParseSeconds((Date.now() - started) / 1000);
       renderParseWork({ ...work, stage: 'done', leadCount: leads.length });
-      brief = { title: data.brief_title || file.name.replace(/\.html?$/i, ''), date: data.brief_date || '', leads };
+      brief = { title: data.brief_title || file.name.replace(/\.(html?|docx)$/i, ''), date: data.brief_date || '', leads };
       renderBriefReview();
       ok = true;
     } catch (err) {
@@ -3821,22 +3846,24 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     src: 'https://cdn.jsdelivr.net/npm/docx@9.8.0/dist/index.iife.js',
     integrity: 'sha384-lCKTCWZeluOZCSCIWVBq+0SitTe1BSFfuOT35fIwxeY1mb4SI1pdD4FtzMngrpe2',
   };
-  let docxLoading = null;
-  function loadDocx() {
-    if (window.docx) return Promise.resolve(window.docx);
-    if (!docxLoading) {
-      docxLoading = new Promise((resolve, reject) => {
+  // Loads a pinned library once; a failed load can be tried again.
+  const libLoading = {};
+  function loadLib(lib, globalName) {
+    if (window[globalName]) return Promise.resolve(window[globalName]);
+    if (!libLoading[globalName]) {
+      libLoading[globalName] = new Promise((resolve, reject) => {
         const s = document.createElement('script');
-        s.src = DOCX_LIB.src;
-        s.integrity = DOCX_LIB.integrity;
+        s.src = lib.src;
+        s.integrity = lib.integrity;
         s.crossOrigin = 'anonymous';
-        s.onload = () => window.docx ? resolve(window.docx) : reject(new Error('the Word library loaded empty'));
-        s.onerror = () => { docxLoading = null; s.remove(); reject(new Error("couldn't load the Word library. Check your internet connection")); };
+        s.onload = () => window[globalName] ? resolve(window[globalName]) : reject(new Error('the Word library loaded empty'));
+        s.onerror = () => { delete libLoading[globalName]; s.remove(); reject(new Error("couldn't load the Word library. Check your internet connection")); };
         document.head.appendChild(s);
       });
     }
-    return docxLoading;
+    return libLoading[globalName];
   }
+  const loadDocx = () => loadLib(DOCX_LIB, 'docx');
 
   // The white TNG logo as a PNG for the black title band (Word can't use the page's inline SVG).
   function logoPng() {

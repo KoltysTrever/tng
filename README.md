@@ -162,7 +162,9 @@ files.
 ## Hunter Brief (batch vetting)
 
 The page's **Hunter Brief** tab takes one of Steve's daily Client Hunter Brief
-`.html` files. The page turns the brief into plain text (links kept, outreach
+`.html` files, or a Word (`.docx`) copy (V.4.7: converted to HTML in the browser by `mammoth`
+1.8.0 from jsDelivr, loaded on demand with a pinned SRI hash; old `.doc` files are refused
+with a Save As tip). Outreach drafts are only set aside from the `.html` version. The page turns the brief into plain text (links kept, outreach
 drafts set aside) and posts `{ "text": "..." }` to `/api/parse-brief`. Claude
 (Sonnet 5.5, low effort, structured JSON output) returns each ranked and watchlist
 lead with only the fields needed to work it, plus the buying organization's
