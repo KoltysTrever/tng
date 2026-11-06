@@ -505,6 +505,8 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     .tng-lead-scorer { max-width: 1140px; }
     .tng-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 40px; align-items: start; }
     .tng-rail { position: sticky; top: 24px; margin-top: 0; }
+    /* Saved & Watchlist lines up with the score column below it. */
+    .tng-saved-tab { width: 300px; justify-content: center; }
   }
 
   /* ---------- Score card ---------- */
@@ -1183,7 +1185,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   <div class="tng-header">
     <div class="tng-header-title-block">
       <h1>TNG Opportunity Score</h1>
-      <div class="tng-version-line">TNG OP TOOL V.4.15 · Created by Trever Koltys</div>
+      <div class="tng-version-line">TNG OP TOOL V.4.16 · Created by Trever Koltys</div>
     </div>
     <div class="tng-header-tools">
       <a class="tng-header-link" href="https://app.apollo.io/" target="_blank" rel="noopener" title="This tool works alongside Apollo">Open Apollo${tngIcon('external')}</a>
