@@ -932,9 +932,11 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   .tng-watch-head .tng-eyes { width: 64px; height: 32px; }
   .tng-watch-head h2 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.01em; color: var(--tng-white); }
   .tng-watch-head p { margin: 4px 0 0; font-size: 14px; line-height: 1.5; color: var(--tng-text-secondary); }
-  .tng-watch-row { display: flex; align-items: flex-start; gap: 14px; padding: 16px 18px; margin-bottom: 10px; background: var(--tng-surface); border: 1px solid var(--tng-hairline); border-radius: var(--tng-radius-lg); }
-  .tng-watch-row.fresh { border-color: rgba(126,226,168,0.55); box-shadow: 0 0 0 1px rgba(126,226,168,0.15), 0 10px 30px rgba(46,125,50,0.15); }
-  .tng-watch-face { flex: none; width: 44px; height: 44px; display: grid; place-items: center; background: var(--tng-surface-2); border-radius: 50%; }
+  /* Watched companies get a green outline so they stand apart from the panels around them;
+     one with something new glows brighter. */
+  .tng-watch-row { display: flex; align-items: flex-start; gap: 14px; padding: 16px 18px; margin-bottom: 10px; background: var(--tng-surface); border: 1.5px solid rgba(126,226,168,0.65); border-radius: var(--tng-radius-lg); box-shadow: 0 6px 22px rgba(46,125,50,0.14); }
+  .tng-watch-row.fresh { border-color: rgba(126,226,168,0.9); box-shadow: 0 0 0 1px rgba(126,226,168,0.25), 0 10px 30px rgba(46,125,50,0.22); }
+  .tng-watch-face { flex: none; width: 44px; height: 44px; display: grid; place-items: center; background: rgba(126,226,168,0.10); border-radius: 50%; }
   .tng-watch-row.fresh .tng-watch-face { background: rgba(126,226,168,0.14); }
   .tng-watch-face .tng-ico { width: 20px; height: 20px; color: var(--tng-text-secondary); }
   .tng-thumb { font-size: 24px; line-height: 1; display: inline-block; animation: tng-thumb-pop 0.6s cubic-bezier(0.2, 0.8, 0.3, 1.2) both, tng-thumb-wiggle 3.5s 0.8s ease-in-out infinite; }
@@ -1173,7 +1175,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   <div class="tng-header">
     <div class="tng-header-title-block">
       <h1>TNG Opportunity Score</h1>
-      <div class="tng-version-line">TNG OP TOOL V.4.11 · Created by Trever Koltys</div>
+      <div class="tng-version-line">TNG OP TOOL V.4.12 · Created by Trever Koltys</div>
     </div>
     <div class="tng-header-tools">
       <a class="tng-header-link" href="https://app.apollo.io/" target="_blank" rel="noopener" title="This tool works alongside Apollo">Open Apollo${tngIcon('external')}</a>
