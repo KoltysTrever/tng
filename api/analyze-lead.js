@@ -66,6 +66,7 @@ export default async function handler(req, res) {
         ]);
         if (people) addReachability(result, people);
         result.site_visits = visits;
+        result.apollo_org_id = saved.org_id || null; // the Watchlist re-checks site visits with it
         result.cached_at = saved.saved_at;
         return res.status(200).json(result);
       }
@@ -159,6 +160,7 @@ export default async function handler(req, res) {
       const { site_visits, ...toSave } = result;
       await cacheSet(cacheKey, { result: toSave, org_id: org ? org.id : null, saved_at: new Date().toISOString() }, CACHE_TTL_SECONDS);
     }
+    result.apollo_org_id = org ? org.id : null; // the Watchlist re-checks site visits with it
     result.cached_at = null;
 
     return res.status(200).json(result);

@@ -22,7 +22,12 @@ const TNG_ICON_PATHS = {
   userPlus: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>',
   info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
   archive: '<rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8M10 12h4"/>',
+  bookmark: '<path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>',
 };
+// Two cartoon eyes that look left and right and blink: the Watchlist keeping an eye out.
+const TNG_EYES = '<svg class="tng-eyes" viewBox="0 0 44 22" aria-hidden="true">'
+  + '<g class="tng-eye"><ellipse cx="11" cy="11" rx="9" ry="9" fill="#FFFFFF"/><circle class="tng-pupil" cx="11" cy="12" r="3.8" fill="#0D0D0D"/></g>'
+  + '<g class="tng-eye"><ellipse cx="33" cy="11" rx="9" ry="9" fill="#FFFFFF"/><circle class="tng-pupil" cx="33" cy="12" r="3.8" fill="#0D0D0D"/></g></svg>';
 // The Zoho mark (a square drawn in Zoho's four colors), inline so it shows where outside images are blocked.
 const ZOHO_MARK = '<svg class="tng-zoho-mark" viewBox="0 0 24 24" fill="none" stroke-width="3.2" stroke-linecap="round" aria-hidden="true">'
   + '<path d="M4 15V7a3 3 0 0 1 3-3h4" stroke="#E42527"/><path d="M11 4h6a3 3 0 0 1 3 3v2" stroke="#089949"/>'
@@ -883,6 +888,54 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     transition: border-color 0.2s, background 0.2s;
   }
   .tng-brief-drop[hidden] { display: none; }
+  /* ---------- Saved companies and the Watchlist ---------- */
+  .tng-eyes { width: 30px; height: 15px; flex: none; overflow: visible; }
+  .tng-eyes .tng-pupil { animation: tng-peek 4.2s ease-in-out infinite; }
+  .tng-eyes .tng-eye { transform-box: fill-box; transform-origin: center; animation: tng-blink 5.5s infinite; }
+  @keyframes tng-peek { 0%, 18% { transform: translate(0, 0); } 28%, 44% { transform: translate(-4px, 0); } 54%, 70% { transform: translate(4px, -1px); } 80%, 100% { transform: translate(0, 0); } }
+  @keyframes tng-blink { 0%, 90%, 100% { transform: scaleY(1); } 94% { transform: scaleY(0.08); } }
+  @keyframes tng-thumb-pop { 0% { transform: scale(0) rotate(-30deg); } 60% { transform: scale(1.25) rotate(8deg); } 80% { transform: scale(0.95) rotate(-4deg); } 100% { transform: scale(1) rotate(0); } }
+  @keyframes tng-thumb-wiggle { 0%, 86%, 100% { transform: rotate(0); } 90% { transform: rotate(-14deg); } 95% { transform: rotate(10deg); } }
+  @media (prefers-reduced-motion: reduce) { .tng-eyes .tng-pupil, .tng-eyes .tng-eye, .tng-thumb { animation: none !important; } }
+
+  .tng-save-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .tng-save-row:empty { display: none; }
+  .tng-save-btn { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; font: inherit; font-size: 14px; font-weight: 600; color: var(--tng-text); background: var(--tng-surface-2); border: 1px solid var(--tng-hairline-strong); border-radius: 999px; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+  .tng-save-btn:hover:not(:disabled) { border-color: rgba(255,255,255,0.35); color: var(--tng-white); }
+  .tng-save-btn:disabled { opacity: 0.5; cursor: wait; }
+  .tng-save-btn.on { background: rgba(21,101,192,0.16); border-color: rgba(91,158,240,0.55); color: var(--tng-white); }
+  .tng-save-btn .tng-eyes { width: 24px; height: 12px; }
+  .tng-save-note { font-size: 13px; color: var(--tng-text-tertiary); }
+
+  .tng-tab-badge { margin-left: 4px; padding: 1px 7px; font-size: 12px; font-weight: 700; color: #0D0D0D; background: #7EE2A8; border-radius: 999px; }
+  .tng-saved-wrap { max-width: 900px; }
+  .tng-watch-head { display: flex; align-items: center; gap: 16px; padding: 20px 22px; margin-bottom: 14px; background: linear-gradient(135deg, rgba(21,101,192,0.16), rgba(21,101,192,0.04)); border: 1px solid rgba(91,158,240,0.3); border-radius: var(--tng-radius-lg); }
+  .tng-watch-head .tng-eyes { width: 64px; height: 32px; }
+  .tng-watch-head h2 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.01em; color: var(--tng-white); }
+  .tng-watch-head p { margin: 4px 0 0; font-size: 14px; line-height: 1.5; color: var(--tng-text-secondary); }
+  .tng-watch-row { display: flex; align-items: flex-start; gap: 14px; padding: 16px 18px; margin-bottom: 10px; background: var(--tng-surface); border: 1px solid var(--tng-hairline); border-radius: var(--tng-radius-lg); }
+  .tng-watch-row.fresh { border-color: rgba(126,226,168,0.55); box-shadow: 0 0 0 1px rgba(126,226,168,0.15), 0 10px 30px rgba(46,125,50,0.15); }
+  .tng-watch-face { flex: none; width: 44px; height: 44px; display: grid; place-items: center; background: var(--tng-surface-2); border-radius: 50%; }
+  .tng-watch-row.fresh .tng-watch-face { background: rgba(126,226,168,0.14); }
+  .tng-thumb { font-size: 24px; line-height: 1; display: inline-block; animation: tng-thumb-pop 0.6s cubic-bezier(0.2, 0.8, 0.3, 1.2) both, tng-thumb-wiggle 3.5s 0.8s ease-in-out infinite; }
+  .tng-watch-main { flex: 1; min-width: 0; }
+  .tng-watch-name { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 16px; font-weight: 700; color: var(--tng-white); }
+  .tng-watch-domain { font-size: 13px; font-weight: 400; color: var(--tng-text-tertiary); }
+  .tng-watch-status { font-size: 14px; color: var(--tng-text-secondary); margin-top: 4px; }
+  .tng-watch-row.fresh .tng-watch-status { color: #7EE2A8; font-weight: 600; }
+  .tng-watch-status.warn { color: #FFB74D; }
+  .tng-watch-new { list-style: none; margin: 10px 0 0; padding: 0; }
+  .tng-watch-new li { padding: 8px 0; border-top: 1px solid var(--tng-hairline); font-size: 14px; line-height: 1.5; color: var(--tng-text); }
+  .tng-watch-new b { color: var(--tng-white); }
+  .tng-watch-new a { margin-left: 6px; }
+  .tng-watch-actions { flex: none; display: flex; flex-direction: column; align-items: stretch; gap: 6px; }
+  .tng-watch-empty { padding: 18px; font-size: 14px; color: var(--tng-text-tertiary); background: var(--tng-surface); border: 1px dashed var(--tng-hairline-strong); border-radius: var(--tng-radius-lg); }
+  .tng-saved-section { margin-top: 28px; }
+  @media (max-width: 640px) {
+    .tng-watch-row { flex-wrap: wrap; }
+    .tng-watch-actions { flex-direction: row; flex-wrap: wrap; width: 100%; }
+  }
+
   /* Past briefs: the team's archive, under the upload box. */
   .tng-archive { margin-top: 20px; }
   .tng-archive[hidden] { display: none; }
@@ -1100,7 +1153,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   <div class="tng-header">
     <div class="tng-header-title-block">
       <h1>TNG Opportunity Score</h1>
-      <div class="tng-version-line">TNG OP TOOL V.4.8 · Created by Trever Koltys</div>
+      <div class="tng-version-line">TNG OP TOOL V.4.9 · Created by Trever Koltys</div>
     </div>
     <div class="tng-header-tools">
       <a class="tng-header-link" href="https://app.apollo.io/" target="_blank" rel="noopener" title="This tool works alongside Apollo">Open Apollo${tngIcon('external')}</a>
@@ -1112,6 +1165,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     <div class="tng-mode-tabs" role="tablist" aria-label="Mode">
       <button class="tng-mode-tab" role="tab" id="tng-tab-single" aria-selected="true" onclick="tngSetMode('single')">${tngIcon('search')}Single Lead</button>
       <button class="tng-mode-tab" role="tab" id="tng-tab-brief" aria-selected="false" onclick="tngSetMode('brief')">${tngIcon('doc')}Hunter Brief</button>
+      <button class="tng-mode-tab" role="tab" id="tng-tab-saved" aria-selected="false" onclick="tngSetMode('saved')">${tngIcon('bookmark')}Saved<span id="tng-saved-badge"></span></button>
     </div>
   </div>
 
@@ -1169,6 +1223,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     <div class="tng-license-badge" id="tng-license-badge"></div>
     <div class="tng-corp-structure" id="tng-corp-structure"></div>
     <div class="tng-cache-note" id="tng-cache-note"></div>
+    <div class="tng-save-row" id="tng-save-row"></div>
     <a href="#" target="_blank" rel="noopener" class="tng-company-linkedin" id="tng-company-linkedin" style="display:none;">${LINKEDIN_LOGO}View Company on LinkedIn →</a>
   </div>
 
@@ -1269,6 +1324,10 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   </aside>
   </div><!-- /.tng-layout -->
   </div><!-- /#tng-mode-single -->
+
+  <div id="tng-mode-saved" hidden>
+    <div class="tng-saved-wrap" id="tng-saved"></div>
+  </div>
 
   <div id="tng-mode-brief" hidden>
     <ol class="tng-brief-steps" id="tng-brief-steps">
@@ -1383,6 +1442,11 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   let lastCompanyInfo = null;
   let currentContactIndex = 0;
   let revealedByIndex = {};
+  // The last lookup as it came back (contacts revealed later are added to it), for Save.
+  let lastAnalyzeResult = null;
+  let lastCrmData = null;
+  let lastCrmPromise = null;
+  let lastNewsPromise = null;
   SIGNALS.forEach(s => state[s.id] = { checked: false, detail: '' });
 
   // Apollo/Claude text goes into innerHTML in a few places — escape it so a stray
@@ -1988,18 +2052,21 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     return lines.join('<br>');
   }
 
-  async function runCrmCheck(domain, email) {
+  // savedData: a saved company's Zoho answer, shown as it was instead of asking Zoho again.
+  async function runCrmCheck(domain, email, savedData) {
     const requestId = ++crmRequestId;
+    lastCrmData = null;
     setCrmResult(false, 'Checking Zoho CRM...', '');
     try {
-      const response = await fetch(CRM_URL, {
+      const response = savedData ? null : await fetch(CRM_URL, {
         method: 'POST',
         headers: API_HEADERS,
         body: JSON.stringify({ domain, email: email || undefined }),
       });
-      const data = await response.json();
+      const data = savedData || await response.json();
       if (requestId !== crmRequestId) return; // a newer lookup (or Reset) superseded this one
-      if (!response.ok) throw new Error(data.error || ('CRM check failed: ' + response.status));
+      if (response && !response.ok) throw new Error(data.error || ('CRM check failed: ' + response.status));
+      lastCrmData = data;
 
       if (!data.configured) {
         setCrmResult(false, 'Zoho not connected yet — check Zoho manually and tick this if they exist', '');
@@ -2109,8 +2176,13 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   }
 
   // refresh: true (from the "Refresh" link) skips this week's saved lookup and spends credits.
-  window.tngAnalyze = async function(refresh) {
+  // saved: a saved company's snapshot, replayed exactly as it was: no lookups, no credits.
+  window.tngAnalyze = async function(refresh, saved) {
     refresh = refresh === true;
+    if (saved) {
+      document.getElementById('tng-domain').value = saved.domain;
+      document.getElementById('tng-email').value = saved.email || '';
+    }
     let domain = document.getElementById('tng-domain').value.trim();
     const email = document.getElementById('tng-email').value.trim();
 
@@ -2134,9 +2206,13 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     }
     setError('');
     setSingleEmpty(false);
-    runCrmCheck(domain, email); // not awaited — fills in the CRM Check section on its own
+    lastAnalyzeResult = null;
+    renderSaveRow();
+    lastCrmPromise = runCrmCheck(domain, email, saved && saved.crm); // not awaited — fills in the CRM Check section on its own
     // Not awaited either: one news search fills in Security Incidents and Trigger Events when it finishes.
-    const news = postJson(NEWS_URL, refresh ? { domain, refresh: true } : { domain }, 240000);
+    const news = saved ? Promise.resolve(saved.news || { available: false, reason: 'not saved' })
+      : postJson(NEWS_URL, refresh ? { domain, refresh: true } : { domain }, 240000);
+    lastNewsPromise = news.catch(() => null);
     runIncidentScan(newsHalf(news, 'incidents'));
     runEventScan(newsHalf(news, 'events'));
     const btn = document.getElementById('tng-analyze-btn');
@@ -2171,16 +2247,19 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
 
     try {
       const response = await Promise.race([
-        fetch(BACKEND_URL, {
-          method: "POST",
-          headers: API_HEADERS,
-          body: JSON.stringify({ domain, email: email || undefined, refresh: refresh || undefined })
-        }),
+        saved
+          ? Promise.resolve({ ok: true, json: async () => ({ ...JSON.parse(JSON.stringify(saved.result)), cached_at: null, saved_company_at: saved.saved_at }) })
+          : fetch(BACKEND_URL, {
+            method: "POST",
+            headers: API_HEADERS,
+            body: JSON.stringify({ domain, email: email || undefined, refresh: refresh || undefined })
+          }),
         timeoutPromise
       ]);
 
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || ('Backend request failed: ' + response.status));
+      lastAnalyzeResult = result;
 
       // Apply auto signals
       const autoSignals = autoSignalsFromResult(result);
@@ -2281,7 +2360,11 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
 
       // Reused this week's lookup: say so, and offer a paid refresh.
       const cacheNoteEl = document.getElementById('tng-cache-note');
-      if (result.cached_at) {
+      if (result.saved_company_at) {
+        cacheNoteEl.innerHTML = `Saved company from ${escapeHtml(fmtSavedDate(result.saved_company_at))}, opened without credits. Everything here is as of that day.`
+          + '<button type="button" onclick="tngAnalyze(true)">Refresh (2 Apollo credits)</button>';
+        cacheNoteEl.classList.add('active');
+      } else if (result.cached_at) {
         cacheNoteEl.innerHTML = `Saved lookup from ${escapeHtml(fmtSavedDate(result.cached_at))}, no credits used. Site visits and Zoho are always live.`
           + '<button type="button" onclick="tngAnalyze(true)">Refresh (2 Apollo credits)</button>';
         cacheNoteEl.classList.add('active');
@@ -2307,7 +2390,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
         linkedin_url: result.company_linkedin_url || '',
       };
       currentContactIndex = 0;
-      revealedByIndex = {};
+      revealedByIndex = saved && saved.revealed ? saved.revealed : {};
       document.getElementById('tng-zoho-result').innerHTML = '';
 
       renderContactCard(email);
@@ -2315,6 +2398,9 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
       renderSignals(true);
       prevTier = 'ice_cold'; // a fresh lead gets its own heat burst
       recompute();
+      // A saved company gets back the ticks it was saved with, once its Zoho and news answers are in.
+      if (saved && saved.ticks) setTimeout(() => restoreTicks(saved.ticks), 60);
+      renderSaveRow();
       clearInterval(tickInterval);
       setStatus(null);
       document.title = '✅ Done — ' + (result.company_name || domain);
@@ -2546,6 +2632,9 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     prevTotal = 0;
     prevTier = 'ice_cold';
     lastCompanyInfo = null;
+    lastAnalyzeResult = null;
+    lastCrmData = null;
+    renderSaveRow();
     currentContactIndex = 0;
     revealedByIndex = {};
     document.getElementById('tng-zoho-result').innerHTML = '';
@@ -2558,6 +2647,270 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     document.getElementById('tng-adjust').open = false;
     setSingleEmpty(true);
   };
+
+  // ----- Saved companies and the Watchlist (api/saved-companies; nightly checks in api/watch-check) -----
+  const SAVED_URL = "https://tng-lead.vercel.app/api/saved-companies";
+  let savedList = null; // null = not loaded; { configured, companies, max_watched } or { error }
+  let watchCheered = false;
+
+  const savedMetaFor = domain => savedList && savedList.companies ? savedList.companies.find(c => c.domain === domain) : null;
+  const fmtShortDate = iso => { const d = new Date(iso); return isNaN(d) ? '' : d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }); };
+
+  function restoreTicks(ticks) {
+    Object.entries(ticks).forEach(([id, t]) => {
+      if (state[id] && t) { state[id].checked = !!t.checked; state[id].detail = t.detail || ''; }
+    });
+    renderSignals();
+    recompute();
+  }
+
+  async function loadSavedList() {
+    try {
+      savedList = await postJson(SAVED_URL, { action: 'list' }, 20000);
+    } catch (err) {
+      console.error(err);
+      savedList = { error: err.message };
+    }
+    updateSavedBadge();
+    renderSaveRow();
+    if (!document.getElementById('tng-mode-saved').hidden) renderSavedTab();
+  }
+
+  function upsertSaved(company) {
+    if (!savedList || !savedList.companies) savedList = { configured: true, companies: [], max_watched: 40 };
+    savedList.companies = savedList.companies.filter(c => c.domain !== company.domain).concat(company);
+    updateSavedBadge();
+  }
+
+  function updateSavedBadge() {
+    const n = savedList && savedList.companies ? savedList.companies.reduce((sum, c) => sum + (c.watch ? c.unseen || 0 : 0), 0) : 0;
+    document.getElementById('tng-saved-badge').innerHTML = n ? `<span class="tng-tab-badge" title="${n} new on the Watchlist">👍 ${n}</span>` : '';
+  }
+
+  // Save and Watch on the company card, once a lookup is in.
+  function renderSaveRow() {
+    const el = document.getElementById('tng-save-row');
+    if (!el) return;
+    if (!lastCompanyInfo || !lastAnalyzeResult || (savedList && savedList.configured === false)) { el.innerHTML = ''; return; }
+    const m = savedMetaFor(cleanDomain(lastCompanyInfo.domain));
+    el.innerHTML = `
+      <button class="tng-save-btn${m ? ' on' : ''}" data-save="save" title="${m ? 'Save this lookup again, as it is now' : 'Keep this lookup for the team, to reopen without credits'}">${tngIcon('bookmark')}${m ? 'Saved · update' : 'Save company'}</button>
+      <button class="tng-save-btn${m && m.watch ? ' on' : ''}" data-save="watch" title="${m && m.watch ? 'Stop watching' : 'Re-check every week for new news, site visits and Zoho'}">${TNG_EYES}${m && m.watch ? 'Watching' : 'Watch'}</button>
+      ${m ? `<span class="tng-save-note">Saved ${escapeHtml(fmtShortDate(m.saved_at))}${m.watch ? ' · checked weekly overnight' : ''}</span>` : ''}`;
+  }
+
+  // What the team has already seen, so the first weekly check only flags what's new.
+  function currentBaseline() {
+    return {
+      incidents: lastIncidents && lastIncidents.available ? lastIncidents.incidents : [],
+      events: lastEvents && lastEvents.available ? lastEvents.events : [],
+      visits_total: lastSiteVisits && lastSiteVisits.available ? lastSiteVisits.total_visits : 0,
+      in_zoho: !!(lastCrmData && lastCrmData.found),
+    };
+  }
+
+  async function saveCurrentCompany(watch, btn) {
+    if (!lastCompanyInfo || !lastAnalyzeResult) return;
+    btn.disabled = true;
+    const label = btn.innerHTML;
+    btn.textContent = 'Saving...';
+    try {
+      // The Zoho and news answers belong in the saved copy, so wait for them if they're still coming.
+      await Promise.all([lastCrmPromise, lastNewsPromise].map(p => p && p.catch(() => null)));
+      const info = lastCompanyInfo;
+      const domain = cleanDomain(info.domain);
+      const { total } = buildScoreSummary();
+      const ticks = {};
+      SIGNALS.forEach(sig => { ticks[sig.id] = { checked: state[sig.id].checked, detail: state[sig.id].detail }; });
+      const news = lastIncidents && lastIncidents.available
+        ? { available: true, incidents: lastIncidents, events: lastEvents && lastEvents.available ? lastEvents : { available: true, events: [], recent_count: 0 } }
+        : { available: false, reason: (lastIncidents && lastIncidents.reason) || 'not checked' };
+      const baseline = currentBaseline();
+      const snapshot = { domain, email: info.typed_contact_email || '', result: lastAnalyzeResult, crm: lastCrmData, news, revealed: revealedByIndex, ticks, baseline };
+      const m = savedMetaFor(domain);
+      const data = await postJson(SAVED_URL, {
+        action: 'save', domain, name: info.company_name, score: total, tier: tierFor(total).tier,
+        org_id: lastAnalyzeResult.apollo_org_id || null, snapshot, watch: watch || !!(m && m.watch), baseline,
+      }, 30000);
+      if (data.configured === false) { tngToast("Saving isn't set up on the server yet"); return; }
+      upsertSaved(data.company);
+      tngToast(watch && !(m && m.watch) ? `👀 Watching ${info.company_name}. We'll peek every week.` : `Saved ${info.company_name}`, 'good');
+    } catch (err) {
+      console.error(err);
+      tngToast("Couldn't save: " + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = label;
+      renderSaveRow();
+    }
+  }
+
+  async function setWatch(domain, on, btn) {
+    btn.disabled = true;
+    try {
+      const data = await postJson(SAVED_URL, { action: 'watch', domain, on }, 20000);
+      upsertSaved(data.company);
+      tngToast(on ? `👀 Watching ${data.company.name}` : `Stopped watching ${data.company.name}`, on ? 'good' : '');
+    } catch (err) {
+      console.error(err);
+      tngToast("Couldn't change the Watchlist: " + err.message);
+    } finally {
+      btn.disabled = false;
+      renderSaveRow();
+      if (!document.getElementById('tng-mode-saved').hidden) renderSavedTab();
+    }
+  }
+
+  document.getElementById('tng-save-row').addEventListener('click', e => {
+    const btn = e.target.closest('[data-save]');
+    if (!btn || btn.disabled || !lastCompanyInfo) return;
+    const m = savedMetaFor(cleanDomain(lastCompanyInfo.domain));
+    if (btn.dataset.save === 'save') saveCurrentCompany(false, btn);
+    else if (m && m.watch) {
+      if (window.confirm(`Stop watching ${lastCompanyInfo.company_name}? It stays in Saved companies.`)) setWatch(m.domain, false, btn);
+    } else saveCurrentCompany(true, btn);
+  });
+
+  // ----- The Saved tab -----
+  function openSavedTab() {
+    renderSavedTab();
+    loadSavedList().then(() => {
+      // A little cheer the first time new activity is on screen.
+      const fresh = document.querySelector('#tng-saved .tng-watch-row.fresh');
+      if (fresh && !watchCheered) {
+        watchCheered = true;
+        confettiBurst(document.querySelector('#tng-saved .tng-watch-head'), ['#7EE2A8', '#5B9EF0', '#FFFFFF', '#FFD54F']);
+      }
+    });
+  }
+
+  function newItemHtml(c) {
+    const label = c.kind === 'event' ? EVENT_TYPE_LABELS[c.type] || 'News'
+      : c.kind === 'incident' ? INCIDENT_TYPE_LABELS[c.type] || 'Incident'
+      : c.kind === 'visits' ? 'Site visits' : 'Zoho';
+    const when = c.date && c.kind !== 'visits' ? fmtIncidentDate(c.date) + ': ' : '';
+    const pitch = c.kind === 'event' && EVENT_SERVICES[c.type] ? ` <span class="muted">Pitch: ${escapeHtml(EVENT_SERVICES[c.type])}</span>` : '';
+    return `<li><b>${escapeHtml(label)}</b> · ${escapeHtml(when + c.text)}${isWebLink(c.url) ? `<a href="${escapeHtml(c.url)}" target="_blank" rel="noopener">Source</a>` : ''}${pitch}</li>`;
+  }
+
+  function tierChip(c) {
+    const t = tierFor(Number(c.score) || 0);
+    return `<span class="tng-chip">${escapeHtml(`${c.score} · ${plainTier(t.label)}`)}</span>`;
+  }
+
+  function watchRowHtml(c) {
+    const fresh = c.unseen > 0;
+    const firstCheck = !c.checked_at || c.checked_at === c.watch_since;
+    const nextAt = new Date((Date.parse(c.checked_at) || Date.now()) + 7 * 86400000).toISOString();
+    const status = fresh ? `${c.unseen} new since the team last looked`
+      : c.check_error ? `Last check had a problem: ${c.check_error}. It tries again next week.`
+      : firstCheck ? `Watching since ${fmtShortDate(c.watch_since)} · first peek around ${fmtShortDate(nextAt)}`
+      : `Nothing new · last peeked ${fmtShortDate(c.checked_at)}, next around ${fmtShortDate(nextAt)}`;
+    return `<div class="tng-watch-row${fresh ? ' fresh' : ''}">
+      <div class="tng-watch-face">${fresh ? '<span class="tng-thumb" role="img" aria-label="New activity">👍</span>' : TNG_EYES}</div>
+      <div class="tng-watch-main">
+        <div class="tng-watch-name">${escapeHtml(c.name || c.domain)} <span class="tng-watch-domain">${escapeHtml(c.domain)}</span> ${tierChip(c)}</div>
+        <div class="tng-watch-status${c.check_error && !fresh ? ' warn' : ''}">${escapeHtml(status)}</div>
+        ${fresh && c.new_items.length ? `<ul class="tng-watch-new">${c.new_items.map(newItemHtml).join('')}</ul>` : ''}
+      </div>
+      <div class="tng-watch-actions">
+        ${fresh ? `<button class="tng-export-btn primary" data-saved="seen" data-domain="${escapeHtml(c.domain)}">👍 Got it</button>` : ''}
+        <button class="tng-export-btn" data-saved="open" data-domain="${escapeHtml(c.domain)}">Open</button>
+        <button class="tng-archive-del" data-saved="unwatch" data-domain="${escapeHtml(c.domain)}">Stop watching</button>
+      </div>
+    </div>`;
+  }
+
+  function savedRowHtml(c) {
+    return `<div class="tng-archive-row">
+      <div class="tng-archive-main">
+        <div class="tng-archive-title">${escapeHtml(c.name || c.domain)}</div>
+        <div class="tng-archive-meta">${escapeHtml(`${c.domain} · score ${c.score} · saved ${fmtShortDate(c.saved_at)}`)}</div>
+      </div>
+      <button class="tng-export-btn" data-saved="open" data-domain="${escapeHtml(c.domain)}">Open</button>
+      <button class="tng-save-btn" data-saved="watch" data-domain="${escapeHtml(c.domain)}">${TNG_EYES}Watch</button>
+      <button class="tng-archive-del" data-saved="delete" data-domain="${escapeHtml(c.domain)}" title="Remove for the whole team">Delete</button>
+    </div>`;
+  }
+
+  function renderSavedTab() {
+    const el = document.getElementById('tng-saved');
+    if (!savedList) { el.innerHTML = `<div class="tng-watch-head">${TNG_EYES}<div><h2>Watchlist</h2><p>Loading...</p></div></div>`; return; }
+    if (savedList.error) { el.innerHTML = `<div class="tng-watch-empty">Couldn't load saved companies (${escapeHtml(savedList.error)}).</div>`; return; }
+    if (savedList.configured === false) { el.innerHTML = '<div class="tng-watch-empty">Saving companies isn\'t set up on the server yet.</div>'; return; }
+    const all = savedList.companies;
+    const watched = all.filter(c => c.watch).sort((a, b) => (b.unseen || 0) - (a.unseen || 0) || String(a.name).localeCompare(String(b.name)));
+    const saved = all.filter(c => !c.watch).sort((a, b) => String(b.saved_at).localeCompare(String(a.saved_at)));
+    el.innerHTML = `
+      <div class="tng-watch-head">${TNG_EYES}<div>
+        <h2>Watchlist</h2>
+        <p>Every week overnight we peek at these for new trigger events and security incidents in the news, new visits to tngdefense.com, and whether they've landed in Zoho. ${watched.length} of ${savedList.max_watched || 40} spots used.</p>
+      </div></div>
+      ${watched.length ? watched.map(watchRowHtml).join('') : '<div class="tng-watch-empty">Nobody on the Watchlist yet. Analyze a company in Single Lead and press <b>Watch</b>.</div>'}
+      <div class="tng-saved-section">
+        <div class="tng-archive-h">${tngIcon('bookmark')}Saved companies</div>
+        ${saved.length ? saved.map(savedRowHtml).join('') : '<div class="tng-archive-empty">Companies you save in Single Lead show up here, for the whole team, for 12 months. Opening one uses no credits.</div>'}
+      </div>`;
+  }
+
+  async function openSavedCompany(domain, btn) {
+    btn.disabled = true;
+    btn.textContent = 'Opening...';
+    try {
+      const data = await postJson(SAVED_URL, { action: 'get', domain }, 30000);
+      const c = data.company;
+      tngSetMode('single');
+      tngReset();
+      window.scrollTo({ top: 0 });
+      tngAnalyze(false, { ...c.snapshot, domain: c.domain, saved_at: c.saved_at });
+    } catch (err) {
+      console.error(err);
+      tngToast("Couldn't open it: " + err.message);
+      btn.disabled = false;
+      btn.textContent = 'Open';
+    }
+  }
+
+  document.getElementById('tng-saved').addEventListener('click', async e => {
+    const btn = e.target.closest('[data-saved]');
+    if (!btn || btn.disabled) return;
+    const domain = btn.dataset.domain;
+    const c = savedMetaFor(domain);
+    switch (btn.dataset.saved) {
+      case 'open': openSavedCompany(domain, btn); break;
+      case 'watch': setWatch(domain, true, btn); break;
+      case 'unwatch':
+        if (window.confirm(`Stop watching ${c ? c.name : domain}? It stays in Saved companies.`)) setWatch(domain, false, btn);
+        break;
+      case 'seen':
+        btn.disabled = true;
+        try {
+          const data = await postJson(SAVED_URL, { action: 'seen', domain }, 20000);
+          confettiBurst(btn, ['#7EE2A8', '#5B9EF0', '#FFFFFF']);
+          upsertSaved(data.company);
+          renderSavedTab();
+        } catch (err) {
+          console.error(err);
+          tngToast("Couldn't update it: " + err.message);
+          btn.disabled = false;
+        }
+        break;
+      case 'delete':
+        if (!window.confirm(`Delete ${c ? c.name : domain} from Saved companies? It's removed for the whole team.`)) break;
+        btn.disabled = true;
+        try {
+          await postJson(SAVED_URL, { action: 'delete', domain }, 20000);
+          savedList.companies = savedList.companies.filter(x => x.domain !== domain);
+          renderSavedTab();
+          renderSaveRow();
+        } catch (err) {
+          console.error(err);
+          tngToast("Couldn't delete it: " + err.message);
+          btn.disabled = false;
+        }
+        break;
+    }
+  });
 
   function buildScoreSummary() {
     const domainVal = document.getElementById('tng-domain').value.trim();
@@ -2807,12 +3160,12 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   let briefRunning = false;
 
   window.tngSetMode = function(mode) {
-    const isBrief = mode === 'brief';
-    document.getElementById('tng-mode-single').hidden = isBrief;
-    document.getElementById('tng-mode-brief').hidden = !isBrief;
-    document.getElementById('tng-tab-single').setAttribute('aria-selected', String(!isBrief));
-    document.getElementById('tng-tab-brief').setAttribute('aria-selected', String(isBrief));
-    if (isBrief && !brief) loadArchiveList();
+    ['single', 'brief', 'saved'].forEach(m => {
+      document.getElementById('tng-mode-' + m).hidden = m !== mode;
+      document.getElementById('tng-tab-' + m).setAttribute('aria-selected', String(m === mode));
+    });
+    if (mode === 'brief' && !brief) loadArchiveList();
+    if (mode === 'saved') openSavedTab();
   };
 
   function setBriefStatus(text) {
@@ -5050,4 +5403,5 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
 
   renderSignals();
   recompute();
+  loadSavedList();
 })();

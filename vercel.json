@@ -1,18 +1,49 @@
 {
   "functions": {
-    "api/analyze-lead.js": { "maxDuration": 120 },
-    "api/parse-brief.js": { "maxDuration": 300 },
-    "api/incident-scan.js": { "maxDuration": 240 },
-    "api/trigger-events.js": { "maxDuration": 240 },
-    "api/news-scan.js": { "maxDuration": 240 }
+    "api/analyze-lead.js": {
+      "maxDuration": 120
+    },
+    "api/parse-brief.js": {
+      "maxDuration": 300
+    },
+    "api/incident-scan.js": {
+      "maxDuration": 240
+    },
+    "api/trigger-events.js": {
+      "maxDuration": 240
+    },
+    "api/news-scan.js": {
+      "maxDuration": 240
+    },
+    "api/saved-companies.js": {
+      "maxDuration": 120
+    },
+    "api/watch-check.js": {
+      "maxDuration": 300
+    }
   },
   "headers": [
     {
       "source": "/tool/(.*)",
-      "headers": [{ "key": "Cache-Control", "value": "no-cache, must-revalidate" }]
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, must-revalidate"
+        }
+      ]
     }
   ],
   "redirects": [
-    { "source": "/lib/:path*", "destination": "/", "permanent": false }
+    {
+      "source": "/lib/:path*",
+      "destination": "/",
+      "permanent": false
+    }
+  ],
+  "crons": [
+    {
+      "path": "/api/watch-check",
+      "schedule": "0 10 * * *"
+    }
   ]
 }

@@ -110,6 +110,26 @@ Safeguards, all on the server (`lib/zoho-push.js`), whatever the page sends:
   Description says it was added by the tool, on what date and by whom;
 - if Zoho or the Upstash store can't be checked, nothing is created.
 
+## Saved companies and the Watchlist (V.4.9)
+
+Single Lead's company card has **Save company** and **Watch**. A saved company keeps the whole
+lookup (Apollo result with any revealed contacts, the Zoho answer, the news, the ticks) for the
+whole team for 12 months; opening it from the **Saved** tab replays it with no lookups, no credits
+and no Claude, with a paid Refresh offered. `/api/saved-companies` handles `list`, `get`, `save`,
+`watch`, `seen`, `check` and `delete` (same access-code header); see `lib/watch.js`.
+
+**Watch** also re-checks the company every week: `/api/watch-check`, run nightly by Vercel Cron
+(`vercel.json` → `crons`, 10:00 UTC), checks the watched companies whose last check is a week old,
+up to 8 a night, two at a time: a fresh news search (about 7 cents of Claude, shared with Single
+Lead's news cache), site visits and the Zoho check (free). Only what the team hasn't seen yet is
+flagged (new news links, more site visits, newly in Zoho); the Saved tab shows it with a thumbs
+up and a badge until someone presses **Got it**. Up to 40 companies can be watched (about $12 a
+month if all 40 are). Analyze now returns `apollo_org_id`, which the visits check needs; companies
+saved from an older lookup get it on their next save.
+
+Setup: add `CRON_SECRET` (any long random string) to Vercel's Environment Variables and redeploy.
+Vercel sends it as `Authorization: Bearer <CRON_SECRET>`; without it the nightly check refuses to run.
+
 ## Saved lookups (cache)
 
 `analyze-lead`, `news-scan` and `parse-brief` save results for 7 days in Upstash
