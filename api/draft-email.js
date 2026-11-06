@@ -1,6 +1,6 @@
-// TNG Lead Scoring — drafts a short outreach email from what a lookup found, in the voice of
-// TNG's CEO, for a person to read, edit and send themselves from Outlook. Nothing is sent from
-// here. No Apollo credits; one Claude call (about 1 to 2 cents).
+// TNG Lead Scoring — drafts a short outreach email from what a lookup found, written the way a
+// person writes to someone they'd like to help, for the sender to read, edit and send themselves
+// from Outlook. Nothing is sent from here. No Apollo credits; one Claude call (about 1 to 2 cents).
 // Body: { angle, contact: { name, title }, company: {..., healthcare, licensed_state},
 //         events: [...], in_zoho, brief: { opportunity, signal, why_tng, first_move, draft } }
 // The page never sends site visits or security incidents: neither belongs in an email.
@@ -10,44 +10,32 @@ import { claudeErrorMessage } from '../lib/claude-error.js';
 
 const MODEL = 'claude-sonnet-5-5';
 const ANGLES = {
-  trigger: 'TRIGGER EVENT: open with the most relevant recent event from FACTS (what happened, with the specifics given: places, numbers, dates), then one short line on what it means for their security, and build the email from there.',
-  intro: 'GENERAL INTRODUCTION: no news hook. Open with what is specific about the company from FACTS (what it runs, where, at what scale), then one short line on the security question that comes with that.',
-  followup: 'FOLLOW-UP: a short follow-up to an earlier note they may have missed. 60 to 90 words, one or two paragraphs. Restate the one reason TNG is relevant in a sentence, and make the ask smaller.',
-  reengage: "RE-ENGAGE: the company already has some relationship with TNG (it is in TNG's CRM). A short check-in that does not explain TNG from scratch and does not invent any history, meetings or names.",
+  trigger: 'TRIGGER EVENT: start from the most relevant recent event in FACTS, mentioned the way a person who read the news would ("Congrats on the new facility", "I saw the announcement about..."), not as a report. Then the security question that change tends to bring up for someone in their role.',
+  intro: 'GENERAL INTRODUCTION: no news hook. Start from a problem someone in their role really deals with, the kind of moment that is rare but hard when it happens. Use what FACTS say about the company only where it makes the email more relevant, never as a summary of it.',
+  followup: 'FOLLOW-UP: a short, friendly nudge on an earlier note they may have missed. 40 to 70 words. One line on why you wrote, one easy question.',
+  reengage: "RE-ENGAGE: the company already has some relationship with TNG (it is in TNG's CRM). A short, warm check-in that doesn't explain TNG from scratch and doesn't invent any history, meetings or names.",
 };
 
-// TNG's CEO wrote these. They set the voice. Every name, place, date and number of the
-// companies they were written to is a [placeholder], so nothing from them can end up in a
-// draft; only TNG's own facts (the proof point) are left as written.
-const STYLE_EXAMPLES = `EXAMPLE 1
-Dr. [Last name],
+// The voice to write in: plain, human and curious. Company-specific details are
+// [placeholders], so nothing from these examples can end up in a real draft.
+const STYLE_EXAMPLES = `EXAMPLE A (general introduction, to an HR leader)
+Hi [First name],
 
-You are on the [conference] faculty on [date] for the [topic] update. [Group] now covers [number] emergency departments across [Hospital system A], [Hospital system B] and [Hospital system C], and every one of those contracts renews on the strength of your clinicians staying put.
+HR ends up owning the situations nobody plans for: a termination that could go badly, an employee who says something worrying, a threat aimed at someone on the team. They don't happen often, but when they do, decisions have to be made fast.
 
-The North Group builds resident security programs for the group, not just the hospital: threat management for named clinicians, a protective intelligence watch, de-escalation training and incident investigation, with an annual risk review your hospital partners can see. At a Level III trauma center ED with 72,000-plus annual visits, our embedded program has run since 2021 and cut workplace violence by 85 to 90 percent. That ED is staffed by an independent physician-owned group like yours.
+That's the kind of thing we help with at The North Group. We plan sensitive terminations and can be on site the day of, and we look into threats involving employees or leadership.
 
-Could I have 20 minutes after your session, or a coffee at [the next event they attend]?
+Does [Company] have something in place for these moments today? If not, I'd be glad to share how other HR teams handle it. Would a short call in the next couple of weeks be worth it?
 
-EXAMPLE 2
-Good morning,
+EXAMPLE B (trigger event, to an operations leader at a company opening a new site)
+Hi [First name],
 
-The purchase agreement for up to [number] acres at [site] is now public, and [City]'s mayor has described the project as [project type]. A [type of facility] carries [the regulatory security requirements it brings], controlled-access zones, and a community that will watch the site from the first survey stake. Security decided at design is cheap. Security retrofitted after licensing is not.
+Congrats on the [new site] in [city]. Openings like that are exciting, and they're also when security tends to get decided in a hurry: who's on the door, who watches the site during the build, what happens the first time something goes wrong.
 
-The North Group is a service-disabled veteran-owned firm licensed in [state]. We deliver the threat and vulnerability assessment and security master plan at design, construction-site coverage during the build, and an embedded program with 24/7 operations center support once material arrives.
+We help companies sort that out early at The North Group, from an assessment while plans are still flexible to staffed coverage once the doors open.
 
-Our work ranges from executive protection for public-company principals to an embedded program at a regional medical center that cut workplace violence 85 to 90 percent. The common thread is discretion and documentation, not visible force.
+Is security for the new site already covered, or still on the list? Happy to share what we've seen work if it's useful.`;
 
-Could we take 20 minutes to align the security plan with your site timeline before the layout is locked?
-
-EXAMPLE 3 (its first line was cut off)
-...on [newest location]. With [location A], [location B] and now [location C], [Group] has opened [number] emergency departments in [number] months, each with a new medical director and a recruiting push behind it. New contracts are kept on clinician retention, and retention is decided on the worst shift of the month.
-
-The North Group builds clinician-safety programs that travel with a group from contract to contract: threat management for named clinicians, a protective intelligence watch, de-escalation training and incident investigation, with an annual risk review the hospital can see. At a Level III trauma center ED with 72,000-plus annual visits, our embedded program has run since 2021 and cut workplace violence by 85 to 90 percent. That ED is staffed by an independent physician-owned group.
-
-I would like 20 minutes with you or your COO to show how a portfolio retainer would price across the [Group] family. Would the week of [suggested week] work?`;
-
-// TNG's services, as named on tngdefense.com (the same list the tool scores site visits by),
-// each with the situations it answers. The draft names only these.
 const TNG_SERVICES = [
   ['Executive Protection', 'principals and executives in the public eye: a new or high-profile CEO, layoffs or controversy aimed at leadership, executive travel and events'],
   ['Private Client Security Program', 'family offices, high-net-worth families and estates: residential and family security, household staff, travel'],
@@ -65,9 +53,8 @@ const TNG_SERVICES = [
 
 // The only claims about TNG a draft may make, as TNG states them.
 const TNG_FACTS = [
-  'The North Group is a service-disabled veteran-owned firm. Say "licensed in <state>" only when FACTS.company.tng_licensed_state names the state, and then use exactly that state.',
-  'Healthcare proof point, only when FACTS.company.healthcare is true: "At a Level III trauma center ED with 72,000-plus annual visits, our embedded program has run since 2021 and cut workplace violence by 85 to 90 percent." For a physician group you may add: "That ED is staffed by an independent physician-owned group."',
-  'General proof point, any company: "Our work ranges from executive protection for public-company principals to an embedded program at a regional medical center that cut workplace violence 85 to 90 percent. The common thread is discretion and documentation, not visible force."',
+  'The North Group is a veteran-owned security and intelligence firm. Mention it only if it helps, in a few words. Say "licensed in <state>" only when FACTS.company.tng_licensed_state names the state and the email is about work there.',
+  'Healthcare result, only for healthcare companies and only if it truly helps: TNG\'s embedded program at a Level III trauma center ED has cut workplace violence by 85 to 90 percent since 2021. One short sentence at most.',
 ];
 
 const SCHEMA = {
@@ -87,51 +74,47 @@ const clipBlock = (v, max) => String(v == null ? '' : v).replace(/\r/g, '').trim
 
 function buildPrompt(input) {
   const facts = JSON.stringify(input, null, 2);
-  return `You are drafting a first-touch business email from The North Group (TNG), a security and intelligence firm, in the voice of its CEO. The sender will read and edit it in Outlook and send it themselves; Outlook adds their signature.
+  return `You are drafting a first-touch email from someone at The North Group (TNG), a security and intelligence firm, to a person at another company. The sender will read and edit it in Outlook and send it themselves; Outlook adds their signature.
 
-VOICE: follow the CEO's emails below closely: their cadence, structure, length and tone. They are style templates only: each [bracket] stands for a fact that, in a real email, comes from FACTS. Never reuse their sentences or near-copies of them (for example, no "... is cheap. ... is not."): write fresh lines in the same rhythm. Every name, place, date and number in your email must come from FACTS, the TNG FACTS, or FACTS.suggested_week.
+VOICE: write like a thoughtful person, not a marketer or an AI. The examples below show the voice; their [brackets] stand for facts that, in a real email, come from FACTS. Don't copy their sentences; write fresh ones in the same spirit.
 
 ${STYLE_EXAMPLES}
 
 What makes that voice:
-- Greeting line: the contact's first name followed by a comma (e.g. "Dana,"), or "Good morning," when no name is known. No "Hi", no pleasantries, no "I hope", no "I wanted to reach out".
-- Paragraph 1: the specific, public facts about them, stated plainly with their specifics, then one short, sharp line on what is at stake for their security (like "Security decided at design is cheap. Security retrofitted after licensing is not."). That line is reasoning, not a new fact.
-- Paragraph 2: what TNG delivers for exactly that situation, as concrete program pieces (often by phase: before, during, after), drawn from TNG SERVICES below. Not adjectives.
-- Optional paragraph 3: one proof point from TNG FACTS, only when it clearly strengthens this email (it fits their sector or situation). Leave it out of follow-ups, out of emails to companies under about 200 employees, and whenever the email is already near the word limit. Most emails don't need it.
-- Last line: one specific, short ask: 20 minutes for a concrete purpose tied to their situation or timeline, as a question. When no better timing exists, you may propose the week in FACTS.suggested_week (e.g. "Would the week of ${input.suggested_week} work?").
-- No sign-off and no name after the ask: the signature follows.
-- 110 to 170 words in the body, never more (60 to 90 for a follow-up). Count before you answer and cut if over. Plain, confident, informational. No hype, no superlatives, no exclamation marks.
+- Start with "Hi <first name>," on its own line.
+- Open from THEIR world: a problem or moment someone in their role really runs into, or, for a trigger event, the news said naturally. Never open by describing their company back to them.
+- Never recite their headcount, headquarters, client list or service lines, and never name their job title back to them ("As an Operations Senior Director..."). Use a company detail only when it makes the point more relevant, and then lightly.
+- Plain, everyday words and contractions. Short sentences. No brochure words: navigate, leverage, solutions, robust, comprehensive, considerably, explore, partner with, peace of mind, seamless, ensure, "in today's".
+- Mention TNG in one or two sentences, describing the services that fit in everyday words (what we'd actually do), not as a list of offerings.
+- Ask one real question about them, the kind they could answer in a line (e.g. "Does [Company] have something in place for this today?").
+- End with a soft, optional ask, with no date (e.g. "Would a short call in the next couple of weeks be worth it?", "Happy to share what we've seen work if it's useful."). Never propose a specific day, date or week unless it comes from FACTS.
+- No sign-off and no name at the end: the signature follows.
+- 70 to 120 words in the body (40 to 70 for a follow-up). Count before you answer and cut if over.
+- No hype, no superlatives, no exclamation marks except an honest "Congrats" on real news.
 
 ANGLE: ${ANGLES[input.angle]}
 
 FACTS (the only facts about the company and contact you may use; anything not here is unknown):
 ${facts}
 
-TNG SERVICES (the only services you may offer, with the situations each answers). Pick the one to three that fit THIS company's situation, the reason for writing and the contact's role, and describe them as concrete work the way the examples do; you may use the service names, but do not list services that don't fit:
+TNG SERVICES (the only services you may offer, with the situations each answers). Pick the one or two that fit THIS company's situation, the reason for writing and the contact's role, and describe them in plain words:
 ${TNG_SERVICES.map(([name, fit]) => `- ${name}: ${fit}`).join('\n')}
 
-Role fit: an executive's Chief of Staff, Executive Assistant or House/Estate Manager points to Executive Protection or the Private Client Security Program; HR points to Workplace Termination Support or workplace-violence prevention (Embedded Services); security, risk or facilities leaders point to Embedded Services, Risk Mitigation Strategies or the GSOC; a CEO or COO can hear the program as a whole.
+Role fit: an executive's Chief of Staff, Executive Assistant or House/Estate Manager points to Executive Protection or the Private Client Security Program; HR points to Workplace Termination Support and threat assessment (Protective Intelligence) or workplace-violence prevention (Embedded Services); security, risk or facilities leaders point to Embedded Services, Risk Mitigation Strategies or the GSOC; a CEO or COO can hear the whole picture briefly.
 
-TNG FACTS (the only claims about TNG you may make):
+TNG FACTS (the only claims about TNG you may make, all optional):
 ${TNG_FACTS.map((f) => '- ' + f).join('\n')}
 
 Hard rules:
-- Never invent facts, figures, events, clients, dates, or anything about the contact beyond their name and title.
-- Never claim anything about the sender: where they will be, what they attended, who they know.
+- Every name, place, date and number in the email must come from FACTS or the TNG FACTS. Never invent facts, figures, events, clients, dates, or anything about the contact beyond their name and title.
+- Never claim anything about the sender: where they will be, what they attended, who they know, what other clients they have.
 - Never mention website visits, tracking, data providers, CRMs, scores, rankings, a "pipeline", or that they are a "lead". Never mention security incidents at their company.
 - If brief.draft is given, it is a colleague's earlier draft: use its facts only if they are also in FACTS, and write in the voice above.
-- Subject: under 8 words, specific to them, plain, no question marks, no clickbait.
+- Subject: 3 to 7 plain words, like a person would write, no question marks, no clickbait.
 - why_now: one short internal note (not part of the email) saying what the email is based on: the fact from FACTS and, if FACTS give one, its date.
 - services: the TNG SERVICES names the email offers, exactly as listed.
 
 Return JSON with subject, body (plain text with \\n line breaks), why_now and services.`;
-}
-
-// The Monday at least a week away (e.g. "Nov 16"), worked out from today, for an ask that needs a date.
-function suggestedWeek(now = new Date()) {
-  const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 7));
-  d.setUTCDate(d.getUTCDate() + ((8 - d.getUTCDay()) % 7));
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
 }
 
 export default async function handler(req, res) {
@@ -157,7 +140,6 @@ export default async function handler(req, res) {
       date: clip(e.date, 20), kind: clip(e.kind, 60), summary: clip(e.summary, 400), suggested_service: clip(e.service, 120),
     })),
     already_known_to_tng: !!b.in_zoho,
-    suggested_week: suggestedWeek(),
     brief: b.brief ? {
       opportunity: clip(b.brief.opportunity, 300), signal: clip(b.brief.signal, 400), why_tng: clip(b.brief.why_tng, 400),
       first_move: clip(b.brief.first_move, 300), draft: clipBlock(b.brief.draft, 2500),
