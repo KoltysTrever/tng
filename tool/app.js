@@ -864,7 +864,13 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   }
 
   /* ---------- Mode switch: Single Lead / Hunter Brief ---------- */
-  .tng-mode-bar { display: flex; justify-content: center; margin-bottom: 32px; }
+  /* The two tasks in the middle; Saved & Watchlist on its own at the right. */
+  .tng-mode-bar { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px; margin-bottom: 32px; }
+  .tng-mode-bar .tng-mode-tabs { grid-column: 2; }
+  .tng-saved-tab { grid-column: 3; justify-self: end; display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; font-family: inherit; font-size: 14px; font-weight: 600; color: var(--tng-text-secondary); background: transparent; border: 1px solid var(--tng-hairline-strong); border-radius: 999px; cursor: pointer; transition: background 0.2s, color 0.2s, border-color 0.2s; }
+  .tng-saved-tab .tng-ico { width: 16px; height: 16px; }
+  .tng-saved-tab:hover { color: var(--tng-white); border-color: rgba(255,255,255,0.35); }
+  .tng-saved-tab[aria-selected="true"] { background: var(--tng-white); color: var(--tng-black); border-color: var(--tng-white); }
   .tng-mode-tabs {
     display: inline-flex;
     gap: 4px;
@@ -1137,8 +1143,10 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   @media (max-width: 760px) {
     .tng-header { flex-direction: column; align-items: flex-start; gap: 14px; }
     .tng-header-note { text-align: left; max-width: none; }
-    .tng-mode-bar { justify-content: stretch; }
+    .tng-mode-bar { grid-template-columns: 1fr; gap: 10px; }
+    .tng-mode-bar .tng-mode-tabs, .tng-saved-tab { grid-column: 1; }
     .tng-mode-tabs { display: flex; width: 100%; }
+    .tng-saved-tab { justify-self: stretch; justify-content: center; }
     .tng-mode-tab { flex: 1; justify-content: center; padding: 9px 12px; }
     .tng-input-row { flex-wrap: wrap; }
     .tng-input-row input { flex: 1 1 100%; }
@@ -1175,7 +1183,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   <div class="tng-header">
     <div class="tng-header-title-block">
       <h1>TNG Opportunity Score</h1>
-      <div class="tng-version-line">TNG OP TOOL V.4.14 · Created by Trever Koltys</div>
+      <div class="tng-version-line">TNG OP TOOL V.4.15 · Created by Trever Koltys</div>
     </div>
     <div class="tng-header-tools">
       <a class="tng-header-link" href="https://app.apollo.io/" target="_blank" rel="noopener" title="This tool works alongside Apollo">Open Apollo${tngIcon('external')}</a>
@@ -1187,8 +1195,8 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     <div class="tng-mode-tabs" role="tablist" aria-label="Mode">
       <button class="tng-mode-tab" role="tab" id="tng-tab-single" aria-selected="true" onclick="tngSetMode('single')">${tngIcon('search')}Single Lead</button>
       <button class="tng-mode-tab" role="tab" id="tng-tab-brief" aria-selected="false" onclick="tngSetMode('brief')">${tngIcon('doc')}Hunter Brief</button>
-      <button class="tng-mode-tab" role="tab" id="tng-tab-saved" aria-selected="false" onclick="tngSetMode('saved')">${tngIcon('bookmark')}Saved<span id="tng-saved-badge"></span></button>
     </div>
+    <button class="tng-saved-tab" id="tng-tab-saved" aria-selected="false" onclick="tngSetMode('saved')" title="Saved companies and the Watchlist">${tngIcon('bookmark')}Saved &amp; Watchlist<span id="tng-saved-badge"></span></button>
   </div>
 
   <div id="tng-mode-single" class="is-empty">
