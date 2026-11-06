@@ -168,7 +168,7 @@ export default async function handler(req, res) {
   }
 }
 
-// Apollo's People Search (free): up to 25 people at the domain in the roles TNG sells to.
+// Apollo's People Search (free): up to 50 people at the domain in the roles TNG sells to.
 // Each comes with has_email / has_direct_phone, which say whether a reveal would find them.
 // Never throws: a failed search means no people, not a failed lookup.
 const PEOPLE_TITLES = [
@@ -181,6 +181,7 @@ const PEOPLE_TITLES = [
   'general counsel', 'vp legal', 'vice president legal', 'chief legal officer',
   'chief administrative officer', 'cao',
   'executive assistant', 'assistant to the ceo', 'assistant to the founder',
+  'chief of staff', 'house manager', 'household manager', 'estate manager',
   'chief executive officer', 'ceo', 'president', 'owner', 'founder', 'co-founder',
   'managing director', 'general manager', 'vp operations', 'vice president operations',
   'director of operations', 'head of operations',
@@ -191,7 +192,7 @@ async function searchPeople(apiKey, domain) {
     const peopleResp = await fetch('https://api.apollo.io/api/v1/mixed_people/api_search', {
       method: 'POST',
       headers: { 'x-api-key': apiKey, 'Content-Type': 'application/json', accept: 'application/json' },
-      body: JSON.stringify({ q_organization_domains_list: [domain], person_titles: PEOPLE_TITLES, per_page: 25, page: 1 }),
+      body: JSON.stringify({ q_organization_domains_list: [domain], person_titles: PEOPLE_TITLES, per_page: 50, page: 1 }),
     });
     const peopleData = await peopleResp.json();
     // Cross-check: keep only results whose employer domain actually matches,
@@ -209,14 +210,23 @@ async function searchPeople(apiKey, domain) {
 // Apollo answers "Yes", "Maybe: please request direct dial…" or nothing.
 const phoneFlag = (v) => (/^yes/i.test(String(v || '')) ? 'yes' : /^maybe/i.test(String(v || '')) ? 'maybe' : 'no');
 
-// The order TNG reaches out in (same as the scoring prompt's contact ranking).
+// The order TNG reaches out in (same as the scoring prompt's contact ranking). For EP-type
+// leads (high-net-worth/private, or under 200 employees) the people who run the principal's
+// day come first: Chief of Staff, Executive Assistant, House or Estate Manager.
+const EP_ROLES = [/chief of staff/i, /executive assistant|assistant to|ea/i, /house ?hold manager|house manager|estate manager/i];
+const isEpLead = (result) => !!result.vertical_high_net_worth || (Number(result.employee_count) > 0 && Number(result.employee_count) < 200);
 const ROLE_ORDER = [
   /\b(cso|ciso)\b|chief security|security/i, /risk/i, /\b(hr|chro)\b|human resources|people/i,
   /counsel|legal/i, /facilit|\behs\b|safety/i, /administrative|\bcao\b/i,
   /\b(coo)\b|operat|general manager|managing director/i, /assistant/i,
   /\b(ceo|cfo|cto|cpo|cxo)\b|chief|president|founder|owner|\bvp\b|vice president|director|head/i,
 ];
-const roleRank = (title) => { const i = ROLE_ORDER.findIndex((re) => re.test(title || '')); return i < 0 ? ROLE_ORDER.length : i; };
+const roleRank = (title, ep) => {
+  const e = EP_ROLES.findIndex((re) => re.test(title || ''));
+  if (e >= 0) return ep ? e - EP_ROLES.length : ROLE_ORDER.length - 2; // with the other assistants otherwise
+  const i = ROLE_ORDER.findIndex((re) => re.test(title || ''));
+  return i < 0 ? ROLE_ORDER.length : i;
+};
 
 // Adds what a reveal would find to each recommended contact, and the next people worth
 // considering (by role, then email on file) as more_people. Deterministic, no credits.
@@ -228,6 +238,7 @@ function addReachability(result, people) {
     if (p) { c.has_email = !!p.has_email; c.has_direct_phone = phoneFlag(p.has_direct_phone); }
   });
   const taken = new Set(contacts.map((c) => c.apollo_id).filter(Boolean));
+  const ep = isEpLead(result);
   result.more_people = people
     .filter((p) => p.id && !taken.has(p.id))
     .map((p) => ({
@@ -238,7 +249,7 @@ function addReachability(result, people) {
       has_email: !!p.has_email,
       has_direct_phone: phoneFlag(p.has_direct_phone),
     }))
-    .sort((a, b) => roleRank(a.title) - roleRank(b.title) || Number(b.has_email) - Number(a.has_email))
+    .sort((a, b) => roleRank(a.title, ep) - roleRank(b.title, ep) || Number(b.has_email) - Number(a.has_email))
     .slice(0, 10);
 }
 
@@ -461,7 +472,7 @@ Based on this data, respond with ONLY a raw JSON object, no markdown fences, no 
   "key_contacts": array of up to 3 objects, ranked best-first, each in exactly this shape: { "name": string, "title": string or null, "linkedin_url": string or null (copy exactly from that person's linkedin_url in PEOPLE SEARCH RESULTS, null if missing — never guess or construct a URL), "apollo_id": string or null (copy exactly from that person's id field, used later to precisely re-fetch this exact person — never guess or invent an id), "reasoning": string (one short phrase explaining why this person ranks where they do) } — return an empty array [] only if PEOPLE SEARCH RESULTS is genuinely empty
 }
 
-For key_contacts, rank candidates in this priority order: (1) CSO/CISO, (2) VP/Director of Security, (3) Chief Risk Officer, (4) VP/Director/Chief of HR or People — a strong fit since Workplace Termination Support is a named TNG service and HR typically initiates that kind of engagement, (5) General Counsel/VP Legal — often the actual gatekeeper for vendor/security decisions when there's no dedicated security function, (6) Director of Facilities/EHS, (7) Chief Administrative Officer, (8) senior Operations/COO/General Manager/Managing Director, (9) for very small or founder-led companies, an Executive Assistant to the CEO/Founder — often the real point of contact for personal/executive protection conversations at that size, (10) FINAL CATCH-ALL — if none of the above roles appear anywhere in the results, the single most senior person present regardless of their specific title or department (CEO, President, Owner, Founder, any VP, any Director, any "Head of" role, in roughly that order of seniority). Return up to 3 distinct people from the people search results in this ranked order as the key_contacts array — do not skip past an earlier, better-fitting match if one exists, and do not return duplicates. If fewer than 3 reasonable candidates exist, return fewer (even just 1) rather than padding with weak matches. IMPORTANT: if the PEOPLE SEARCH RESULTS list contains ANY person at all, key_contacts must not be empty — return at least the single most senior person available. Empty array is reserved strictly for when that list is genuinely empty. REACHABILITY: has_email says whether Apollo holds an email for that person (reaching them is the point of the recommendation). Within the same priority level, or between adjacent levels when the fit is otherwise close, rank a has_email: true person above a has_email: false one. Keep a clearly better-fitting has_email: false person (e.g. the only security leader) in the list, but never as the only contact when a reasonable has_email: true candidate exists; mention "no email on file" in that person's reasoning.
+For key_contacts, first decide whether this is an EP-TYPE LEAD: vertical_high_net_worth is true (family office, private wealth, estate) or the company has fewer than 200 employees. For an EP-type lead, rank these first, ahead of everyone below: (a) Chief of Staff, (b) Executive Assistant to the CEO/Founder/Principal (any Executive Assistant if none names the principal), (c) House Manager, Household Manager or Estate Manager — they run the principal's day and are the real point of contact for executive and residential protection; then continue with the order below. For every other lead, use this priority order, with any Chief of Staff alongside (8): (1) CSO/CISO, (2) VP/Director of Security, (3) Chief Risk Officer, (4) VP/Director/Chief of HR or People — a strong fit since Workplace Termination Support is a named TNG service and HR typically initiates that kind of engagement, (5) General Counsel/VP Legal — often the actual gatekeeper for vendor/security decisions when there's no dedicated security function, (6) Director of Facilities/EHS, (7) Chief Administrative Officer, (8) senior Operations/COO/General Manager/Managing Director, (9) an Executive Assistant to the CEO/Founder, or a House or Estate Manager, (10) FINAL CATCH-ALL — if none of the above roles appear anywhere in the results, the single most senior person present regardless of their specific title or department (CEO, President, Owner, Founder, any VP, any Director, any "Head of" role, in roughly that order of seniority). Return up to 3 distinct people from the people search results in this ranked order as the key_contacts array — do not skip past an earlier, better-fitting match if one exists, and do not return duplicates. If fewer than 3 reasonable candidates exist, return fewer (even just 1) rather than padding with weak matches. IMPORTANT: if the PEOPLE SEARCH RESULTS list contains ANY person at all, key_contacts must not be empty — return at least the single most senior person available. Empty array is reserved strictly for when that list is genuinely empty. REACHABILITY: has_email says whether Apollo holds an email for that person (reaching them is the point of the recommendation). Within the same priority level, or between adjacent levels when the fit is otherwise close, rank a has_email: true person above a has_email: false one. Keep a clearly better-fitting has_email: false person (e.g. the only security leader) in the list, but never as the only contact when a reasonable has_email: true candidate exists; mention "no email on file" in that person's reasoning.
 
 For revenue_tier, base it primarily on annual_revenue_printed or organization_revenue_printed in ORGANIZATION DATA; if revenue data is missing, you may estimate from estimated_num_employees as a rough proxy but must say so plainly in revenue_tier_reasoning (e.g. "No revenue data; estimated from employee count") — never invent a specific dollar figure that isn't in the data. Use "unknown" if there's not enough information to make any reasonable estimate, and "under_10m" if the company is clearly smaller than $10M. Mark verticals true only when the company's own core industry is a clear match — a company can match more than one vertical, or none. Being a vendor, consultant, or staffing provider to a vertical does NOT count as matching that vertical. When available, cross-reference sic_codes and naics_codes in ORGANIZATION DATA alongside the industry/industries text fields — these are standardized classification codes and give a more reliable signal than free-text industry descriptions alone (e.g. SIC codes in the 6000-6300 range generally indicate banking/finance/insurance; 2000-3999 generally indicate manufacturing; 7000-7999 often indicate hospitality/retail/services; 1200-1499 and 4900-4999 often indicate energy/utilities/mining; 6500-6553 generally indicate real estate). Use these codes as supporting evidence, not the sole basis — the industry/description text and your own judgment still matter most.
 

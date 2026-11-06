@@ -67,6 +67,9 @@ reach ranks first), copies both flags onto each recommended contact, and returns
 `more_people`: up to 10 other people at the company from the same search, ordered by role
 (security, risk, HR, legal, facilities, operations, executives) and then email on file.
 Lookups saved before these flags existed get them from the free search on their next read.
+For EP-type leads (high-net-worth/private, or under 200 employees) the Chief of Staff, Executive
+Assistant and House or Estate Manager rank first, in the scoring prompt's contact order and in
+`more_people`; other leads keep security leaders first. The search asks for up to 50 people.
 The page shows "Email on file" / "No email in Apollo" badges, warns before revealing
 someone with no email on file, and lists the more people under the contacts; revealing
 one (1 credit) adds them to the contacts, so exports and Push to Zoho include them.
