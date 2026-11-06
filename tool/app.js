@@ -1185,7 +1185,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   <div class="tng-header">
     <div class="tng-header-title-block">
       <h1>TNG Opportunity Score</h1>
-      <div class="tng-version-line">TNG OP TOOL V.4.16 · Created by Trever Koltys</div>
+      <div class="tng-version-line">TNG OP TOOL V.4.17 · Created by Trever Koltys</div>
     </div>
     <div class="tng-header-tools">
       <a class="tng-header-link" href="https://app.apollo.io/" target="_blank" rel="noopener" title="This tool works alongside Apollo">Open Apollo${tngIcon('external')}</a>
@@ -5406,7 +5406,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
         </div>`;
     el.innerHTML = `<div class="tng-modal">
       <div class="tng-modal-head"><h2 id="tng-outreach-title">Email outreach · ${escapeHtml(o.company.name)}</h2><button class="tng-modal-x" data-outreach="close" aria-label="Close">×</button></div>
-      <p class="tng-modal-sub">Claude drafts a short, professional introduction from what the lookup found, offering the TNG services that fit. Edit it, then open it in Outlook: nothing is sent until you press Send there, and Outlook adds your signature.</p>
+      <p class="tng-modal-sub">Claude drafts a short, professional introduction, personalized only on a real connection like recent news, offering the TNG services that fit. Edit it, then open it in Outlook: nothing is sent until you press Send there, and Outlook adds your signature.</p>
       ${picker}
       <label class="tng-push-label" for="tng-outreach-to">Email address</label>
       <input class="tng-push-input" id="tng-outreach-to" data-outreach-field="to" placeholder="Their email (reveal it above, or type it)" value="${escapeHtml(o.to)}" ${busy ? 'disabled' : ''} autocomplete="off" spellcheck="false">
