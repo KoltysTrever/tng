@@ -870,7 +870,8 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   .tng-mode-bar { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 16px; margin-bottom: 32px; }
   .tng-mode-bar .tng-mode-tabs { grid-column: 2; }
   .tng-saved-tab { grid-column: 3; justify-self: end; display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; font-family: inherit; font-size: 14px; font-weight: 600; color: var(--tng-text-secondary); background: transparent; border: 1px solid var(--tng-hairline-strong); border-radius: 999px; cursor: pointer; transition: background 0.2s, color 0.2s, border-color 0.2s; }
-  .tng-saved-tab .tng-ico { width: 16px; height: 16px; }
+  .tng-saved-tab .tng-ico { width: 16px; height: 16px; color: #FFD54F; fill: rgba(255,213,79,0.25); }
+  .tng-saved-tab[aria-selected="true"] .tng-ico { color: #C99700; fill: rgba(201,151,0,0.25); }
   .tng-saved-tab:hover { color: var(--tng-white); border-color: rgba(255,255,255,0.35); }
   .tng-saved-tab[aria-selected="true"] { background: var(--tng-white); color: var(--tng-black); border-color: var(--tng-white); }
   .tng-mode-tabs {
@@ -1185,7 +1186,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   <div class="tng-header">
     <div class="tng-header-title-block">
       <h1>TNG Opportunity Score</h1>
-      <div class="tng-version-line">TNG OP TOOL V.4.17 · Created by Trever Koltys</div>
+      <div class="tng-version-line">TNG OP TOOL V.4.18 · Created by Trever Koltys</div>
     </div>
     <div class="tng-header-tools">
       <a class="tng-header-link" href="https://app.apollo.io/" target="_blank" rel="noopener" title="This tool works alongside Apollo">Open Apollo${tngIcon('external')}</a>
