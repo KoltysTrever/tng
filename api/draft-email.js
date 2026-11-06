@@ -1,5 +1,5 @@
-// TNG Lead Scoring — drafts a short outreach email from what a lookup found, written the way a
-// person writes to someone they'd like to help, for the sender to read, edit and send themselves
+// TNG Lead Scoring — drafts a short outreach email from what a lookup found: a calm, professional
+// introduction (the team's own edited email is the model), for the sender to read, edit and send themselves
 // from Outlook. Nothing is sent from here. No Apollo credits; one Claude call (about 1 to 2 cents).
 // Body: { angle, contact: { name, title }, company: {..., healthcare, licensed_state},
 //         events: [...], in_zoho, brief: { opportunity, signal, why_tng, first_move, draft } }
@@ -10,31 +10,35 @@ import { claudeErrorMessage } from '../lib/claude-error.js';
 
 const MODEL = 'claude-sonnet-5-5';
 const ANGLES = {
-  trigger: 'TRIGGER EVENT: start from the most relevant recent event in FACTS, mentioned the way a person who read the news would ("Congrats on the new facility", "I saw the announcement about..."), not as a report. Then the security question that change tends to bring up for someone in their role.',
-  intro: 'GENERAL INTRODUCTION: no news hook. Start from a problem someone in their role really deals with, the kind of moment that is rare but hard when it happens. Use what FACTS say about the company only where it makes the email more relevant, never as a summary of it.',
-  followup: 'FOLLOW-UP: a short, friendly nudge on an earlier note they may have missed. 40 to 70 words. One line on why you wrote, one easy question.',
-  reengage: "RE-ENGAGE: the company already has some relationship with TNG (it is in TNG's CRM). A short, warm check-in that doesn't explain TNG from scratch and doesn't invent any history, meetings or names.",
+  trigger: 'TRIGGER EVENT: after saying who you are, connect the reason for writing to the most relevant recent event in FACTS, mentioned plainly and respectfully (e.g. "I saw the announcement about the new facility in ..."), and the security planning that kind of change usually involves.',
+  intro: 'GENERAL INTRODUCTION: no news hook. After saying who you are, name the kind of situation TNG helps organizations like theirs prepare for, chosen for the contact\'s role.',
+  followup: 'FOLLOW-UP: a short, courteous follow-up to an earlier introduction they may have missed. 40 to 70 words. Restate in one sentence what TNG helps with, and repeat the soft ask.',
+  reengage: "RE-ENGAGE: the company already has some relationship with TNG (it is in TNG's CRM). A short, courteous check-in that doesn't explain TNG from scratch and doesn't invent any history, meetings or names.",
 };
 
-// The voice to write in: plain, human and curious. Company-specific details are
-// [placeholders], so nothing from these examples can end up in a real draft.
-const STYLE_EXAMPLES = `EXAMPLE A (general introduction, to an HR leader)
+// The voice to write in: calm, courteous and professional. Example A is the team's own edit of a
+// draft; company details are [placeholders], so nothing from the examples can end up in a draft.
+const STYLE_EXAMPLES = `EXAMPLE A (general introduction, to an HR leader; written by the team)
 Hi [First name],
 
-HR ends up owning the situations nobody plans for: a termination that could go badly, an employee who says something worrying, a threat aimed at someone on the team. They don't happen often, but when they do, decisions have to be made fast.
+I'm reaching out from The North Group regarding how organizations prepare for sensitive workplace situations, particularly those involving employee safety or potentially difficult separations.
 
-That's the kind of thing we help with at The North Group. We plan sensitive terminations and can be on site the day of, and we look into threats involving employees or leadership.
+We work with HR and leadership teams to help manage these situations through advance planning, on-site support when needed, and threat assessments when concerns arise involving employees or executives. Our goal is to provide experienced resources that complement existing HR procedures and help organizations respond appropriately.
 
-Does [Company] have something in place for these moments today? If not, I'd be glad to share how other HR teams handle it. Would a short call in the next couple of weeks be worth it?
+I wanted to introduce our team and see whether these are areas [Company] currently manages internally or where outside support might be helpful.
+
+Would you be open to a brief introductory conversation in the coming weeks?
 
 EXAMPLE B (trigger event, to an operations leader at a company opening a new site)
 Hi [First name],
 
-Congrats on the [new site] in [city]. Openings like that are exciting, and they're also when security tends to get decided in a hurry: who's on the door, who watches the site during the build, what happens the first time something goes wrong.
+I'm with The North Group, and I saw the announcement about [Company]'s new [site] in [city]. Projects like that usually bring a round of security planning, from access and staffing to how the site is covered while it's being built.
 
-We help companies sort that out early at The North Group, from an assessment while plans are still flexible to staffed coverage once the doors open.
+Our team supports operations and facilities leaders through that process with site assessments early on, security coverage during construction, and staffed or embedded programs once the site opens, designed to fit alongside the team you already have.
 
-Is security for the new site already covered, or still on the list? Happy to share what we've seen work if it's useful.`;
+I'd like to learn how [Company] is approaching security for the new site and whether outside support would be useful.
+
+Would you be open to a short introductory call in the coming weeks?`;
 
 const TNG_SERVICES = [
   ['Executive Protection', 'principals and executives in the public eye: a new or high-profile CEO, layoffs or controversy aimed at leadership, executive travel and events'],
@@ -76,21 +80,22 @@ function buildPrompt(input) {
   const facts = JSON.stringify(input, null, 2);
   return `You are drafting a first-touch email from someone at The North Group (TNG), a security and intelligence firm, to a person at another company. The sender will read and edit it in Outlook and send it themselves; Outlook adds their signature.
 
-VOICE: write like a thoughtful person, not a marketer or an AI. The examples below show the voice; their [brackets] stand for facts that, in a real email, come from FACTS. Don't copy their sentences; write fresh ones in the same spirit.
+VOICE: a calm, courteous, professional introduction, the way the team writes. The examples below show the tone and structure only; their [brackets] stand for facts that, in a real email, come from FACTS.
 
 ${STYLE_EXAMPLES}
 
+Do not copy the examples. Write every sentence new for this contact and situation; never reuse a phrase of five or more words from them. Vary how you open, describe TNG and ask, while keeping the same tone and shape.
+
 What makes that voice:
 - Start with "Hi <first name>," on its own line.
-- Open from THEIR world: a problem or moment someone in their role really runs into, or, for a trigger event, the news said naturally. Never open by describing their company back to them.
-- Never recite their headcount, headquarters, client list or service lines, and never name their job title back to them ("As an Operations Senior Director..."). Use a company detail only when it makes the point more relevant, and then lightly.
-- Plain, everyday words and contractions. Short sentences. No brochure words: navigate, leverage, solutions, robust, comprehensive, considerably, explore, partner with, peace of mind, seamless, ensure, "in today's".
-- Mention TNG in one or two sentences, describing the services that fit in everyday words (what we'd actually do), not as a list of offerings.
-- Ask one real question about them, the kind they could answer in a line (e.g. "Does [Company] have something in place for this today?").
-- End with a soft, optional ask, with no date (e.g. "Would a short call in the next couple of weeks be worth it?", "Happy to share what we've seen work if it's useful."). Never propose a specific day, date or week unless it comes from FACTS.
+- First paragraph: who is writing (from The North Group) and why, in one or two sentences, tied to a situation that fits the contact's role or, for a trigger event, the news.
+- Second paragraph: how TNG helps with that, as the work itself (planning, on-site support, assessments, coverage), described in plain words, and framed as complementing their existing team and procedures.
+- Third paragraph: a respectful question about how they handle this today (internally, or where outside support might help). Never imply they are unprepared or doing it wrong.
+- Last line: a soft ask for a brief introductory conversation or call "in the coming weeks". Never propose a specific day, date or week unless it comes from FACTS.
+- Measured language: nothing dramatic or alarming ("ugly", "crisis", "nightmare", "when it hits"), no hype, no superlatives, no exclamation marks, no buzzwords (leverage, robust, cutting-edge, seamless, best-in-class, game-changer, solutions).
+- Never recite their headcount, headquarters, client list or service lines, and never name their job title back to them. Use a company detail only when it makes the email more relevant.
 - No sign-off and no name at the end: the signature follows.
-- 70 to 120 words in the body (40 to 70 for a follow-up). Count before you answer and cut if over.
-- No hype, no superlatives, no exclamation marks except an honest "Congrats" on real news.
+- 80 to 130 words in the body (40 to 70 for a follow-up). Count before you answer and cut if over.
 
 ANGLE: ${ANGLES[input.angle]}
 
@@ -110,7 +115,7 @@ Hard rules:
 - Never claim anything about the sender: where they will be, what they attended, who they know, what other clients they have.
 - Never mention website visits, tracking, data providers, CRMs, scores, rankings, a "pipeline", or that they are a "lead". Never mention security incidents at their company.
 - If brief.draft is given, it is a colleague's earlier draft: use its facts only if they are also in FACTS, and write in the voice above.
-- Subject: 3 to 7 plain words, like a person would write, no question marks, no clickbait.
+- Subject: 3 to 7 plain, professional words, no question marks, no clickbait.
 - why_now: one short internal note (not part of the email) saying what the email is based on: the fact from FACTS and, if FACTS give one, its date.
 - services: the TNG SERVICES names the email offers, exactly as listed.
 

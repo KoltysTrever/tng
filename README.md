@@ -134,10 +134,10 @@ Vercel sends it as `Authorization: Bearer <CRON_SECRET>`; without it the nightly
 
 **Email outreach** on the Single Lead contact card and on each vetted Hunter Brief lead opens a
 window where Claude (Sonnet 5.5, `/api/draft-email`, about 1 to 2 cents a draft) writes a short,
-first-touch email in a plain, human voice (two example emails set the tone; company details in them are
-placeholders) to the chosen contact, from the company facts, the contact's title, recent trigger events
-and, for brief leads, Steve's notes and draft. It starts from the contact's problem, never recites the
-company's profile back, asks one real question and ends with a soft, dateless ask. It offers only TNG's
+first-touch email as a calm, professional introduction (the team's own edited email is the model;
+company details in the examples are placeholders) to the chosen contact, from the company facts, the contact's title, recent trigger events
+and, for brief leads, Steve's notes and draft. It says who is writing and why, describes how TNG would help as
+complementing their own team, asks how they handle it today and ends with a soft, dateless ask. It offers only TNG's
 services as named on tngdefense.com, picked to fit, and only TNG's approved facts. Angles: Trigger event, General
 intro, Follow-up, Re-engage (only when the company is in Zoho). Site visits and security incidents
 are never sent to the draft. The person edits it, then **Open in Outlook** (a `mailto:` link for the
