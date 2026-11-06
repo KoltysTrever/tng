@@ -140,8 +140,9 @@ or the company already being in Zoho); otherwise it's a plain introduction of TN
 fit the contact's role, never an opener about their industry, role or problems. It acknowledges they may
 already be covered and ends with a soft, dateless ask. It offers only TNG's
 services as named on tngdefense.com, picked to fit, and only TNG's approved facts. Angles: Trigger event, General
-intro, Follow-up, Re-engage (only when the company is in Zoho). Site visits and security incidents
-are never sent to the draft. The person edits it, then **Open in Outlook** (a `mailto:` link for the
+intro, Follow-up, Re-engage (only when the company is in Zoho). The tngdefense.com pages the company
+viewed are sent by name only, as private context for which services to lead with; the email never
+mentions them. Security incidents are never sent. The person edits it, then **Open in Outlook** (a `mailto:` link for the
 desktop app; long emails may be cut off there) or **Outlook on the web** (an outlook.office.com
 compose link), or Copy. Nothing is sent by the tool, and Outlook adds the sender's own signature.
 

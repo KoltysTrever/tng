@@ -1186,7 +1186,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   <div class="tng-header">
     <div class="tng-header-title-block">
       <h1>TNG Opportunity Score</h1>
-      <div class="tng-version-line">TNG OP TOOL V.4.18 · Created by Trever Koltys</div>
+      <div class="tng-version-line">TNG OP TOOL V.4.19 · Created by Trever Koltys</div>
     </div>
     <div class="tng-header-tools">
       <a class="tng-header-link" href="https://app.apollo.io/" target="_blank" rel="noopener" title="This tool works alongside Apollo">Open Apollo${tngIcon('external')}</a>
@@ -5351,6 +5351,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     try {
       const data = await postJson(DRAFT_URL, {
         angle: o.angle, contact: outreachPerson(), company: o.company, events: o.events, in_zoho: o.inZoho,
+        interest: o.interest || [], interest_direct: !!o.interestDirect,
         services: eventServices(o.rawEvents || []), brief: o.brief || null,
       }, 60000);
       if (outreach !== o) return;
@@ -5416,6 +5417,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
         <button class="tng-export-btn" data-outreach="draft" ${busy || !o.candidates.length ? 'disabled' : ''}>${hasDraft ? 'Rewrite' : 'Write draft'}</button></div>
       ${status}
       ${o.whyNow ? `<div class="tng-outreach-why"><b>Based on:</b> ${escapeHtml(o.whyNow)}${o.services && o.services.length ? ` · <b>Offers:</b> ${escapeHtml(o.services.join(', '))}` : ''} <span>(for you, not in the email)</span></div>` : ''}
+      ${o.whyNow && (o.interest || []).length ? `<div class="tng-outreach-why"><b>Pages they viewed on tngdefense.com:</b> ${escapeHtml(o.interest.join(', '))}${o.interestDirect ? ', plus the contact page' : ''} <span>(used to pick services, never mentioned in the email)</span></div>` : ''}
       <label class="tng-push-label" for="tng-outreach-subject">Subject</label>
       <input class="tng-push-input" id="tng-outreach-subject" data-outreach-field="subject" value="${escapeHtml(o.subject)}" ${busy ? 'disabled' : ''}>
       <label class="tng-push-label" for="tng-outreach-body">Email</label>
@@ -5513,7 +5515,17 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     }
   }
 
-  // The recent trigger events, as the draft needs them (never incidents or site visits).
+  // Which tngdefense.com pages the company viewed, by name only: private context that steers which
+  // services the draft leads with. The email itself never mentions them.
+  function visitedInterest(pageIds) {
+    const pages = pageIds.map(id => SIGNALS.find(sig => sig.id === id)).filter(Boolean);
+    return {
+      interest: pages.filter(sig => sig.pageType === 'service' && sig.id !== 'licensing_page').map(sig => sig.label),
+      interestDirect: pages.some(sig => sig.pageType === 'high_intent'),
+    };
+  }
+
+  // The recent trigger events, as the draft needs them (never incidents).
   const draftEvents = events => (events || []).filter(e => e.recent).slice(0, 5)
     .map(e => ({ date: e.date, kind: EVENT_TYPE_LABELS[e.type] || 'News', summary: e.summary, service: EVENT_SERVICES[e.type] || '' }));
 
@@ -5527,6 +5539,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
       rawEvents: raw,
       events: draftEvents(raw),
       inZoho: !!(lastCrmData && lastCrmData.found),
+      ...visitedInterest(SIGNALS.filter(sig => sig.group === 'pages' && state[sig.id].checked).map(sig => sig.id)),
       candidates: singlePushCandidates(),
       refreshCandidates: singlePushCandidates,
       startIndex: currentContactIndex,
@@ -5545,6 +5558,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
       rawEvents: raw,
       events: draftEvents(raw),
       inZoho: !!v.crmFound,
+      ...visitedInterest(Object.keys(v.visits.pages)),
       brief: { opportunity: lead.opportunity, signal: lead.signal, why_tng: lead.why_tng, first_move: lead.first_move, draft: lead.draft },
       candidates: briefPushCandidates(lead),
       refreshCandidates: () => briefPushCandidates(lead),

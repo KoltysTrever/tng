@@ -4,7 +4,8 @@
 // sent from here. No Apollo credits; one Claude call (about 1 to 2 cents).
 // Body: { angle, contact: { name, title }, company: {..., healthcare, licensed_state},
 //         events: [...], in_zoho, brief: { opportunity, signal, why_tng, first_move, draft } }
-// The page never sends site visits or security incidents: neither belongs in an email.
+// The page sends which tngdefense.com pages the company viewed (names only, no counts or dates) as
+// private context for choosing services; the email never mentions them. Incidents are never sent.
 
 import { guard } from '../lib/guard.js';
 import { claudeErrorMessage } from '../lib/claude-error.js';
@@ -87,6 +88,8 @@ ${STYLE_EXAMPLES}
 
 Do not copy the examples word for word. Keep their tone, shape and length, but write the sentences for this contact and situation.
 
+PRIVATE CONTEXT (never mention, quote or hint at it): FACTS.private_interest lists TNG service pages people at this company viewed recently. Use it only to decide which services to lead with and describe most fully. If FACTS.private_interest_direct is true, they looked at TNG's contact or request-services page, so the email can be slightly more direct about TNG's availability to help. Never say or imply that you know what they looked at: no "I noticed", "I saw you were", "your interest in", "as you explore", and nothing about our website.
+
 PERSONALIZATION: do not manufacture it. Only a verified connection may personalize the email: a recent event in FACTS.events (or brief.signal), or already_known_to_tng being true. With no verified connection, write a straightforward professional introduction like Example A: personal only in the name and the company.
 
 What makes that voice:
@@ -118,7 +121,7 @@ ${TNG_FACTS.map((f) => '- ' + f).join('\n')}
 Hard rules:
 - Every name, place, date and number in the email must come from FACTS or the TNG FACTS. Never invent facts, figures, events, clients, dates, or anything about the contact beyond their name and title.
 - Never claim anything about the sender: where they will be, what they attended, who they know, what other clients they have.
-- Never mention website visits, tracking, data providers, CRMs, scores, rankings, a "pipeline", or that they are a "lead". Never mention security incidents at their company.
+- Never mention or hint at website visits, page views, tracking, data providers, CRMs, scores, rankings, a "pipeline", or that they are a "lead". Never mention security incidents at their company.
 - If brief.draft is given, it is a colleague's earlier draft: use its facts only if they are also in FACTS, and write in the voice above.
 - Subject: 3 to 7 plain, professional words (e.g. "Introduction: The North Group"), no question marks, no clickbait.
 - why_now: one short internal note (not part of the email): the verified connection it uses and its date, or "No verified connection: straightforward introduction".
@@ -150,6 +153,8 @@ export default async function handler(req, res) {
       date: clip(e.date, 20), kind: clip(e.kind, 60), summary: clip(e.summary, 400), suggested_service: clip(e.service, 120),
     })),
     already_known_to_tng: !!b.in_zoho,
+    private_interest: (Array.isArray(b.interest) ? b.interest : []).slice(0, 8).map((x) => clip(x, 60)).filter(Boolean),
+    private_interest_direct: !!b.interest_direct,
     brief: b.brief ? {
       opportunity: clip(b.brief.opportunity, 300), signal: clip(b.brief.signal, 400), why_tng: clip(b.brief.why_tng, 400),
       first_move: clip(b.brief.first_move, 300), draft: clipBlock(b.brief.draft, 2500),
