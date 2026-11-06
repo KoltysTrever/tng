@@ -3,10 +3,12 @@
 //   { "action": "preview", ...contact }          what a push would create, and what blocks it; reads only
 //   { "action": "create", ...contact, "confirm_warnings": true }  creates one Contact and its Note;
 //                                                 refused unless ZOHO_PUSH_ENABLED=true
+//   { "action": "log_email", email, owner_email, subject, body }  adds one Note (the outreach
+//                                                 email) to the one Contact with that email
 
 import { guard } from '../lib/guard.js';
 import { zohoConfigured, zohoPushConfigured } from '../lib/zoho.js';
-import { checkPushSetup, previewPush, createPush } from '../lib/zoho-push.js';
+import { checkPushSetup, previewPush, createPush, logEmail } from '../lib/zoho-push.js';
 
 export default async function handler(req, res) {
   if (!guard(req, res)) return;
@@ -26,6 +28,10 @@ export default async function handler(req, res) {
     }
     if (body.action === 'create') {
       const { status, body: out } = await createPush(body);
+      return res.status(status).json(out);
+    }
+    if (body.action === 'log_email') {
+      const { status, body: out } = await logEmail(body);
       return res.status(status).json(out);
     }
   } catch (err) {

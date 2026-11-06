@@ -734,6 +734,25 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   @keyframes tng-heatwave { 0% { opacity: 0; } 18% { opacity: 1; } 100% { opacity: 0; } }
   .tng-burst-confetti { position: fixed; width: 9px; height: 13px; border-radius: 2px; will-change: transform, opacity; }
 
+  /* ---------- Email outreach ---------- */
+  .tng-outreach-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--tng-white); color: var(--tng-black); border: 1px solid var(--tng-white); padding: 10px 16px; font-size: 14px; font-weight: 600; border-radius: var(--tng-radius-sm); cursor: pointer; font-family: inherit; box-shadow: 0 4px 14px rgba(255,255,255,0.12); transition: background 0.2s, transform 0.1s; }
+  .tng-outreach-btn:hover { background: #E5E5E7; }
+  .tng-outreach-btn:active { transform: scale(0.98); }
+  .tng-outreach-btn .tng-ico { width: 16px; height: 16px; }
+  .tng-angles { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tng-angle { padding: 7px 14px; font: inherit; font-size: 13.5px; font-weight: 600; color: var(--tng-text-secondary); background: var(--tng-surface-2); border: 1px solid var(--tng-hairline-strong); border-radius: 999px; cursor: pointer; }
+  .tng-angle:hover:not(:disabled) { color: var(--tng-white); }
+  .tng-angle.on { color: var(--tng-black); background: var(--tng-white); border-color: var(--tng-white); }
+  .tng-angle:disabled { opacity: 0.4; cursor: not-allowed; }
+  .tng-outreach-why { margin-top: 12px; padding: 8px 12px; font-size: 13px; color: var(--tng-text-tertiary); background: var(--tng-surface-2); border-radius: var(--tng-radius-sm); }
+  .tng-outreach-why b { color: var(--tng-text-secondary); }
+  .tng-outreach-body { min-height: 260px; font-size: 14px; line-height: 1.55; }
+  .tng-outreach-sends { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+  .tng-outreach-sends .tng-export-btn { flex: 1 1 180px; }
+  .tng-outreach-log { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--tng-hairline); }
+  .tng-outreach-log-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .tng-outreach-log-row .tng-push-input { flex: 1 1 220px; }
+
   /* ---------- Push to Zoho ---------- */
   .tng-zoho-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--tng-alert-clear); color: var(--tng-white); border: 1px solid rgba(255,255,255,0.14); padding: 10px 16px; font-size: 14px; font-weight: 600; border-radius: var(--tng-radius-sm); cursor: pointer; font-family: inherit; box-shadow: 0 4px 14px rgba(46,125,50,0.35); transition: background 0.2s, box-shadow 0.2s, transform 0.1s; }
   .tng-zoho-btn:hover { background: #388E3C; box-shadow: 0 6px 20px rgba(46,125,50,0.5); }
@@ -1154,7 +1173,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   <div class="tng-header">
     <div class="tng-header-title-block">
       <h1>TNG Opportunity Score</h1>
-      <div class="tng-version-line">TNG OP TOOL V.4.10 · Created by Trever Koltys</div>
+      <div class="tng-version-line">TNG OP TOOL V.4.11 · Created by Trever Koltys</div>
     </div>
     <div class="tng-header-tools">
       <a class="tng-header-link" href="https://app.apollo.io/" target="_blank" rel="noopener" title="This tool works alongside Apollo">Open Apollo${tngIcon('external')}</a>
@@ -1241,6 +1260,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
       <a href="#" target="_blank" rel="noopener" class="tng-contact-link" id="tng-contact-link" style="display:none;">${LINKEDIN_LOGO}View LinkedIn →</a>
       <button class="tng-reveal-btn" id="tng-reveal-btn" onclick="tngRevealContact()" style="display:none;">${tngIcon('mail')}${REVEAL_LABEL}</button>
       <button class="tng-zoho-btn" id="tng-zoho-btn" onclick="tngPushToZoho()" style="display:none;">${ZOHO_TILE}Push to Zoho</button>
+      <button class="tng-outreach-btn" id="tng-outreach-btn" onclick="tngOutreach()" style="display:none;">${tngIcon('mail')}Email outreach</button>
     </div>
     <div class="tng-reveal-result" id="tng-reveal-result"></div>
     <div class="tng-zoho-result" id="tng-zoho-result"></div>
@@ -2484,6 +2504,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     document.getElementById('tng-contact-reach').innerHTML = contact && !revealed ? reachChips(contact) : '';
     renderMorePeople();
     document.getElementById('tng-zoho-btn').style.display = 'inline-flex';
+    document.getElementById('tng-outreach-btn').style.display = 'inline-flex';
     document.getElementById('tng-contact-card').classList.add('active');
   }
 
@@ -4980,17 +5001,32 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     s.busy = 'revealing';
     s.error = '';
     renderPush();
+    s.error = await revealCandidate(c);
+    if (pushState !== s) return;
+    s.busy = '';
+    s.candidates = s.refreshCandidates();
+    // A revealed person may have moved in the list (more people join the contacts); follow them.
+    const moved = c.apolloId ? s.candidates.findIndex(x => x.apolloId === c.apolloId) : -1;
+    useCandidate(moved >= 0 ? moved : s.chosen);
+    renderPush();
+    runPushPreview();
+  }
+
+  // Reveals one person from a push or outreach picker (1 Apollo credit) and records them
+  // where the page keeps them. Returns '' on success, else what went wrong.
+  async function revealCandidate(c) {
+    let error = '';
     try {
       if (c.reveal.kind === 'briefMore' || c.reveal.kind === 'singleMore') {
         const failed = c.reveal.kind === 'briefMore' ? await revealBriefMore(c.reveal.lead, c.reveal.i, true) : await revealSingleMore(c.reveal.i, true);
-        if (failed) s.error = failed;
+        if (failed) error = failed;
       } else if (c.reveal.kind === 'brief') {
         const { lead, ci } = c.reveal;
         const ac = lead.vetted.contacts[ci];
         const payload = ac.apollo_id ? { apollo_id: ac.apollo_id } : { first_name: (ac.name || '').split(' ')[0], domain: lead.domain, title: ac.title };
         const data = await postJson(REVEAL_URL, payload, 60000);
         if (data.revealed) ac.revealed = { full_name: data.full_name || '', email: data.email || '' };
-        else s.error = data.message || 'Apollo couldn\'t confidently match this contact.';
+        else error = data.message || 'Apollo couldn\'t confidently match this contact.';
         renderBriefResults();
       } else {
         const i = c.reveal.index;
@@ -5001,20 +5037,13 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
           revealedByIndex[i] = { full_name: data.full_name || '', email: data.email || '' };
           if (i === currentContactIndex) renderContactCard(document.getElementById('tng-email').value.trim());
         } else {
-          s.error = data.message || 'Apollo couldn\'t confidently match this contact.';
+          error = data.message || 'Apollo couldn\'t confidently match this contact.';
         }
       }
     } catch (err) {
-      s.error = 'Reveal failed: ' + err.message;
+      error = 'Reveal failed: ' + err.message;
     }
-    if (pushState !== s) return;
-    s.busy = '';
-    s.candidates = s.refreshCandidates();
-    // A revealed person may have moved in the list (more people join the contacts); follow them.
-    const moved = c.apolloId ? s.candidates.findIndex(x => x.apolloId === c.apolloId) : -1;
-    useCandidate(moved >= 0 ? moved : s.chosen);
-    renderPush();
-    runPushPreview();
+    return error;
   }
 
   // Push is allowed only right after a clean check of exactly these details.
@@ -5264,7 +5293,250 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     if (e.key !== 'Escape') return;
     if (closeZohoHelp()) return;
     if (pushState) closePush();
+    else if (outreach) closeOutreach();
   });
+
+  // ----- Email outreach: Claude drafts, the person edits, Outlook sends (api/draft-email) -----
+  // Nothing is sent from the tool: the draft opens as a new email in Outlook (desktop or web),
+  // where the person's own signature is added. Site visits and security incidents are never
+  // passed to the draft; Log in Zoho adds the sent email as a note on their Contact.
+  const DRAFT_URL = "https://tng-lead.vercel.app/api/draft-email";
+  const ANGLE_LABELS = { trigger: 'Trigger event', intro: 'General intro', followup: 'Follow-up', reengage: 'Re-engage' };
+  const MAILTO_SAFE_LENGTH = 1900; // longer links can be cut off by some mail apps
+  let outreach = null; // the open outreach window, or null
+
+  // ctx: { company: {...}, events, inZoho, brief?, candidates, refreshCandidates, startIndex }
+  function openOutreach(ctx) {
+    const angles = { trigger: ctx.events.length > 0 || !!(ctx.brief && ctx.brief.signal), intro: true, followup: true, reengage: !!ctx.inZoho };
+    const ready = ctx.candidates.findIndex(c => c.email);
+    const start = ctx.startIndex != null && ctx.candidates[ctx.startIndex] ? ctx.startIndex : ready >= 0 ? ready : 0;
+    outreach = { ...ctx, angles, angle: angles.trigger ? 'trigger' : angles.reengage ? 'reengage' : 'intro',
+      chosen: start, to: '', subject: '', body: '', whyNow: '', busy: '', error: '', opened: false, log: null, ownerEmail: savedOwner() };
+    outreach.to = (ctx.candidates[start] || {}).email || '';
+    renderOutreach();
+    if (ctx.candidates.length) writeDraft();
+  }
+
+  function closeOutreach() {
+    if (!outreach || outreach.busy === 'logging') return;
+    outreach = null;
+    const el = document.getElementById('tng-outreach-modal');
+    if (el) el.remove();
+  }
+
+  function outreachPerson() {
+    const c = outreach.candidates[outreach.chosen] || {};
+    return { name: [c.first, c.last].filter(Boolean).join(' ') || c.label || '', title: c.title || '' };
+  }
+
+  async function writeDraft() {
+    const o = outreach;
+    if (!o || o.busy) return;
+    o.busy = 'drafting';
+    o.error = '';
+    renderOutreach();
+    try {
+      const data = await postJson(DRAFT_URL, {
+        angle: o.angle, contact: outreachPerson(), company: o.company, events: o.events, in_zoho: o.inZoho,
+        services: eventServices(o.rawEvents || []), brief: o.brief || null,
+      }, 60000);
+      if (outreach !== o) return;
+      Object.assign(o, { subject: data.subject || '', body: data.body || '', whyNow: data.why_now || '', services: data.services || [], log: null });
+    } catch (err) {
+      if (outreach !== o) return;
+      o.error = "Couldn't write the draft: " + err.message;
+    }
+    o.busy = '';
+    renderOutreach();
+  }
+
+  const mailtoLink = o => `mailto:${o.to ? o.to.trim() : ''}?subject=${encodeURIComponent(o.subject)}&body=${encodeURIComponent(o.body.replace(/\r?\n/g, '\r\n'))}`;
+  const owaLink = o => `https://outlook.office.com/mail/deeplink/compose?${o.to ? 'to=' + encodeURIComponent(o.to.trim()) + '&' : ''}subject=${encodeURIComponent(o.subject)}&body=${encodeURIComponent(o.body)}`;
+
+  function renderOutreach() {
+    const o = outreach;
+    let el = document.getElementById('tng-outreach-modal');
+    if (!o) { if (el) el.remove(); return; }
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'tng-outreach-modal';
+      el.className = 'tng-modal-backdrop';
+      el.setAttribute('role', 'dialog');
+      el.setAttribute('aria-modal', 'true');
+      el.setAttribute('aria-labelledby', 'tng-outreach-title');
+      document.querySelector('.tng-lead-scorer').appendChild(el);
+      el.addEventListener('click', onOutreachClick);
+      el.addEventListener('input', onOutreachInput);
+      el.addEventListener('change', onOutreachChange);
+    }
+    const busy = !!o.busy;
+    const cand = o.candidates[o.chosen];
+    const hasDraft = !!(o.subject || o.body);
+    const validTo = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(o.to.trim());
+    const longLink = hasDraft && mailtoLink(o).length > MAILTO_SAFE_LENGTH;
+    const picker = o.candidates.length ? `<label class="tng-push-label" for="tng-outreach-pick">To</label>
+      <div class="tng-push-pick-row"><select class="tng-push-select" id="tng-outreach-pick" data-outreach="pick" ${busy ? 'disabled' : ''}>
+        ${o.candidates.map((c, i) => `<option value="${i}" ${i === o.chosen ? 'selected' : ''}>${escapeHtml(c.label)}</option>`).join('')}
+      </select>${cand && cand.reveal && !cand.email ? `<button class="tng-reveal-btn" data-outreach="reveal" ${busy ? 'disabled' : ''}>${tngIcon('mail')}Reveal email (1 Apollo credit)</button>` : ''}</div>`
+      : '<div class="tng-push-status"><div class="warn">No contact to write to yet. Analyze the company first.</div></div>';
+    const status = o.busy === 'drafting' ? '<div class="tng-push-status"><span class="tng-radar"></span>Writing a draft from what the lookup found...</div>'
+      : o.busy === 'revealing' ? '<div class="tng-push-status"><span class="tng-radar"></span>Revealing from Apollo...</div>'
+      : o.error ? `<div class="tng-push-status"><div class="bad">${escapeHtml(o.error)}</div></div>` : '';
+    const log = !hasDraft ? '' : o.log && o.log.ok
+      ? `<div class="tng-outreach-log"><div class="tng-push-status"><div class="good">✓ Logged on ${escapeHtml(o.log.contact || 'the Contact')} in Zoho. <a href="${escapeHtml(o.log.url)}" target="_blank" rel="noopener">Open the Contact →</a></div></div></div>`
+      : `<div class="tng-outreach-log">
+          <label class="tng-push-label" for="tng-outreach-owner">Sent it? Log it in Zoho as a note on their Contact</label>
+          <div class="tng-outreach-log-row">
+            <input class="tng-push-input" id="tng-outreach-owner" data-outreach-field="ownerEmail" placeholder="Your work email (the one you use in Zoho)" value="${escapeHtml(o.ownerEmail)}" ${busy ? 'disabled' : ''} autocomplete="off" spellcheck="false">
+            <button class="tng-zoho-btn" data-outreach="log" ${busy || !validTo ? 'disabled' : ''} title="${validTo ? 'Adds this email as a note on the Contact with this address' : 'Needs a To address'}">${ZOHO_TILE}${o.busy === 'logging' ? 'Logging...' : 'Log in Zoho'}</button>
+          </div>
+          ${o.log && o.log.error ? `<div class="tng-push-status"><div class="bad">${escapeHtml(o.log.error)}${o.log.url ? ` <a href="${escapeHtml(o.log.url)}" target="_blank" rel="noopener">Open the Contact →</a>` : ''}</div></div>` : ''}
+        </div>`;
+    el.innerHTML = `<div class="tng-modal">
+      <div class="tng-modal-head"><h2 id="tng-outreach-title">Email outreach · ${escapeHtml(o.company.name)}</h2><button class="tng-modal-x" data-outreach="close" aria-label="Close">×</button></div>
+      <p class="tng-modal-sub">Claude drafts a short email in Steve's style from what the lookup found, offering the TNG services that fit. Edit it, then open it in Outlook: nothing is sent until you press Send there, and Outlook adds your signature.</p>
+      ${picker}
+      <label class="tng-push-label" for="tng-outreach-to">Email address</label>
+      <input class="tng-push-input" id="tng-outreach-to" data-outreach-field="to" placeholder="Their email (reveal it above, or type it)" value="${escapeHtml(o.to)}" ${busy ? 'disabled' : ''} autocomplete="off" spellcheck="false">
+      <label class="tng-push-label">Angle</label>
+      <div class="tng-angles">${Object.keys(ANGLE_LABELS).map(a => `<button class="tng-angle${o.angle === a ? ' on' : ''}" data-outreach="angle" data-angle="${a}" ${busy || !o.angles[a] ? 'disabled' : ''} title="${o.angles[a] ? '' : a === 'trigger' ? 'No recent trigger event found' : 'Not in Zoho yet'}">${ANGLE_LABELS[a]}</button>`).join('')}
+        <button class="tng-export-btn" data-outreach="draft" ${busy || !o.candidates.length ? 'disabled' : ''}>${hasDraft ? 'Rewrite' : 'Write draft'}</button></div>
+      ${status}
+      ${o.whyNow ? `<div class="tng-outreach-why"><b>Based on:</b> ${escapeHtml(o.whyNow)}${o.services && o.services.length ? ` · <b>Offers:</b> ${escapeHtml(o.services.join(', '))}` : ''} <span>(for you, not in the email)</span></div>` : ''}
+      <label class="tng-push-label" for="tng-outreach-subject">Subject</label>
+      <input class="tng-push-input" id="tng-outreach-subject" data-outreach-field="subject" value="${escapeHtml(o.subject)}" ${busy ? 'disabled' : ''}>
+      <label class="tng-push-label" for="tng-outreach-body">Email</label>
+      <textarea class="tng-push-note tng-outreach-body" id="tng-outreach-body" data-outreach-field="body" ${busy ? 'disabled' : ''}>${escapeHtml(o.body)}</textarea>
+      ${longLink ? '<div class="tng-push-status"><div class="warn">This email is long for the Outlook desktop link and may be cut off. Use Outlook on the web, or Copy and paste it.</div></div>' : ''}
+      <div class="tng-outreach-sends">
+        <button class="tng-export-btn primary" data-outreach="desktop" ${busy || !hasDraft ? 'disabled' : ''}>${tngIcon('mail')}Open in Outlook</button>
+        <button class="tng-export-btn" data-outreach="web" ${busy || !hasDraft ? 'disabled' : ''}>${tngIcon('external')}Outlook on the web</button>
+        <button class="tng-export-btn" data-outreach="copy" ${busy || !hasDraft ? 'disabled' : ''}>${tngIcon('copy')}Copy</button>
+      </div>
+      ${log}
+    </div>`;
+  }
+
+  function onOutreachInput(e) {
+    const f = e.target.dataset.outreachField;
+    if (!outreach || !f) return;
+    outreach[f] = e.target.value;
+    if (f === 'to' || f === 'ownerEmail') {
+      const btn = document.querySelector('[data-outreach="log"]');
+      if (btn) btn.disabled = !!outreach.busy || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(outreach.to.trim());
+    }
+  }
+
+  function onOutreachChange(e) {
+    if (!outreach || e.target.dataset.outreach !== 'pick') return;
+    outreach.chosen = Number(e.target.value);
+    outreach.to = (outreach.candidates[outreach.chosen] || {}).email || '';
+    outreach.log = null;
+    renderOutreach();
+  }
+
+  async function onOutreachClick(e) {
+    const o = outreach;
+    if (!o) return;
+    if (e.target.id === 'tng-outreach-modal') { closeOutreach(); return; }
+    const btn = e.target.closest('[data-outreach]');
+    if (!btn || btn.disabled) return;
+    switch (btn.dataset.outreach) {
+      case 'close': closeOutreach(); break;
+      case 'angle': o.angle = btn.dataset.angle; writeDraft(); break;
+      case 'draft': writeDraft(); break;
+      case 'desktop': {
+        const a = document.createElement('a');
+        a.href = mailtoLink(o);
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        o.opened = true;
+        tngToast('Opening a new email in Outlook...', 'good');
+        break;
+      }
+      case 'web':
+        window.open(owaLink(o), '_blank', 'noopener');
+        o.opened = true;
+        break;
+      case 'copy':
+        copyText(`Subject: ${o.subject}\n\n${o.body}`);
+        break;
+      case 'reveal': {
+        const c = o.candidates[o.chosen];
+        if (!window.confirm(revealPrompt({ has_email: c.hasEmail }))) break;
+        o.busy = 'revealing';
+        o.error = '';
+        renderOutreach();
+        const err = await revealCandidate(c);
+        if (outreach !== o) return;
+        o.busy = '';
+        o.error = err;
+        o.candidates = o.refreshCandidates();
+        const moved = c.apolloId ? o.candidates.findIndex(x => x.apolloId === c.apolloId) : -1;
+        if (moved >= 0) o.chosen = moved;
+        o.to = (o.candidates[o.chosen] || {}).email || o.to;
+        renderOutreach();
+        break;
+      }
+      case 'log': {
+        const owner = o.ownerEmail.trim().toLowerCase();
+        if (!owner) { o.log = { error: 'Enter your work email first.' }; renderOutreach(); break; }
+        o.busy = 'logging';
+        renderOutreach();
+        const { ok, data } = await postOnce(ZOHO_PUSH_URL, { action: 'log_email', email: o.to.trim(), owner_email: owner, subject: o.subject, body: o.body }, 45000);
+        if (outreach !== o) return;
+        o.busy = '';
+        if (ok && data.logged) {
+          saveOwner(owner);
+          o.log = { ok: true, contact: data.contact, url: data.url };
+          confettiBurst(btn, ['#E42527', '#089949', '#F9B21D', '#226DB4']);
+        } else {
+          o.log = { error: data.configured === false ? 'Zoho isn\'t connected for writing yet.' : data.error || 'Zoho didn\'t confirm the note.', url: data.url };
+        }
+        renderOutreach();
+        break;
+      }
+    }
+  }
+
+  // The recent trigger events, as the draft needs them (never incidents or site visits).
+  const draftEvents = events => (events || []).filter(e => e.recent).slice(0, 5)
+    .map(e => ({ date: e.date, kind: EVENT_TYPE_LABELS[e.type] || 'News', summary: e.summary, service: EVENT_SERVICES[e.type] || '' }));
+
+  window.tngOutreach = function() {
+    if (!lastCompanyInfo) return;
+    const info = lastCompanyInfo;
+    const raw = lastEvents && lastEvents.available ? lastEvents.events : [];
+    openOutreach({
+      company: { name: info.company_name, domain: info.domain, industry: info.industry, employees: info.employee_count, headquarters: info.headquarters, description: info.company_description,
+        healthcare: !!(lastAnalyzeResult && lastAnalyzeResult.vertical_healthcare), licensed_state: info.licensed_state || '' },
+      rawEvents: raw,
+      events: draftEvents(raw),
+      inZoho: !!(lastCrmData && lastCrmData.found),
+      candidates: singlePushCandidates(),
+      refreshCandidates: singlePushCandidates,
+      startIndex: currentContactIndex,
+    });
+  };
+
+  function openBriefOutreach(lead) {
+    const v = vettedOf(lead);
+    if (!v) return;
+    const r = v.result;
+    const raw = v.events && v.events.available ? v.events.events : [];
+    openOutreach({
+      company: { name: r.company_name || lead.organization, domain: lead.domain, industry: r.industry, employees: r.employee_count, headquarters: r.headquarters, description: r.company_description,
+        healthcare: !!r.vertical_healthcare,
+        licensed_state: lead.site_state ? (lead.site_licensed ? lead.site_state : '') : r.licensed_state_match ? r.licensed_state_name || '' : '' },
+      rawEvents: raw,
+      events: draftEvents(raw),
+      inZoho: !!v.crmFound,
+      brief: { opportunity: lead.opportunity, signal: lead.signal, why_tng: lead.why_tng, first_move: lead.first_move, draft: lead.draft },
+      candidates: briefPushCandidates(lead),
+      refreshCandidates: () => briefPushCandidates(lead),
+    });
+  }
 
   function openBriefPush(lead) {
     const v = vettedOf(lead);
@@ -5306,10 +5578,11 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   // The card's push button, or the link once this lead's contact has been pushed.
   function zohoActionHtml(lead, v, report) {
     if (report || !v) return '';
+    const outreach = `<button class="tng-outreach-btn" data-brief-action="outreach" data-key="${lead.key}">${tngIcon('mail')}Email outreach</button>`;
     if (lead.zohoPushed) {
-      return `<div class="tng-zoho-row"><span class="tng-chip good">✓ Pushed to Zoho</span><a href="${escapeHtml(lead.zohoPushed.url)}" target="_blank" rel="noopener">View the Contact →</a></div>`;
+      return `<div class="tng-zoho-row"><span class="tng-chip good">✓ Pushed to Zoho</span><a href="${escapeHtml(lead.zohoPushed.url)}" target="_blank" rel="noopener">View the Contact →</a>${outreach}</div>`;
     }
-    return `<div class="tng-zoho-row"><button class="tng-zoho-btn" data-brief-action="zoho" data-key="${lead.key}">${ZOHO_TILE}Push to Zoho</button></div>`;
+    return `<div class="tng-zoho-row"><button class="tng-zoho-btn" data-brief-action="zoho" data-key="${lead.key}">${ZOHO_TILE}Push to Zoho</button>${outreach}</div>`;
   }
 
   function resetBrief() {
@@ -5373,6 +5646,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
       case 'pdf': printBriefReport(); break;
       case 'reveal': revealBriefContact(lead, Number(btn.dataset.contact), btn); break;
       case 'zoho': openBriefPush(lead); break;
+      case 'outreach': openBriefOutreach(lead); break;
       case 'reveal-more': revealBriefMore(lead, Number(btn.dataset.person)); break;
       case 'retry':
         if (lead.pending) break;

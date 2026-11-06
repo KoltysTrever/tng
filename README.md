@@ -130,6 +130,25 @@ saved from an older lookup get it on their next save.
 Setup: add `CRON_SECRET` (any long random string) to Vercel's Environment Variables and redeploy.
 Vercel sends it as `Authorization: Bearer <CRON_SECRET>`; without it the nightly check refuses to run.
 
+## Email outreach (V.4.11)
+
+**Email outreach** on the Single Lead contact card and on each vetted Hunter Brief lead opens a
+window where Claude (Sonnet 5.5, `/api/draft-email`, about 1 to 2 cents a draft) writes a short,
+first-touch email in the voice of TNG's CEO (three of Steve's emails are its style reference) to the
+chosen contact, from the company facts, the contact's title, recent trigger events and, for brief
+leads, Steve's notes and draft. It offers only TNG's services as named on tngdefense.com, picked to
+fit the situation and the contact's role, and only TNG's approved facts (SDVOB; "licensed in <state>"
+only when the licensing check confirms it; the 85 to 90% healthcare result). Angles: Trigger event, General
+intro, Follow-up, Re-engage (only when the company is in Zoho). Site visits and security incidents
+are never sent to the draft. The person edits it, then **Open in Outlook** (a `mailto:` link for the
+desktop app; long emails may be cut off there) or **Outlook on the web** (an outlook.office.com
+compose link), or Copy. Nothing is sent by the tool, and Outlook adds the sender's own signature.
+
+**Log in Zoho** (`/api/zoho-push`, `action: "log_email"`) adds the email as one Note on the one
+Contact with that address, after checking the sender is an active Zoho user. It never creates or
+changes a Contact; if no Contact (or more than one) has the address, nothing is written. Same kill
+switch as pushes, a 10-minute lock against logging the same email twice, and a cap of 100 a day.
+
 ## Saved lookups (cache)
 
 `analyze-lead`, `news-scan` and `parse-brief` save results for 7 days in Upstash
