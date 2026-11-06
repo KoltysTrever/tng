@@ -16,33 +16,35 @@ const ANGLES = {
   reengage: "RE-ENGAGE: the company already has some relationship with TNG (it is in TNG's CRM). A short check-in that does not explain TNG from scratch and does not invent any history, meetings or names.",
 };
 
-// TNG's CEO wrote these. They set the voice; their facts belong to those companies only.
+// TNG's CEO wrote these. They set the voice. Every name, place, date and number of the
+// companies they were written to is a [placeholder], so nothing from them can end up in a
+// draft; only TNG's own facts (the proof point) are left as written.
 const STYLE_EXAMPLES = `EXAMPLE 1
-Dr. Khoury,
+Dr. [Last name],
 
-I saw you are on the MCEP $traight Talk faculty on Nov 19 for the No Surprises Act and IDR update, and I will be in the virtual room. IEP now covers 12 emergency departments across Henry Ford, Trinity Health Oakland and Magruder, and every one of those contracts renews on the strength of your clinicians staying put.
+You are on the [conference] faculty on [date] for the [topic] update. [Group] now covers [number] emergency departments across [Hospital system A], [Hospital system B] and [Hospital system C], and every one of those contracts renews on the strength of your clinicians staying put.
 
 The North Group builds resident security programs for the group, not just the hospital: threat management for named clinicians, a protective intelligence watch, de-escalation training and incident investigation, with an annual risk review your hospital partners can see. At a Level III trauma center ED with 72,000-plus annual visits, our embedded program has run since 2021 and cut workplace violence by 85 to 90 percent. That ED is staffed by an independent physician-owned group like yours.
 
-Could I have 20 minutes after your session, or a coffee at the Winter Symposium in Boyne, Jan 28 to 31?
+Could I have 20 minutes after your session, or a coffee at [the next event they attend]?
 
 EXAMPLE 2
 Good morning,
 
-The purchase agreement for up to 440 acres at the LEAP District is now public, and Lebanon's mayor has described the project as medical isotope production. A radioisotope facility carries an NRC security plan, controlled-access zones, and a community that will watch the site from the first survey stake. Security decided at design is cheap. Security retrofitted after licensing is not.
+The purchase agreement for up to [number] acres at [site] is now public, and [City]'s mayor has described the project as [project type]. A [type of facility] carries [the regulatory security requirements it brings], controlled-access zones, and a community that will watch the site from the first survey stake. Security decided at design is cheap. Security retrofitted after licensing is not.
 
-The North Group is a service-disabled veteran-owned firm licensed in Indiana. We deliver the threat and vulnerability assessment and security master plan at design, construction-site coverage during the build, and an embedded program with 24/7 operations center support once material arrives.
+The North Group is a service-disabled veteran-owned firm licensed in [state]. We deliver the threat and vulnerability assessment and security master plan at design, construction-site coverage during the build, and an embedded program with 24/7 operations center support once material arrives.
 
 Our work ranges from executive protection for public-company principals to an embedded program at a regional medical center that cut workplace violence 85 to 90 percent. The common thread is discretion and documentation, not visible force.
 
 Could we take 20 minutes to align the security plan with your site timeline before the layout is locked?
 
 EXAMPLE 3 (its first line was cut off)
-...on Hocking Valley. With Coldwater, St. Bernard and now Logan, Emergency Care Partners has opened three emergency departments in 16 months, each with a new medical director and a recruiting push behind it. New contracts are kept on clinician retention, and retention is decided on the worst shift of the month.
+...on [newest location]. With [location A], [location B] and now [location C], [Group] has opened [number] emergency departments in [number] months, each with a new medical director and a recruiting push behind it. New contracts are kept on clinician retention, and retention is decided on the worst shift of the month.
 
 The North Group builds clinician-safety programs that travel with a group from contract to contract: threat management for named clinicians, a protective intelligence watch, de-escalation training and incident investigation, with an annual risk review the hospital can see. At a Level III trauma center ED with 72,000-plus annual visits, our embedded program has run since 2021 and cut workplace violence by 85 to 90 percent. That ED is staffed by an independent physician-owned group.
 
-I would like 20 minutes with you or your COO to show how a portfolio retainer would price across the ECP family. Would the week of Nov 16 work?`;
+I would like 20 minutes with you or your COO to show how a portfolio retainer would price across the [Group] family. Would the week of [suggested week] work?`;
 
 // TNG's services, as named on tngdefense.com (the same list the tool scores site visits by),
 // each with the situations it answers. The draft names only these.
@@ -87,7 +89,7 @@ function buildPrompt(input) {
   const facts = JSON.stringify(input, null, 2);
   return `You are drafting a first-touch business email from The North Group (TNG), a security and intelligence firm, in the voice of its CEO. The sender will read and edit it in Outlook and send it themselves; Outlook adds their signature.
 
-VOICE: follow the CEO's emails below closely: their cadence, structure, length and tone. They are style references only: never reuse their facts (names, places, events, numbers), except the TNG FACTS listed further down, and never reuse their sentences or near-copies of them (for example, no "... is cheap. ... is not."): write fresh lines in the same rhythm.
+VOICE: follow the CEO's emails below closely: their cadence, structure, length and tone. They are style templates only: each [bracket] stands for a fact that, in a real email, comes from FACTS. Never reuse their sentences or near-copies of them (for example, no "... is cheap. ... is not."): write fresh lines in the same rhythm. Every name, place, date and number in your email must come from FACTS, the TNG FACTS, or FACTS.suggested_week.
 
 ${STYLE_EXAMPLES}
 
@@ -119,13 +121,13 @@ Hard rules:
 - Never mention website visits, tracking, data providers, CRMs, scores, rankings, a "pipeline", or that they are a "lead". Never mention security incidents at their company.
 - If brief.draft is given, it is a colleague's earlier draft: use its facts only if they are also in FACTS, and write in the voice above.
 - Subject: under 8 words, specific to them, plain, no question marks, no clickbait.
-- why_now: one short internal note (not part of the email) saying what the email is based on, e.g. "New Yardley facility announced Oct 2026".
+- why_now: one short internal note (not part of the email) saying what the email is based on: the fact from FACTS and, if FACTS give one, its date.
 - services: the TNG SERVICES names the email offers, exactly as listed.
 
 Return JSON with subject, body (plain text with \\n line breaks), why_now and services.`;
 }
 
-// The Monday at least a week away ("Nov 16"), for an ask that needs a date.
+// The Monday at least a week away (e.g. "Nov 16"), worked out from today, for an ask that needs a date.
 function suggestedWeek(now = new Date()) {
   const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 7));
   d.setUTCDate(d.getUTCDate() + ((8 - d.getUTCDay()) % 7));
