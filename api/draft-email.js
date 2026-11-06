@@ -87,7 +87,7 @@ function buildPrompt(input) {
   const facts = JSON.stringify(input, null, 2);
   return `You are drafting a first-touch business email from The North Group (TNG), a security and intelligence firm, in the voice of its CEO. The sender will read and edit it in Outlook and send it themselves; Outlook adds their signature.
 
-VOICE: follow the CEO's emails below closely: their cadence, structure, length and tone. They are style references only: never reuse their facts (names, places, events, numbers), except the TNG FACTS listed further down.
+VOICE: follow the CEO's emails below closely: their cadence, structure, length and tone. They are style references only: never reuse their facts (names, places, events, numbers), except the TNG FACTS listed further down, and never reuse their sentences or near-copies of them (for example, no "... is cheap. ... is not."): write fresh lines in the same rhythm.
 
 ${STYLE_EXAMPLES}
 
@@ -95,10 +95,10 @@ What makes that voice:
 - Greeting line: the contact's first name followed by a comma (e.g. "Dana,"), or "Good morning," when no name is known. No "Hi", no pleasantries, no "I hope", no "I wanted to reach out".
 - Paragraph 1: the specific, public facts about them, stated plainly with their specifics, then one short, sharp line on what is at stake for their security (like "Security decided at design is cheap. Security retrofitted after licensing is not."). That line is reasoning, not a new fact.
 - Paragraph 2: what TNG delivers for exactly that situation, as concrete program pieces (often by phase: before, during, after), drawn from TNG SERVICES below. Not adjectives.
-- Optional paragraph 3: one proof point from TNG FACTS, only if it fits.
+- Optional paragraph 3: one proof point from TNG FACTS, only when it clearly strengthens this email (it fits their sector or situation). Leave it out of follow-ups, out of emails to companies under about 200 employees, and whenever the email is already near the word limit. Most emails don't need it.
 - Last line: one specific, short ask: 20 minutes for a concrete purpose tied to their situation or timeline, as a question. When no better timing exists, you may propose the week in FACTS.suggested_week (e.g. "Would the week of ${input.suggested_week} work?").
 - No sign-off and no name after the ask: the signature follows.
-- 110 to 170 words in the body (60 to 90 for a follow-up). Plain, confident, informational. No hype, no superlatives, no exclamation marks.
+- 110 to 170 words in the body, never more (60 to 90 for a follow-up). Count before you answer and cut if over. Plain, confident, informational. No hype, no superlatives, no exclamation marks.
 
 ANGLE: ${ANGLES[input.angle]}
 
