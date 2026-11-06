@@ -198,6 +198,14 @@ the best contact and what to pitch; the pages after hold the company facts, the 
 breakdown, every trigger event and incident with sources, the Zoho result, site visits
 and all contacts. Also built only from what's on screen.
 
+**Past briefs** (V.4.8): once a brief has been vetted, the page saves it for the whole team
+through `/api/brief-archive` (actions `list`, `get`, `save`, `delete`, same access-code header),
+and saves it again after a reveal, a push or a retry. The list under the upload box opens any
+of them exactly as it was left: no lookups re-run, no Apollo credits, no Claude. Stored in the
+same Upstash Redis as the saved lookups (`briefarchive:v1:*`), each brief expiring 12 months
+after its last save; up to 900 KB a brief (a fully vetted brief is roughly 100 to 200 KB).
+Without Upstash the list simply doesn't show.
+
 While the brief is being read, the page shows the steps and a countdown. Reading the
 brief is a single Claude call, so the middle steps are paced by the expected time
 (the average of past reads, saved in the browser) rather than reported by the server;

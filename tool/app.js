@@ -21,6 +21,7 @@ const TNG_ICON_PATHS = {
   mail: '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/>',
   userPlus: '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>',
   info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
+  archive: '<rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8M10 12h4"/>',
 };
 // The Zoho mark (a square drawn in Zoho's four colors), inline so it shows where outside images are blocked.
 const ZOHO_MARK = '<svg class="tng-zoho-mark" viewBox="0 0 24 24" fill="none" stroke-width="3.2" stroke-linecap="round" aria-hidden="true">'
@@ -882,6 +883,20 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     transition: border-color 0.2s, background 0.2s;
   }
   .tng-brief-drop[hidden] { display: none; }
+  /* Past briefs: the team's archive, under the upload box. */
+  .tng-archive { margin-top: 20px; }
+  .tng-archive[hidden] { display: none; }
+  .tng-archive-h { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--tng-text-secondary); margin: 0 0 10px; }
+  .tng-archive-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; margin-bottom: 8px; background: var(--tng-surface); border: 1px solid var(--tng-hairline); border-radius: var(--tng-radius-md); }
+  .tng-archive-row:hover { border-color: var(--tng-hairline-strong); }
+  .tng-archive-main { flex: 1; min-width: 0; }
+  .tng-archive-title { font-size: 15px; font-weight: 600; color: var(--tng-white); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tng-archive-meta { font-size: 13px; color: var(--tng-text-tertiary); margin-top: 2px; }
+  .tng-archive-row .tng-export-btn { flex: 0 0 auto; }
+  .tng-archive-del { flex: 0 0 auto; background: none; border: none; padding: 6px 8px; font: inherit; font-size: 13px; color: var(--tng-text-tertiary); cursor: pointer; border-radius: var(--tng-radius-sm); }
+  .tng-archive-del:hover { color: var(--tng-white); background: var(--tng-surface-2); }
+  .tng-archive-empty { font-size: 14px; color: var(--tng-text-tertiary); }
+  .tng-archive-note { font-size: 13px; color: var(--tng-text-tertiary); }
   .tng-brief-drop:hover, .tng-brief-drop.dragover { border-color: rgba(91,158,240,0.6); background: rgba(21,101,192,0.08); }
   .tng-brief-drop input { display: none; }
   .tng-brief-drop-title { font-size: 18px; font-weight: 600; color: var(--tng-white); }
@@ -1085,7 +1100,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   <div class="tng-header">
     <div class="tng-header-title-block">
       <h1>TNG Opportunity Score</h1>
-      <div class="tng-version-line">TNG OP TOOL V.4.7 · Created by Trever Koltys</div>
+      <div class="tng-version-line">TNG OP TOOL V.4.8 · Created by Trever Koltys</div>
     </div>
     <div class="tng-header-tools">
       <a class="tng-header-link" href="https://app.apollo.io/" target="_blank" rel="noopener" title="This tool works alongside Apollo">Open Apollo${tngIcon('external')}</a>
@@ -1271,6 +1286,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
       <span class="tng-brief-drop-title">Choose a Hunter Brief</span>
       <span class="tng-brief-drop-sub">or drag the brief here: the .html file or a Word (.docx) copy</span>
     </label>
+    <div class="tng-archive" id="tng-brief-archive" hidden></div>
 
     <div id="tng-brief-review"></div>
     <div id="tng-brief-results"></div>
@@ -2796,6 +2812,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     document.getElementById('tng-mode-brief').hidden = !isBrief;
     document.getElementById('tng-tab-single').setAttribute('aria-selected', String(!isBrief));
     document.getElementById('tng-tab-brief').setAttribute('aria-selected', String(isBrief));
+    if (isBrief && !brief) loadArchiveList();
   };
 
   function setBriefStatus(text) {
@@ -2998,6 +3015,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     renderBriefReview();
     renderBriefResults();
     document.getElementById('tng-brief-drop').hidden = true;
+    document.getElementById('tng-brief-archive').hidden = true;
 
     const work = { fileName: file.name, draftCount: Object.keys(drafts).length, chars: text.length, expected: expectedParseSeconds(), elapsed: 0, stage: 'working' };
     const started = Date.now();
@@ -3032,6 +3050,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
       setBriefError("Couldn't read the brief: " + err.message);
       document.getElementById('tng-brief-drop').hidden = false;
       document.getElementById('tng-brief-work').hidden = true;
+      renderArchiveList();
       setBriefStep(1);
     } finally {
       clearInterval(tick);
@@ -3279,6 +3298,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
     el.innerHTML = `
       <div class="tng-brief-summary tng-results-bar">
         <div class="tng-brief-summary-text"><strong>${escapeHtml(briefHeading())}</strong><br>${escapeHtml(briefCountsText(main))}
+          <br><span class="tng-archive-note" id="tng-brief-archive-note">${escapeHtml(archiveNoteText())}</span>
           <br><button class="tng-help-link" onclick="tngPriorityHelp()">${tngIcon('info')}How priority works</button></div>
         <div class="tng-export-row">
           <button class="tng-export-btn primary" data-brief-action="report" ${briefRunning ? 'disabled title="Available when vetting finishes"' : 'title="Download a Word document for leadership"'}>${tngIcon('doc')}Executive Report</button>
@@ -3292,7 +3312,140 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
       <div class="tng-export-note tng-brief-export-note">${tngIcon('info')}<span>Apollo contacts are included in every export with their full name and email only after you pull them from Apollo with <b>Reveal email</b> (1 Apollo credit each). Contacts named in Steve's brief are always included.</span></div>
       ${main.map((x, i) => leadCardHtml(x.lead, x.pr, i + 1)).join('')}
       ${rest.length ? `<details class="tng-brief-watch" ${brief.watchOpen ? 'open' : ''}><summary>Watchlist, not vetted (${rest.length})</summary>${rest.map(x => leadCardHtml(x.lead, x.pr, '–')).join('')}</details>` : ''}`;
+    scheduleArchiveSave();
   }
+
+  // ----- Past briefs: vetted briefs saved for the whole team (api/brief-archive) -----
+  // A brief saves itself once vetting finishes, and again after a reveal, a push or a retry.
+  // Opening one shows it exactly as it was left: no lookups re-run, no credits, no Claude.
+  const ARCHIVE_URL = "https://tng-lead.vercel.app/api/brief-archive";
+  const ARCHIVE_SKIP = new Set(['pending', 'lookups', 'archive', 'moreOpen', 'peopleOpen', 'watchOpen']);
+  let archiveList = null; // null = not loaded; { configured, briefs } or { error }
+  let archiveTimer = null;
+
+  const fmtSavedAt = iso => {
+    const d = new Date(iso);
+    return isNaN(d) ? '' : d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+  };
+  const archivePayload = b => JSON.stringify(b, (k, v) => ARCHIVE_SKIP.has(k) ? undefined : v);
+
+  function archiveNoteText() {
+    const a = brief && brief.archive;
+    if (!a) return briefRunning ? 'Saves to Past briefs when vetting finishes' : '';
+    if (a.error) return "Couldn't save to Past briefs: " + a.error;
+    if (a.saving) return 'Saving to Past briefs...';
+    return a.savedAt ? `Saved to Past briefs · ${fmtSavedAt(a.savedAt)}${a.opened ? ' · opened from the archive, results as of that day' : ''}` : '';
+  }
+  function showArchiveNote() {
+    const el = document.getElementById('tng-brief-archive-note');
+    if (el) el.textContent = archiveNoteText();
+  }
+
+  // Saves a moment after the last change, only once vetting is done and only if something changed.
+  function scheduleArchiveSave() {
+    if (!brief || briefRunning || !brief.leads.some(l => l.vetted)) return;
+    clearTimeout(archiveTimer);
+    archiveTimer = setTimeout(saveArchive, 1500);
+  }
+  async function saveArchive() {
+    const b = brief;
+    if (!b || briefRunning) return;
+    const body = archivePayload(b);
+    b.archive = b.archive || {};
+    if (body === b.archive.lastBody) return;
+    b.archive.saving = true;
+    showArchiveNote();
+    try {
+      const data = await postJson(ARCHIVE_URL, { action: 'save', id: b.archive.id, brief: JSON.parse(body) }, 30000);
+      if (data.configured === false) { b.archive = null; return; }
+      Object.assign(b.archive, { id: data.id, savedAt: data.saved_at, lastBody: body, error: '' });
+    } catch (err) {
+      console.error(err);
+      b.archive.error = err.message;
+    } finally {
+      if (b.archive) b.archive.saving = false;
+      if (b === brief) showArchiveNote();
+    }
+  }
+
+  async function loadArchiveList() {
+    try {
+      archiveList = await postJson(ARCHIVE_URL, { action: 'list' }, 20000);
+    } catch (err) {
+      console.error(err);
+      archiveList = { error: err.message };
+    }
+    renderArchiveList();
+  }
+
+  function renderArchiveList() {
+    const el = document.getElementById('tng-brief-archive');
+    el.hidden = !!brief || !archiveList || archiveList.configured === false;
+    if (el.hidden) return;
+    const head = `<div class="tng-archive-h">${tngIcon('archive')}Past briefs</div>`;
+    if (archiveList.error) {
+      el.innerHTML = head + `<div class="tng-archive-empty">Couldn't load past briefs (${escapeHtml(archiveList.error)}).</div>`;
+      return;
+    }
+    const rows = archiveList.briefs.map(b => `<div class="tng-archive-row">
+        <div class="tng-archive-main">
+          <div class="tng-archive-title">${escapeHtml(b.date ? fmtDay(b.date, true) : b.title || 'Hunter Brief')}</div>
+          <div class="tng-archive-meta">${escapeHtml(`${b.vetted} of ${b.leads} leads vetted · saved ${fmtSavedAt(b.saved_at)}`)}</div>
+        </div>
+        <button class="tng-export-btn" data-archive="open" data-id="${escapeHtml(b.id)}">Open</button>
+        <button class="tng-archive-del" data-archive="delete" data-id="${escapeHtml(b.id)}" title="Remove from Past briefs for everyone">Delete</button>
+      </div>`).join('');
+    el.innerHTML = head + (rows || '<div class="tng-archive-empty">No briefs saved yet. Each brief is saved here for the team once it has been vetted, and kept for 12 months.</div>');
+  }
+
+  async function openArchivedBrief(id, btn) {
+    if (briefRunning) return;
+    setBriefError('');
+    btn.disabled = true;
+    btn.textContent = 'Opening...';
+    try {
+      const data = await postJson(ARCHIVE_URL, { action: 'get', id }, 30000);
+      const saved = data.brief;
+      saved.leads.forEach(l => { l.pending = false; l.lookups = null; });
+      const meta = (archiveList && archiveList.briefs || []).find(b => b.id === id);
+      saved.started = true;
+      saved.archive = { id, savedAt: meta ? meta.saved_at : '', opened: true, lastBody: archivePayload(saved) };
+      brief = saved;
+      document.getElementById('tng-brief-drop').hidden = true;
+      document.getElementById('tng-brief-work').hidden = true;
+      renderArchiveList();
+      renderBriefReview();
+      renderBriefResults();
+      window.scrollTo({ top: 0 });
+    } catch (err) {
+      console.error(err);
+      setBriefError("Couldn't open that brief: " + err.message);
+      btn.disabled = false;
+      btn.textContent = 'Open';
+    }
+  }
+
+  async function deleteArchivedBrief(id, btn) {
+    const meta = (archiveList && archiveList.briefs || []).find(b => b.id === id);
+    if (!window.confirm(`Delete the ${meta && meta.date ? fmtDay(meta.date, true) : 'selected'} brief from Past briefs? It's removed for the whole team.`)) return;
+    btn.disabled = true;
+    try {
+      await postJson(ARCHIVE_URL, { action: 'delete', id }, 20000);
+      archiveList.briefs = archiveList.briefs.filter(b => b.id !== id);
+      renderArchiveList();
+    } catch (err) {
+      console.error(err);
+      setBriefError("Couldn't delete that brief: " + err.message);
+      btn.disabled = false;
+    }
+  }
+
+  document.getElementById('tng-brief-archive').addEventListener('click', e => {
+    const btn = e.target.closest('[data-archive]');
+    if (!btn || btn.disabled) return;
+    if (btn.dataset.archive === 'open') openArchivedBrief(btn.dataset.id, btn);
+    else deleteArchivedBrief(btn.dataset.id, btn);
+  });
 
   // report = true builds the same card for the exported report: no buttons, details shown in full.
   function leadCardHtml(lead, pr, pos, report) {
@@ -4807,12 +4960,14 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
 
   function resetBrief() {
     if (briefRunning) return;
+    if (archiveTimer) { clearTimeout(archiveTimer); archiveTimer = null; saveArchive(); } // a change not saved yet still goes through
     brief = null;
     setBriefError('');
     renderBriefReview();
     renderBriefResults();
     document.getElementById('tng-brief-drop').hidden = false;
     document.getElementById('tng-brief-work').hidden = true;
+    loadArchiveList();
   }
 
   // ----- Wiring -----
