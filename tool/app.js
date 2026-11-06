@@ -917,6 +917,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   .tng-watch-row.fresh { border-color: rgba(126,226,168,0.55); box-shadow: 0 0 0 1px rgba(126,226,168,0.15), 0 10px 30px rgba(46,125,50,0.15); }
   .tng-watch-face { flex: none; width: 44px; height: 44px; display: grid; place-items: center; background: var(--tng-surface-2); border-radius: 50%; }
   .tng-watch-row.fresh .tng-watch-face { background: rgba(126,226,168,0.14); }
+  .tng-watch-face .tng-ico { width: 20px; height: 20px; color: var(--tng-text-secondary); }
   .tng-thumb { font-size: 24px; line-height: 1; display: inline-block; animation: tng-thumb-pop 0.6s cubic-bezier(0.2, 0.8, 0.3, 1.2) both, tng-thumb-wiggle 3.5s 0.8s ease-in-out infinite; }
   .tng-watch-main { flex: 1; min-width: 0; }
   .tng-watch-name { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 16px; font-weight: 700; color: var(--tng-white); }
@@ -1153,7 +1154,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
   <div class="tng-header">
     <div class="tng-header-title-block">
       <h1>TNG Opportunity Score</h1>
-      <div class="tng-version-line">TNG OP TOOL V.4.9 · Created by Trever Koltys</div>
+      <div class="tng-version-line">TNG OP TOOL V.4.10 · Created by Trever Koltys</div>
     </div>
     <div class="tng-header-tools">
       <a class="tng-header-link" href="https://app.apollo.io/" target="_blank" rel="noopener" title="This tool works alongside Apollo">Open Apollo${tngIcon('external')}</a>
@@ -2807,7 +2808,7 @@ const tngIcon = name => `<svg class="tng-ico" viewBox="0 0 24 24" fill="none" st
       : firstCheck ? `Watching since ${fmtShortDate(c.watch_since)} · first peek around ${fmtShortDate(nextAt)}`
       : `Nothing new · last peeked ${fmtShortDate(c.checked_at)}, next around ${fmtShortDate(nextAt)}`;
     return `<div class="tng-watch-row${fresh ? ' fresh' : ''}">
-      <div class="tng-watch-face">${fresh ? '<span class="tng-thumb" role="img" aria-label="New activity">👍</span>' : TNG_EYES}</div>
+      <div class="tng-watch-face">${fresh ? '<span class="tng-thumb" role="img" aria-label="New activity">👍</span>' : tngIcon('building')}</div>
       <div class="tng-watch-main">
         <div class="tng-watch-name">${escapeHtml(c.name || c.domain)} <span class="tng-watch-domain">${escapeHtml(c.domain)}</span> ${tierChip(c)}</div>
         <div class="tng-watch-status${c.check_error && !fresh ? ' warn' : ''}">${escapeHtml(status)}</div>
